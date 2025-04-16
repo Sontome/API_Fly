@@ -301,23 +301,29 @@ def read_tax_from_file(data):
         print(f"❌ Lỗi đọc file {filename}:", e)
         return None
 # Gọi hàm
-def save_all_results(vechieudi, vechieuve, giave_chieu_di, giave_chieu_ve, filename="full_result.json"):
+def save_all_results(sochieu,vechieudi, giave_chieu_di, vechieuve=None ,giave_chieu_ve=None, filename="full_result.json"):
     data = {
         "ve_chieu_di": vechieudi,
         "ve_chieu_ve": vechieuve,
         "gia_ve_chieu_di": giave_chieu_di,
         "gia_ve_chieu_ve": giave_chieu_ve
     }
+    if sochieu=="1":
+        data = {
+            "ve_chieu_di": vechieudi,
+            
+            "gia_ve_chieu_di": giave_chieu_di
+        }
     
     try:
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-        print(f"✅ Lưu file '{filename}' ngon lành cành đào đại ca ơi!")
+        print(f"✅ Lưu file '{filename}'")
     except Exception as e:
         print("❌ Lỗi lưu file vcl:", e)
 token = get_app_access_token_from_state()
-def test(city_pair, departure_place, departure_place_name, return_place, return_place_name, 
-         departure_date, return_date, adult_count, child_count):
+def api_vj(city_pair, departure_place, departure_place_name, return_place, return_place_name, 
+         departure_date, return_date, adult_count, child_count,sochieu):
     # Lấy token
    
     
@@ -337,32 +343,34 @@ def test(city_pair, departure_place, departure_place_name, return_place, return_
     )
     # Lọc vé phù hợp
     vechieudi = doc_va_loc_ve_re_nhat(danhsachchuyen)  # >>result_chieu_di.json
-    vechieuve = doc_va_loc_ve_re_nhat_chieu_ve(danhsachchuyen)  # >>result_chieu_ve.json
+     # >>result_chieu_ve.json
     # Lấy booking key và tính thuế
     booking_key = vechieudi[0]['BookingKey'] # Lấy BookingKey đầu tiên
     giave_chieu_di = gettax(token, booking_key)
-
-
-    booking_key = vechieuve[0]['BookingKey']
-    giave_chieu_ve = gettax(token, booking_key)
+    if str(sochieu) =="2":
+        vechieuve = doc_va_loc_ve_re_nhat_chieu_ve(danhsachchuyen) 
+        booking_key = vechieuve[0]['BookingKey']
+        giave_chieu_ve = gettax(token, booking_key)
+        save_all_results(sochieu,vechieudi,  giave_chieu_di,vechieuve, giave_chieu_ve)
     #booking_key_chieu_ve = get_booking_keys_from_file("result_chieu_ve.json")[0]  # Lấy BookingKey đầu tiên
     #gettax_chieu_ve(token, booking_key_chieu_ve)
 
-    
+    else:
     # In thông tin chuyến bay (giả sử bạn có hàm này)
-    save_all_results(vechieudi, vechieuve, giave_chieu_di, giave_chieu_ve)
+        save_all_results(sochieu,vechieudi,  giave_chieu_di,vechieuve, giave_chieu_ve)
     
 
     
 # Chạy hàm test với các tham số đầu vào tùy ý
-test(
-    city_pair="HAN-ICN",
-    departure_place="HAN",
-    departure_place_name="Ho Chi Minh",
-    return_place="ICN",
-    return_place_name="Ha Noi",
+api_vj(
+    city_pair="HAN-PUS",
+    departure_place="",
+    departure_place_name="",
+    return_place="",
+    return_place_name="",
     departure_date="2025-05-01",
     return_date="2025-05-05",
     adult_count="1",
-    child_count="0"
+    child_count="0",
+    sochieu = "2"
 )
