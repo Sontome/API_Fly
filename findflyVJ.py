@@ -24,8 +24,7 @@ def get_app_access_token_from_state(file_path="state.json"):
 
 def get_vietjet_flight_options(city_pair, departure_place, departure_place_name, return_place, return_place_name,
                                 departure_date, return_date, adult_count, child_count, auth_token):
-    import requests
-    import json
+    
 
     url = "https://agentapi.vietjetair.com/api/v13/Booking/findtraveloptions"
     params = {
@@ -127,6 +126,7 @@ def doc_va_loc_ve_re_nhat(data):
 
     except Exception as e:
         print("❌ Lỗi xử lý file:", e)
+        return None
 def doc_va_loc_ve_re_nhat_chieu_ve(data):
     try:
         
@@ -319,13 +319,15 @@ def save_all_results(sochieu,vechieudi, giave_chieu_di, vechieuve=None ,giave_ch
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
         print(f"✅ Lưu file '{filename}'")
+        #print(data)
+        return data
     except Exception as e:
         print("❌ Lỗi lưu file vcl:", e)
 token = get_app_access_token_from_state()
 def api_vj(city_pair, departure_place, departure_place_name, return_place, return_place_name, 
          departure_date, return_date, adult_count, child_count,sochieu):
     # Lấy token
-   
+    loi= ""
     
     # Lấy flight options
    
@@ -341,23 +343,36 @@ def api_vj(city_pair, departure_place, departure_place_name, return_place, retur
         child_count=child_count,
         auth_token=token
     )
+    if danhsachchuyen ==None :
+        print("báo lỗi khong tai duoc")
+        loi += "báo lỗi khong tai duoc\n"
     # Lọc vé phù hợp
-    vechieudi = doc_va_loc_ve_re_nhat(danhsachchuyen)  # >>result_chieu_di.json
+    vechieudi = doc_va_loc_ve_re_nhat(danhsachchuyen)
+    if vechieudi ==None :
+        print("báo lỗi het chuyen")
+        loi += "báo lỗi het chuyen\n"
+         # >>result_chieu_di.json
      # >>result_chieu_ve.json
     # Lấy booking key và tính thuế
     booking_key = vechieudi[0]['BookingKey'] # Lấy BookingKey đầu tiên
     giave_chieu_di = gettax(token, booking_key)
     if str(sochieu) =="2":
+        
         vechieuve = doc_va_loc_ve_re_nhat_chieu_ve(danhsachchuyen) 
+        if vechieuve ==None :
+            print("báo lỗi het chuyen ve")
+            loi += "báo lỗi het chuyen ve\n"
         booking_key = vechieuve[0]['BookingKey']
         giave_chieu_ve = gettax(token, booking_key)
-        save_all_results(sochieu,vechieudi,  giave_chieu_di,vechieuve, giave_chieu_ve)
+        result = save_all_results(sochieu,vechieudi,  giave_chieu_di,vechieuve, giave_chieu_ve)
+        return result 
     #booking_key_chieu_ve = get_booking_keys_from_file("result_chieu_ve.json")[0]  # Lấy BookingKey đầu tiên
     #gettax_chieu_ve(token, booking_key_chieu_ve)
 
     else:
     # In thông tin chuyến bay (giả sử bạn có hàm này)
-        save_all_results(sochieu,vechieudi,  giave_chieu_di,vechieuve, giave_chieu_ve)
+        result = save_all_results(sochieu,vechieudi,  giave_chieu_di)
+        return result 
     
 
     
@@ -369,7 +384,7 @@ api_vj(
     return_place="",
     return_place_name="",
     departure_date="2025-05-01",
-    return_date="2025-05-05",
+    return_date="2025-05-01",
     adult_count="1",
     child_count="0",
     sochieu = "2"
