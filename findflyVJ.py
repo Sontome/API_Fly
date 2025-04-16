@@ -1,9 +1,15 @@
 import requests
 import json
 import time  # 👈 Thêm thư viện time
-
+from datetime import datetime
 # Định nghĩa các hàm
-
+def format_time(time_str):
+    try:
+        dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+        return dt.strftime("%H:%M ngày %d/%m")
+    except Exception as e:
+        print("❌ Format lỗi vcl:", e)
+        return time_str
 def get_app_access_token_from_state(file_path="state.json"):
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -18,6 +24,9 @@ def get_app_access_token_from_state(file_path="state.json"):
 
 def get_vietjet_flight_options(city_pair, departure_place, departure_place_name, return_place, return_place_name,
                                 departure_date, return_date, adult_count, child_count, auth_token):
+    import requests
+    import json
+
     url = "https://agentapi.vietjetair.com/api/v13/Booking/findtraveloptions"
     params = {
         "cityPair": city_pair,
@@ -54,19 +63,17 @@ def get_vietjet_flight_options(city_pair, departure_place, departure_place_name,
     }
 
     response = requests.get(url, headers=headers, params=params)
-    print("📡 Status code:", response.status_code)
+    #print("📡 Status code:", response.status_code)
 
     if response.status_code == 200:
-        with open("flyresult.json", "w", encoding="utf-8") as f:
-            json.dump(response.json(), f, ensure_ascii=False, indent=4)
-        print("✅ Lưu file `flyresult.json` ngon lành cành đào!")
+        print("✅ Lấy dữ liệu chuyến bay thành công!")
+        return response.json()
     else:
         print("❌ Có lỗi xảy ra vcl:", response.text)
+        return None
 
-def doc_va_loc_ve_re_nhat(file_path):
+def doc_va_loc_ve_re_nhat(data):
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
 
         list_chuyen = data.get("data", {}).get("list_Travel_Options_Departure", [])
         eco_min = None
@@ -112,12 +119,64 @@ def doc_va_loc_ve_re_nhat(file_path):
             ket_qua.append(eco_min)
         elif deluxe_min:
             ket_qua.append(deluxe_min)
+        print("✅ Check vé rẻ nhất")
+        #print(ket_qua)
+        return ket_qua
 
-        with open("result.json", "w", encoding="utf-8") as f:
-            json.dump(ket_qua, f, ensure_ascii=False, indent=4)
+        
 
-        print("✅ Đã lưu vé phù hợp nhất (theo chênh lệch giá) vào file result.json đại ca ơi!")
+    except Exception as e:
+        print("❌ Lỗi xử lý file:", e)
+def doc_va_loc_ve_re_nhat_chieu_ve(data):
+    try:
+        
 
+        list_chuyen = data.get("data", {}).get("list_Travel_Options_Arrival", [])
+        eco_min = None
+        deluxe_min = None
+
+        def tao_thong_tin_flight(flight_info, fare):
+            return {
+                "Flight": flight_info.get("Number"),
+                "From": flight_info.get("departureAirport", {}).get("Code"),
+                "To": flight_info.get("arrivalAirport", {}).get("Code"),
+                "ETD": flight_info.get("ETDLocal"),
+                "ETA": flight_info.get("ETALocal"),
+                "BookingKey": fare.get("BookingKey"),
+                "FareCost": fare.get("FareCost"),
+                "Currency": fare.get("currency", {}).get("code"),
+                "SeatsAvailable": fare.get("SeatsAvailable"),
+                "Type": fare.get("Description")
+            }
+
+        for chuyen in list_chuyen:
+            segment = chuyen.get("segmentOptions", [])
+            if not segment:
+                continue
+            flight_info = segment[0].get("flight", {})
+            for fare in chuyen.get("fareOption", []):
+                fare_type = fare.get("Description")
+                fare_cost = fare.get("FareCost")
+                if fare_type == "Eco":
+                    if eco_min is None or fare_cost < eco_min["FareCost"]:
+                        eco_min = tao_thong_tin_flight(flight_info, fare)
+                elif fare_type == "Deluxe":
+                    if deluxe_min is None or fare_cost < deluxe_min["FareCost"]:
+                        deluxe_min = tao_thong_tin_flight(flight_info, fare)
+
+        ket_qua = []
+        if eco_min and deluxe_min:
+            chenh_lech = deluxe_min["FareCost"] - eco_min["FareCost"]
+            if chenh_lech >= 40000:
+                ket_qua.append(eco_min)
+            else:
+                ket_qua.append(deluxe_min)
+        elif eco_min:
+            ket_qua.append(eco_min)
+        elif deluxe_min:
+            ket_qua.append(deluxe_min)
+        print("✅ Check vé rẻ nhất chiều về")
+        return ket_qua
     except Exception as e:
         print("❌ Lỗi xử lý file:", e)
 
@@ -147,19 +206,52 @@ def gettax(authorization: str, bookingKey: str):
         res.raise_for_status()
         data = res.json()
 
-        with open("tax.json", "w", encoding="utf-8") as f:
+        
+
+        print("✅ Đã lấy giá chốt")
+        return data
+    except requests.RequestException as e:
+        print("❌ Lỗi khi gọi API:", e)
+        return None
+def gettax_chieu_ve(authorization: str, bookingKey: str):
+    url = "https://agentapi.vietjetair.com/api/v13/Booking/quotationwithoutpassenger"
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "authorization": f"Bearer {authorization}",
+        "content-type": "application/json",
+        "languagecode": "vi",
+        "platform": "3"
+    }
+    payload = {
+        "journeys": [
+            {
+                "index": 1,
+                "bookingKey": bookingKey
+            }
+        ],
+        "numberOfAdults": 1,
+        "numberOfChilds": 0,
+        "numberOfInfants": 0
+    }
+
+    try:
+        res = requests.post(url, headers=headers, json=payload)
+        res.raise_for_status()
+        data = res.json()
+
+        with open("tax_vj_chieu_ve.json", "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
-        print("✅ Đã lưu kết quả vào file tax.json")
+        print("✅ Đã lưu kết quả vào file tax_chieu_ve.json")
         return data
     except requests.RequestException as e:
         print("❌ Lỗi khi gọi API:", e)
         return None
 
-def get_booking_keys_from_file(file_path: str):
+def get_booking_keys(data):
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        
+       
 
         booking_keys = []
         for chuyen in data:
@@ -171,11 +263,10 @@ def get_booking_keys_from_file(file_path: str):
     except Exception as e:
         print("❌ Lỗi đọc file:", e)
         return []
-def print_flight_info():
+def print_flight_info(data):
     try:
         # Đọc dữ liệu từ file result.json
-        with open("result.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
+        
 
         # Duyệt qua các chuyến bay trong dữ liệu
         for flight in data:
@@ -187,37 +278,52 @@ def print_flight_info():
             fare_cost = flight.get("FareCost", "N/A")
             
             # In ra thông tin chuyến bay
-            print(f"✈️ Flight from {from_airport} to {to_airport}")
-            print(f"   - ETD: {etd}")
-            print(f"   - Type: {flight_type}")
-            print(f"   - FareCost: {fare_cost} KRW")
+            print(f"Hãng: VIETJET - Chặng bay: {from_airport}-{to_airport} ? chiều ( {flight_type} : {fare_cost})")
+            print(f"{from_airport}-{to_airport} {format_time(etd)}")
+            
+           
             print()
 
     except Exception as e:
         print("❌ Lỗi khi xử lý file:", e)
-def read_tax_from_file():
+def read_tax_from_file(data):
     try:
-        with open("tax.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
         
+
         totalamountdeparture = data.get("data", {}).get("totalamountdeparture")
         if totalamountdeparture is not None:
-            print(f"💸 Giá Chốt: {totalamountdeparture}")
+            #print(f"💸 Giá Chốt: {totalamountdeparture}")
+            pass
         else:
-            print("❌ Không tìm thấy trường totalamountdeparture trong tax.json.")
-        return data
+            print(f"❌ Không tìm thấy trường totalamountdeparture trong {filename}.")
+        return totalamountdeparture
     except Exception as e:
-        print("❌ Lỗi đọc file tax.json:", e)
+        print(f"❌ Lỗi đọc file {filename}:", e)
         return None
 # Gọi hàm
-print_flight_info()
+def save_all_results(vechieudi, vechieuve, giave_chieu_di, giave_chieu_ve, filename="full_result.json"):
+    data = {
+        "ve_chieu_di": vechieudi,
+        "ve_chieu_ve": vechieuve,
+        "gia_ve_chieu_di": giave_chieu_di,
+        "gia_ve_chieu_ve": giave_chieu_ve
+    }
+    
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        print(f"✅ Lưu file '{filename}' ngon lành cành đào đại ca ơi!")
+    except Exception as e:
+        print("❌ Lỗi lưu file vcl:", e)
+token = get_app_access_token_from_state()
 def test(city_pair, departure_place, departure_place_name, return_place, return_place_name, 
          departure_date, return_date, adult_count, child_count):
     # Lấy token
-    token = get_app_access_token_from_state()
+   
     
     # Lấy flight options
-    get_vietjet_flight_options(
+   
+    danhsachchuyen=get_vietjet_flight_options(
         city_pair=city_pair,
         departure_place=departure_place,
         departure_place_name=departure_place_name,
@@ -229,17 +335,25 @@ def test(city_pair, departure_place, departure_place_name, return_place, return_
         child_count=child_count,
         auth_token=token
     )
-    
     # Lọc vé phù hợp
-    doc_va_loc_ve_re_nhat("flyresult.json")
-    
+    vechieudi = doc_va_loc_ve_re_nhat(danhsachchuyen)  # >>result_chieu_di.json
+    vechieuve = doc_va_loc_ve_re_nhat_chieu_ve(danhsachchuyen)  # >>result_chieu_ve.json
     # Lấy booking key và tính thuế
-    booking_key = get_booking_keys_from_file("result.json")[0]  # Lấy BookingKey đầu tiên
-    gettax(token, booking_key)
+    booking_key = vechieudi[0]['BookingKey'] # Lấy BookingKey đầu tiên
+    giave_chieu_di = gettax(token, booking_key)
+
+
+    booking_key = vechieuve[0]['BookingKey']
+    giave_chieu_ve = gettax(token, booking_key)
+    #booking_key_chieu_ve = get_booking_keys_from_file("result_chieu_ve.json")[0]  # Lấy BookingKey đầu tiên
+    #gettax_chieu_ve(token, booking_key_chieu_ve)
+
     
     # In thông tin chuyến bay (giả sử bạn có hàm này)
-    print_flight_info()
-    read_tax_from_file()
+    save_all_results(vechieudi, vechieuve, giave_chieu_di, giave_chieu_ve)
+    
+
+    
 # Chạy hàm test với các tham số đầu vào tùy ý
 test(
     city_pair="HAN-ICN",
