@@ -1,0 +1,5 @@
+
+fastapi
+httpx
+datetime
+requests
