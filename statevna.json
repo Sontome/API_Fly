@@ -1,0 +1,339 @@
+{
+  "cookies": [
+    {
+      "name": "JSESSIONID",
+      "value": "28DB89863CABF00473F5C301F48FD00F",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pwSave_agtCode",
+      "value": "5253",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pwSave_custId",
+      "value": "HANVIETAIR",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pwSave_agtCode",
+      "value": "5253",
+      "domain": ".wholesale.powercallair.com",
+      "path": "/",
+      "expires": 1747497787.228419,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pwSave_custId",
+      "value": "HANVIETAIR",
+      "domain": ".wholesale.powercallair.com",
+      "path": "/",
+      "expires": 1747497787.228478,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userTeamId",
+      "value": "TS0114",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_companyNationCode",
+      "value": "KR",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_language",
+      "value": "KR",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_acp_agent_type",
+      "value": "A",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_tkt_request_auth",
+      "value": "Y",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_companyName",
+      "value": "hanvietair",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_companyGroupCode",
+      "value": "2000",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_companyGroupName",
+      "value": "%28%EC%A3%BC%29%ED%8C%8C%EC%9B%8C%EC%BD%9C",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userPhone2",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userSexType",
+      "value": "F",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userPhone",
+      "value": "01035463396",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_admin_language",
+      "value": "KR+",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userEngNameLast",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_gscCode",
+      "value": "BW",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userName",
+      "value": "Hoang+Thi+Tuoi",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_companyCode",
+      "value": "5253",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userEngNameFirst",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userId",
+      "value": "hanvietair",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userEmail",
+      "value": "hanvietair%40gmail.com",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userBirth",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userMobile",
+      "value": "01035463396",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_role",
+      "value": "M",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_userTeamNameLcl",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_MappingID",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_HanaExhCode",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_HanaJikCode",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_HanaCompanyCode",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "HGRS_ss_HanaContract",
+      "value": "\"\"",
+      "domain": "wholesale.powercallair.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "localStorage": {
+    "cTypeB2B": "Y",
+    "mode": "v3"
+  },
+  "sessionStorage": {}
+}
