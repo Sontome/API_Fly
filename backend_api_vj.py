@@ -2,8 +2,76 @@ import requests
 import json
 import httpx
 from datetime import datetime
+import os
+CONFIG_GIA_FILE = "config_gia.json"
 
+# 🔧 Giá mặc định
+DEFAULT_CONFIG_GIA = {
+    "HANH_LY_DELUXE": 2000,
+    "HANH_LY_ECO": 40000,
+    "PHI_XUAT_VE_2_CHIEU": 15000,
+    "PHI_XUAT_VE_1CH_DELUXE": 40000,
+    "PHI_XUAT_VE_1CH_ECO": 32000
+}
+
+# 📦 Load cấu hình giá
+def load_config_gia():
+    if os.path.exists(CONFIG_GIA_FILE):
+        try:
+            with open(CONFIG_GIA_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                config_loaded = {
+                    "PHI_XUAT_VE_2_CHIEU": int(data.get("PHI_XUAT_VE_2_CHIEU", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_2_CHIEU"])),
+                    "HANH_LY_DELUXE": int(data.get("HANH_LY_DELUXE", DEFAULT_CONFIG_GIA["HANH_LY_DELUXE"])),
+                    "HANH_LY_ECO": int(data.get("HANH_LY_ECO", DEFAULT_CONFIG_GIA["HANH_LY_ECO"])),
+                    "PHI_XUAT_VE_1CH_DELUXE": int(data.get("PHI_XUAT_VE_1CH_DELUXE", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_DELUXE"])),
+                    "PHI_XUAT_VE_1CH_ECO": int(data.get("PHI_XUAT_VE_1CH_ECO", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_ECO"])),
+                }
+
+                # 🖨️ In ra log
+                print("📥 Đã load cấu hình giá từ file:")
+                for key, value in config_loaded.items():
+                    print(f"  - {key}: {value:,}đ")
+
+                input("⏸️ Ấn Enter để tiếp tục...")
+                return config_loaded
+        except Exception as e:
+            print("❌ Lỗi khi đọc config_gia.json:", e)
+
+    print("⚠️ Không tìm thấy hoặc lỗi file config_gia.json, dùng mặc định:")
+    for key, value in DEFAULT_CONFIG_GIA.items():
+        print(f"  - {key}: {value:,}đ")
+
+    input("⏸️ Ấn Enter để tiếp tục...")
+    return DEFAULT_CONFIG_GIA.copy()
+config_gia = load_config_gia()
 # ✅ Format lại thời gian
+def price_add(chieudi: dict, chieuve: dict | None, config_gia: dict) -> int:
+    tong = 0
+
+    # 👕 Hành lý chiều đi
+    if chieudi["Type"].lower() == "eco":
+        tong += config_gia["HANH_LY_ECO"]
+    elif chieudi["Type"].lower() == "deluxe":
+        tong += config_gia["HANH_LY_DELUXE"]
+
+    if chieuve:
+        # 🎒 Hành lý chiều về (nếu có)
+        if chieuve["Type"].lower() == "eco":
+            tong += config_gia["HANH_LY_ECO"]
+        elif chieuve["Type"].lower() == "deluxe":
+            tong += config_gia["HANH_LY_DELUXE"]
+
+        # 🧾 Phí xuất vé 2 chiều
+        tong += config_gia["PHI_XUAT_VE_2_CHIEU"]
+    else:
+        # 🧾 Phí xuất vé 1 chiều (theo loại vé đi)
+        if chieudi["Type"].lower() == "eco":
+            tong += config_gia["PHI_XUAT_VE_1CH_ECO"]
+        elif chieudi["Type"].lower() == "deluxe":
+            tong += config_gia["PHI_XUAT_VE_1CH_DELUXE"]
+
+    return tong
 def format_time(time_str):
     try:
         dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M")
@@ -138,26 +206,33 @@ def save_all_results(sochieu, vechieudi, giave_chieu_di, vechieuve=None, giave_c
         "ve_chieu_ve": vechieuve,
         "gia_ve_chieu_ve": giave_chieu_ve
     }
-
-def thongtinve(data, sochieu):
+def to_price(number: float) -> str:
+    so_ngan = number / 1000
+    return f"{so_ngan:,.3f}w".replace(",", ".")
+def thongtinve(data, sochieu,name):
     try:
         text = ""
         if str(sochieu) == "2":
             chieudi = data["ve_chieu_di"][0]
             chieuve = data["ve_chieu_ve"][0]
-            text += f"VJ ✈️ {chieudi['From']}->{chieudi['To']} lúc {format_time(chieudi['ETD'])} - {chieudi['Type']} {chieudi['FareCost']}\n"
-            text += f"VJ ✈️ {chieuve['From']}->{chieuve['To']} lúc {format_time(chieuve['ETD'])} - {chieuve['Type']} {chieuve['FareCost']}\n"
-            text += f"💰 Giá tổng: {data['gia_ve_chieu_di']['data']['totalamountdeparture']} + {data['gia_ve_chieu_ve']['data']['totalamountdeparture']}"
+            text += f"👤Tên Khách:  {name}\n\n"
+            text += f"Hãng: VIETJET - Chặng bay: {chieudi['From']}-{chieudi['To']} Khứ Hồi ( {chieudi['Type']}:{to_price(data['gia_ve_chieu_di']['data']['totalamountdeparture'])}-{chieuve['Type']}:{to_price(data['gia_ve_chieu_ve']['data']['totalamountdeparture'])} )\n\n"
+            text += f"{chieudi['From']}-{chieudi['To']} {format_time(chieudi['ETD'])}\n"
+            text += f"{chieuve['From']}-{chieuve['To']} {format_time(chieuve['ETD'])}\n"
+            text += f"Vietjet 7kg xách tay, 20kg ký gửi, giá vé = {to_price(data['gia_ve_chieu_di']['data']['totalamountdeparture']+data['gia_ve_chieu_ve']['data']['totalamountdeparture']+price_add(chieudi, chieuve, config_gia))}"
         else:
             chieudi = data["ve_chieu_di"][0]
-            text += f"VJ ✈️ {chieudi['From']}->{chieudi['To']} lúc {format_time(chieudi['ETD'])} - {chieudi['Type']} {chieudi['FareCost']}\n"
-            text += f"💰 Giá tổng: {data['gia_ve_chieu_di']['data']['totalamountdeparture']}"
+            text += f"👤Tên Khách:  {name}\n\n"
+            text += f"Hãng: VIETJET - Chặng bay: {chieudi['From']}-{chieudi['To']} 1 Chiều ( {chieudi['Type']}:{to_price(data['gia_ve_chieu_di']['data']['totalamountdeparture'])} )\n\n"
+            text += f"{chieudi['From']}-{chieudi['To']} {format_time(chieudi['ETD'])}\n"
+            
+            text += f"Vietjet 7kg xách tay, 20kg ký gửi, giá vé = {to_price(data['gia_ve_chieu_di']['data']['totalamountdeparture']+price_add(chieudi, None, config_gia))}"
         return text
     except Exception as e:
         return f"❌ Lỗi show info: {e}"
 
-async def api_vj(city_pair, departure_place, departure_place_name, return_place, return_place_name, 
-                 departure_date, return_date, adult_count, child_count, sochieu):
+async def api_vj(name,city_pair, departure_place, departure_place_name, return_place, return_place_name, 
+                 departure_date, return_date,adult_count=1, child_count=0, sochieu=2):
     token = get_app_access_token_from_state()
     result_data = await get_vietjet_flight_options(
         city_pair, departure_place, departure_place_name,
@@ -171,7 +246,8 @@ async def api_vj(city_pair, departure_place, departure_place_name, return_place,
 
     vechieudi = extract_flight(result_data, "list_Travel_Options_Departure")
     if not vechieudi:
-        return "❌ Không có chuyến đi nào hợp lệ"
+        return f"👤Tên Khách:  {name}\n\n❌ Không có chuyến đi nào hợp lệ"
+
 
     giave_chieu_di = get_tax(token, vechieudi[0]['BookingKey'])
 
@@ -184,4 +260,4 @@ async def api_vj(city_pair, departure_place, departure_place_name, return_place,
     else:
         result = save_all_results(sochieu, vechieudi, giave_chieu_di)
 
-    return thongtinve(result, sochieu)
+    return thongtinve(result, sochieu,name)
