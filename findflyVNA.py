@@ -1,13 +1,25 @@
 import requests
 import json
-from urllib.parse import parse_qs, unquote
-from urllib.parse import urlencode, quote
 
-def dict_to_query_string(params: dict) -> str:
-    """
-    Chuyển dict thành query string, tự động encode giá trị.
-    """
-    return urlencode(params, doseq=True, quote_via=quote)
+# Tạo session để giữ cookies
+session = requests.Session()
+
+# Load cookies từ file JSON
+with open("statevna.json", "r", encoding="utf-8") as f:
+    raw_cookies = json.load(f)
+
+# Gắn cookies vô session
+for cookie in raw_cookies["cookies"]:
+    session.cookies.set(cookie['name'], cookie['value'], domain=cookie.get('domain'), path=cookie.get('path', '/'))
+def get_cheapest_fare(data):
+    fares = data.get("FARES", [])
+    if not fares:
+        return None  # Không có vé nào hết
+    
+    cheapest = min(fares, key=lambda fare: fare.get("MA", float("inf")))
+    return cheapest
+# URL và headers như fetch
+url = "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml"
 
 headers = {
     "accept": "application/json, text/javascript, */*; q=0.01",
@@ -19,87 +31,108 @@ headers = {
     "sec-fetch-dest": "empty",
     "sec-fetch-mode": "cors",
     "sec-fetch-site": "same-origin",
-    "x-csrf-token": "",  # điền nếu cần
+    "x-csrf-token": "",
     "x-requested-with": "XMLHttpRequest",
-    "referer": "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?mode=v3"
+    "Referer": "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?mode=v3"
 }
 
-params = {
+data = {
     "mode": "v3",
-    "activedCar": "KE,RS,7C,TW,VN,VJ,NX,OZ",
-    "activedCLSS1": "T,E,R,I,Z,L,V,H,B,Y,A",
-    "activedCLSS2": "L,A,H,R,U,T,S,W,V,B,Y,Z",
-    "activedAirport": "ICN-DAD-DAD-ICN",
-    "activedVia": 0,
-    "activedStatus":"OK,HL",
-    "activedIDT": "ADT,VFR",
-    "minAirFareView": 265400,
-    "maxAirFareView": 1415700,
-    "page": 1,
-    "sort": "priceAsc",
-    "interval01Val": 1085,
-    "interval02Val": 1095,
-    "filterTimeSlideMin0": 615,
-    "filterTimeSlideMax0": 2155,
-    "filterTimeSlideMin1": 5,
-    "filterTimeSlideMax1": 2345,
+    "qcars": "",
     "trip": "RT",
     "dayInd": "N",
-    "strDateSearch": 202504,
-    "day":"" ,
-    "plusDate":"" ,
-    "daySeq": 0,
+    "strDateSearch": "202504",
+    "day": "",
+    "plusDate": "",
+    "daySeq": "0",
     "dep0": "ICN",
     "dep1": "DAD",
     "dep2": "",
     "dep3": "",
     "arr0": "DAD",
     "arr1": "ICN",
-    "arr2":"" ,
+    "arr2": "",
     "arr3": "",
-    "depdate0": "20250520",
-    "depdate1": "20250623",
+    "depdate0": "20250418",
+    "depdate1": "20250423",
     "depdate2": "",
     "depdate3": "",
-    "retdate": "20250623",
+    "retdate": "20250423",
     "val": "",
     "comp": "Y",
-    "adt": 1,
-    "chd": 0,
-    "inf": 0,
+    "adt": "1",
+    "chd": "0",
+    "inf": "0",
     "car": "YY",
     "idt": "ALL",
     "isBfm": "Y",
     "CBFare": "YY",
-    "skipFilter": "",
+    "skipFilter": "Y",
     "miniFares": "Y",
-    "sessionKey": "62N0EYVKSNRN6AWUCQER"
+    "sessionKey": ""
 }
-# Load cookies từ file nếu cần
-with open("statevna.json", "r", encoding="utf-8") as f:
-    cookies_raw = json.load(f)
-cookies = {c["name"]: c["value"] for c in cookies_raw["cookies"]}
-data = dict_to_query_string(params)
-response = requests.post(
-    "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml",
-    headers=headers,
-    data="mode=v3&qcars=&trip=RT&dayInd=N&strDateSearch=202504&day=&plusDate=&daySeq=0&dep0=ICN&dep1=DAD&dep2=&dep3=&arr0=DAD&arr1=ICN&arr2=&arr3=&depdate0=20250520&depdate1=20250623&depdate2=&depdate3=&retdate=20250623&val=&comp=Y&adt=1&chd=0&inf=0&car=YY&idt=ALL&isBfm=Y&CBFare=YY&skipFilter=Y&miniFares=Y&sessionKey=",
-    cookies=cookies
-)
 
-fare = response.json().get("FARES",{})
 
-def filter_vna_tickets(fare):
-    
-    min = 100000000
-    for item in fare:
-        if item.get("CA")=="VN":    
-            if int(item.get("XA")) < min:
-                ticket = item
-                min= int(item.get("XA"))
-                
-    print(ticket)
-    print( fare)
+data1 = {
+    'mode': 'v3',
+    'activedCar': 'VN',
+    'activedCLSS1': 'T,E,Z,I,L,H,Y,A',
+    'activedCLSS2': 'Q,I,H,E,A,T,V,Y,L,R,Z',
+    'activedAirport': 'ICN-HAN-HAN-ICN',
+    'activedVia': '0',
+    'activedStatus': 'OK,HL',
+    'activedIDT': 'ADT,VFR',
+    'minAirFareView': '204000',
+    'maxAirFareView': '1415700',
+    'page': '1',
+    'sort': 'priceAsc',
+    'interval01Val': '1100',
+    'interval02Val': '1095',
+    'filterTimeSlideMin0': '5',
+    'filterTimeSlideMax0': '2355',
+    'filterTimeSlideMin1': '5',
+    'filterTimeSlideMax1': '2345',
+    'trip': 'RT',
+    'dayInd': 'N',
+    'strDateSearch': '202504',
+    'daySeq': '0',
+    'dep0': 'ICN',
+    'dep1': 'HAN',
+    'arr0': 'HAN',
+    'arr1': 'ICN',
+    'depdate0': '20250419',
+    'depdate1': '20250519',
+    'retdate': '20250519',
+    'comp': 'Y',
+    'adt': '1',
+    'chd': '0',
+    'inf': '0',
+    'car': 'YY',
+    'idt': 'ALL',
+    'isBfm': 'Y',
+    'CBFare': 'YY',
+    'miniFares': 'Y',
+    'sessionKey': '4E2ZORYZAEMUZFZKJNP9'
+}
+response = session.post(url, headers=headers, data=data1)
 
-danhsachvna =filter_vna_tickets(fare)
+# In kết quả
+print("Status code:", response.status_code)
+result = response.text
 
+#result= result.get("FARES",{})
+data = json.loads(result)
+print("hàng")
+print(data.get("PAGESIZE"))
+print("trang")
+print(data.get("TOTALPAGE"))
+cheapest_fare = get_cheapest_fare(data)
+renhat = cheapest_fare.get("XA")
+if cheapest_fare:
+    print("Vé rẻ nhất nè đại ca:")
+    print(cheapest_fare.get("AP"))
+    print(cheapest_fare.get("SK")[0].get("DD"))
+    print(cheapest_fare.get("SK")[1].get("DD"))
+    print(renhat)
+else:
+    print("Đéo thấy vé nào luôn á :))")
