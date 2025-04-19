@@ -69,7 +69,7 @@ def format_date(ngay_str):
         # Trường hợp "20250422" => "22/04"
         return f"{ngay_str[6:8]}/{ngay_str[4:6]}"
     else:
-        print("Input xàm lol, không đúng định dạng")
+        print("ngày tháng không đúng định dạng")
         return None
 def create_session_powercall():
     now = datetime.now()
@@ -124,7 +124,7 @@ async def doc_va_loc_ve_re_nhat(data, session, headers, form_data):
                 cheapest = min(fares, key=lambda fare: int(fare.get("MA", 999999999)))
                 return cheapest
             except json.JSONDecodeError:
-                print("API trả về xàm lol, không parse được JSON")
+                print("API trả về không phải json, check lỗi cookie, không parse được JSON")
                 return None
     else:
         fares_noituyen= list(filter(loc_fare_vn_noituyen, fares))
@@ -141,7 +141,7 @@ async def doc_va_loc_ve_re_nhat(data, session, headers, form_data):
         return cheapest
 def thong_tin_ve(data, sochieu, name):
     if not data:
-        return "❌ Không có dữ liệu vé, xàm lol!"
+        return "❌ Không có dữ liệu vé!"
 
     hang = "Vietnam Airlines"
     
@@ -281,7 +281,7 @@ async def get_vna_flight_options(
 
                 return await doc_va_loc_ve_re_nhat(data, session, headers, form_data)
             except json.JSONDecodeError:
-                print("API trả về xàm lol, không parse được JSON")
+                print("API trả về không phải json, khả năng sai cookie, không parse được JSON")
                 return None
 
 # Đổi tên hàm thành api_vna cho đúng bài
