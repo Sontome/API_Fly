@@ -3,6 +3,7 @@ import uvicorn
 import asyncio
 from typing import Optional
 from backen_api_vna import api_vna
+from utils_telegram_vna import send_mess
 # Giả sử mấy hàm từ code cũ import từ file khác nếu cần
 #from your_module import api_vna
 
@@ -30,7 +31,9 @@ async def vna_api(
         )
 
         if result:
+            await send_mess(result)
             return {"success": True, "data": result}
+            
         else:
             return {"success": False, "message": "Không tìm được vé phù hợp"}
 
