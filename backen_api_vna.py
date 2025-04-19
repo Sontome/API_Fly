@@ -291,21 +291,26 @@ async def get_vna_flight_options(
             if not is_json_response(responsevna):
                 print("🚨 Cookie có vẻ hết hạn, đang gọi getcokivna.py để renew...")
                 subprocess.run(["python", "getcokivna.py"], check=True)
-                async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as responsevna:
-                    try:
-                        datavna = json.loads(responsevna.text)
-                        file_path = "./test.json"
-                        with open(file_path, "w", encoding="utf-8") as f:
-                            json.dump(datavna, f, ensure_ascii=False, indent=4)
-                        
+                with open("statevna.json", "r", encoding="utf-8") as f:
+                    raw_cookies = json.load(f)["cookies"]
 
-                        return await doc_va_loc_ve_re_nhat(datavna, session, headers, form_data)
-                    except json.JSONDecodeError:
-                        file_path = "./test.json"
-                        with open(file_path, "w", encoding="utf-8") as f:
-                            json.dump(resultvna, f, ensure_ascii=False, indent=4)
-                        print("API trả về không phải json, khả năng sai cookie, không parse được JSON")
-                        return None
+                cookies = {cookie["name"]: cookie["value"] for cookie in raw_cookies} 
+                async with aiohttp.ClientSession(cookies=cookies) as session:
+                    async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as responsevna:
+                        try:
+                            datavna = json.loads(responsevna.text)
+                            file_path = "./test.json"
+                            with open(file_path, "w", encoding="utf-8") as f:
+                                json.dump(datavna, f, ensure_ascii=False, indent=4)
+                            
+
+                            return await doc_va_loc_ve_re_nhat(datavna, session, headers, form_data)
+                        except json.JSONDecodeError:
+                            file_path = "./test.json"
+                            with open(file_path, "w", encoding="utf-8") as f:
+                                json.dump(resultvna, f, ensure_ascii=False, indent=4)
+                            print("API trả về không phải json, khả năng sai cookie, không parse được JSON")
+                            return None
 
 
             try:
