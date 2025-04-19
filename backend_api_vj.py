@@ -33,7 +33,7 @@ def load_config_gia():
                 for key, value in config_loaded.items():
                     print(f"  - {key}: {value:,}đ")
 
-                input("⏸️ Ấn Enter để tiếp tục...")
+               
                 return config_loaded
         except Exception as e:
             print("❌ Lỗi khi đọc config_gia.json:", e)
@@ -42,7 +42,7 @@ def load_config_gia():
     for key, value in DEFAULT_CONFIG_GIA.items():
         print(f"  - {key}: {value:,}đ")
 
-    input("⏸️ Ấn Enter để tiếp tục...")
+    
     return DEFAULT_CONFIG_GIA.copy()
 config_gia = load_config_gia()
 # ✅ Format lại thời gian

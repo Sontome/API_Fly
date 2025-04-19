@@ -51,4 +51,4 @@ with sync_playwright() as p:
         export_full_state(context, page, STATE_FILE)
     
     print("🎯 Đang ở:", page.url)
-    time.sleep(10000)
+    

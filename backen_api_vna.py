@@ -28,7 +28,7 @@ def load_config_gia():
                 for key, value in config_loaded.items():
                     print(f"  - {key}: {value:,}đ")
 
-                input("⏸️ Ấn Enter để tiếp tục...")
+                
                 return config_loaded
         except Exception as e:
             print("❌ Lỗi khi đọc config_gia.json:", e)
@@ -37,7 +37,7 @@ def load_config_gia():
     for key, value in DEFAULT_CONFIG_GIA.items():
         print(f"  - {key}: {value:,}đ")
 
-    input("⏸️ Ấn Enter để tiếp tục...")
+    
     return DEFAULT_CONFIG_GIA.copy()
 config_gia = load_config_gia()
 def price_add(sochieu, config_gia: dict) -> int:
@@ -161,9 +161,14 @@ def thong_tin_ve(data, sochieu, name):
         ga_den = s.get("AA", "??")
         try : 
             ga_noi= s.get("VA1", "??")
-            gio_di = format_time(s.get("DT", 0))
-            ngay_di = format_date(str(s.get("DD", "")))
-            thongtin_chang += f"\n {ga_di}-{ga_noi}-{ga_den} {gio_di} ngày {ngay_di}"
+            if ga_noi !="??":
+                gio_di = format_time(s.get("DT", 0))
+                ngay_di = format_date(str(s.get("DD", "")))
+                thongtin_chang += f"\n {ga_di}-{ga_noi}-{ga_den} {gio_di} ngày {ngay_di}"
+            else:
+                gio_di = format_time(s.get("DT", 0))
+                ngay_di = format_date(str(s.get("DD", "")))
+                thongtin_chang += f"\n {ga_di}-{ga_den} {gio_di} ngày {ngay_di}"
         except:
             gio_di = format_time(s.get("DT", 0))
             ngay_di = format_date(str(s.get("DD", "")))
@@ -266,21 +271,24 @@ async def get_vna_flight_options(
     
 
     async with aiohttp.ClientSession(cookies=cookies) as session:
-        async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as response:
-            if response.status != 200:
-                print("Đéo gọi được API, mã lỗi:", response.status)
+        async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as responsevna:
+            if responsevna.status != 200:
+                print("Đéo gọi được API, mã lỗi:", responsevna.status)
                 return None
 
-            result = await response.text()
+            result = await responsevna.text()
             try:
-                data = json.loads(result)
+                datavna = json.loads(result)
                 file_path = "./test.json"
                 with open(file_path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=4)
+                    json.dump(datavna, f, ensure_ascii=False, indent=4)
                 
 
-                return await doc_va_loc_ve_re_nhat(data, session, headers, form_data)
+                return await doc_va_loc_ve_re_nhat(datavna, session, headers, form_data)
             except json.JSONDecodeError:
+                file_path = "./test.json"
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(result, f, ensure_ascii=False, indent=4)
                 print("API trả về không phải json, khả năng sai cookie, không parse được JSON")
                 return None
 
@@ -294,18 +302,18 @@ async def api_vna(
     depdate1="",
     
     name="khách lẻ",
-    sochieu=1
+    sochieu="1"
 ):
     # Nếu chưa truyền depdate1 thì auto gán bằng retdate
     trip = "RT"
-    if sochieu == 1:
+    if str(sochieu) == "1":
             depdate1=""
             trip = "OW"
     print(f"🛫 Tìm vé cho: {name} | Số chiều: {sochieu}")
     print(f"From {dep0} to {arr0} | Ngày đi: {depdate0} | Ngày về: {depdate1 if trip == 'RT' else '⛔ Không có'}")
     
         
-    result = await get_vna_flight_options(
+    resultvna = await get_vna_flight_options(
         
         trip=trip,
         dep0=dep0,
@@ -315,7 +323,7 @@ async def api_vna(
         retdate=format_date(depdate1),
         sochieu=sochieu
     )
-    thongtin = thong_tin_ve(result,sochieu,name)
+    thongtin = thong_tin_ve(resultvna,sochieu,name)
     print( thongtin)
     return thongtin
 
