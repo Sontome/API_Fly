@@ -3,6 +3,7 @@ import json
 import asyncio
 from datetime import datetime
 import os
+import subprocess
 CONFIG_GIA_FILE = "config_gia_vna.json"
 
 # 🔧 Giá mặc định
@@ -11,7 +12,17 @@ DEFAULT_CONFIG_GIA = {
     "PHI_XUAT_VE_1CH": 30000,
     "PHI_XUAT_VE_2CH": 10000
 }
-
+def load_cookie_from_state():
+    with open(COOKIE_FILE, "r", encoding="utf-8") as f:
+        state = json.load(f)
+        cookies = {cookie["name"]: cookie["value"] for cookie in state["cookies"]}
+        return cookies
+def is_json_response(resp):
+    try:
+        resp.json()
+        return True
+    except Exception:
+        return False
 # 📦 Load cấu hình giá
 def load_config_gia():
     if os.path.exists(CONFIG_GIA_FILE):
@@ -201,13 +212,13 @@ async def get_vna_flight_options(
     retdate,
     sochieu,
     activedVia="0,1",
-    sesion_powercall=create_session_powercall()
+    
 ):
     with open("statevna.json", "r", encoding="utf-8") as f:
         raw_cookies = json.load(f)["cookies"]
 
     cookies = {cookie["name"]: cookie["value"] for cookie in raw_cookies}
-
+    sesion_powercall=create_session_powercall()
     headers = {
         "accept": "application/json, text/javascript, */*; q=0.01",
         "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -276,9 +287,29 @@ async def get_vna_flight_options(
                 print("Đéo gọi được API, mã lỗi:", responsevna.status)
                 return None
 
-            result = await responsevna.text()
+            resultvna = await responsevna.text()
+            if not is_json_response(responsevna):
+                print("🚨 Cookie có vẻ hết hạn, đang gọi getcokivna.py để renew...")
+                subprocess.run(["python", "getcokivna.py"], check=True)
+                async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as responsevna:
+                    try:
+                        datavna = json.loads(responsevna.text)
+                        file_path = "./test.json"
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            json.dump(datavna, f, ensure_ascii=False, indent=4)
+                        
+
+                        return await doc_va_loc_ve_re_nhat(datavna, session, headers, form_data)
+                    except json.JSONDecodeError:
+                        file_path = "./test.json"
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            json.dump(resultvna, f, ensure_ascii=False, indent=4)
+                        print("API trả về không phải json, khả năng sai cookie, không parse được JSON")
+                        return None
+
+
             try:
-                datavna = json.loads(result)
+                datavna = json.loads(resultvna)
                 file_path = "./test.json"
                 with open(file_path, "w", encoding="utf-8") as f:
                     json.dump(datavna, f, ensure_ascii=False, indent=4)
@@ -288,7 +319,7 @@ async def get_vna_flight_options(
             except json.JSONDecodeError:
                 file_path = "./test.json"
                 with open(file_path, "w", encoding="utf-8") as f:
-                    json.dump(result, f, ensure_ascii=False, indent=4)
+                    json.dump(resultvna, f, ensure_ascii=False, indent=4)
                 print("API trả về không phải json, khả năng sai cookie, không parse được JSON")
                 return None
 
