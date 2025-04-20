@@ -37,7 +37,7 @@ def login_and_save(page, context):
     export_full_state(context, page, STATE_FILE)
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=True)
 
     context = browser.new_context()
     page = context.new_page()
