@@ -29,7 +29,7 @@ def login_and_save(page, context):
     page.fill('input[name="user_agt_Code"]', "5253")
     page.fill('input[name="user_id"]', "HANVIETAIR")
     page.fill('input[name="user_password"]', "Ha@112233")
-    page.click('button[style="padding: 30px 14px 30px;background: #f66b17;color:white;font-size:15px"]')
+    page.press('input[name="user_password"]', 'Enter')
 
     page.wait_for_load_state("networkidle")
     print("✅ Đăng nhập thành công:", page.url)
