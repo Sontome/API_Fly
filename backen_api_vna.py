@@ -189,7 +189,7 @@ def thong_tin_ve(data, sochieu, name):
     hanhly_xachtay = "12kg"
     hanhly_kygui = "46kg"
 
-    gia_ve = data.get("MA", 0)
+    gia_ve = data.get("MA", 0)+price_add(sochieu,config_gia)
 
     # 👉 Format giá vé
     gia_str = to_price(gia_ve)
