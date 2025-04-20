@@ -3,3 +3,5 @@ fastapi
 httpx
 datetime
 requests
+uvicorn
+aiohttp
