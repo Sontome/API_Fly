@@ -280,8 +280,8 @@ async def get_vna_flight_options(
 
     
     
-
-    async with aiohttp.ClientSession(cookies=cookies) as session:
+    connector = aiohttp.TCPConnector(ssl=False)
+    async with aiohttp.ClientSession(cookies=cookies,connector=connector) as session:
         async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as responsevna:
             if responsevna.status != 200:
                 print("Đéo gọi được API, mã lỗi:", responsevna.status)
@@ -295,7 +295,7 @@ async def get_vna_flight_options(
                     raw_cookies = json.load(f)["cookies"]
 
                 cookies = {cookie["name"]: cookie["value"] for cookie in raw_cookies} 
-                async with aiohttp.ClientSession(cookies=cookies) as session:
+                async with aiohttp.ClientSession(cookies=cookies,connector=connector) as session:
                     async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as responsevna:
                         try:
                             datavna = json.loads(responsevna.text)
