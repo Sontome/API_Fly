@@ -92,64 +92,53 @@ async def doc_va_loc_ve_re_nhat(data, session, headers, form_data):
 
     def loc_fare_vn(fare):
         return fare.get("IT") == "VFR" and fare.get("CA") == "VN" and fare.get("VA") == "0"
+
     def loc_fare_vn_noituyen(fare):
         return fare.get("IT") == "VFR" and fare.get("CA") == "VN" and fare.get("VA") == "1"
 
+    # Nếu chưa có vé thì call lại API
     if not fares:
-        print("đã call cookie > server > recheck")
-        
+        print("ko thấy dữ liệu chuyến bay >  recheck")
 
-        # 🔥 GỌI NHÁP TRƯỚC (KHÔNG LẤY KẾT QUẢ)
-        
-
-        # 🤝 GỌI CHÍNH THỨC
-        async with session.post("https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml", headers=headers, data=form_data) as response:
+        async with session.post(
+            "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?viewType=xml",
+            headers=headers,
+            data=form_data
+        ) as response:
             if response.status != 200:
-                print("Đéo gọi được API, mã lỗi:", response.status)
+                print("ko call được API, mã lỗi:", response.status)
                 return None
 
-            result = await response.text()
             try:
+                result = await response.text()
                 data = json.loads(result)
-
-                # 💾 Lưu file nếu cần
-               
-
                 fares = data.get("FARES", [])
+
                 if not fares:
                     print("Hết vé chiều đi hoặc chiều về, đổi ngày bay 🥲")
                     return None
-                fares_noituyen= list(filter(loc_fare_vn_noituyen, fares))
-                fares = list(filter(loc_fare_vn, fares))
-                
-                    
 
-                if not fares:
-                    if not fares_noituyen:
-                        print("Không có vé phù hợp điều kiện VN + VFR 🥲")
-                        return None
-                    else :
-                        cheapest = min(fares_noituyen, key=lambda fare: int(fare.get("MA", 999999999)))
-                        return cheapest
-
-                cheapest = min(fares, key=lambda fare: int(fare.get("MA", 999999999)))
-                return cheapest
             except json.JSONDecodeError:
                 print("API trả về không phải json, check lỗi cookie, không parse được JSON")
                 return None
-    else:
-        fares_noituyen= list(filter(loc_fare_vn_noituyen, fares))
-        fares = list(filter(loc_fare_vn, fares))
-        if not fares:
-            if not fares_noituyen:
-                print("Không có vé phù hợp điều kiện VN + VFR 🥲")
-                return None
-            else:
-                cheapest = min(fares_noituyen, key=lambda fare: int(fare.get("MA", 999999999)))
-                return cheapest
 
-        cheapest = min(fares, key=lambda fare: int(fare.get("MA", 999999999)))
+    # 👉 Lọc vé phù hợp
+    fares_chinh = list(filter(loc_fare_vn, fares))
+    fares_phu = list(filter(loc_fare_vn_noituyen, fares))
+    
+    with open("./va0.json", "w", encoding="utf-8") as f:
+                                json.dump(fares_chinh, f, ensure_ascii=False, indent=4)
+    with open("./va1.json", "w", encoding="utf-8") as f:
+                                json.dump(fares_phu, f, ensure_ascii=False, indent=4)
+    if fares_chinh:
+        cheapest = min(fares_chinh, key=lambda fare: int(fare.get("MA", 999999999)))
         return cheapest
+    elif fares_phu:
+        cheapest = min(fares_phu, key=lambda fare: int(fare.get("MA", 999999999)))
+        return cheapest
+    else:
+        print("Không có vé phù hợp điều kiện VN + VFR 🥲")
+        return None
 def thong_tin_ve(data, sochieu, name):
     if not data:
         return "❌ Không có dữ liệu vé!"
@@ -211,7 +200,7 @@ async def get_vna_flight_options(
     depdate1,
     retdate,
     sochieu,
-    activedVia="0,1",
+    
     
 ):
     with open("statevna.json", "r", encoding="utf-8") as f:
@@ -223,60 +212,68 @@ async def get_vna_flight_options(
         "accept": "application/json, text/javascript, */*; q=0.01",
         "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
         "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "x-requested-with": "XMLHttpRequest",
-        "Referer": "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?mode=v3"
+        "sec-ch-ua": '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-csrf-token": "",
+        "x-requested-with": "XMLHttpRequest"
     }
 
-    form_data = {
-        'mode': 'v3',
-        'activedCar': 'VN',
-        'activedCLSS1': 'U,E,H,T,A,R,V,Z,N,S,W,Q,K,L,M,Y',
-        'activedCLSS2': 'U,E,H,T,A,R,V,Z,N,S,W,Q,K,L,M,Y',
-        'activedAirport': f"{dep0}-{arr0}-{arr0}-{dep0}",
-        'activedVia': activedVia,
-        'activedStatus': 'OK,HL',
-        'activedIDT': 'VFR',
-        'minAirFareView': '0',
-        'maxAirFareView': '1500000',
-        'page': '1',
-        'sort': 'priceAsc',
-        'interval01Val': '1270',
-        'interval02Val': '1095',
-        'filterTimeSlideMin0': '5',
-        'filterTimeSlideMax0': '2355',
-        'filterTimeSlideMin1': '5',
-        'filterTimeSlideMax1': '2345',
+    
+    form_data= {
+         "mode": "v3",
+        "qcars": "",
         'trip': trip,
-        'dayInd': 'N',
-        'strDateSearch': depdate0[:6],
-        'daySeq': '0',
+        "dayInd": "N",
+        "strDateSearch": "202504",
+        "day": "",
+        "plusDate": "",
+        "daySeq": "0",
         'dep0': dep0,
         'dep1': arr0,
         'arr0': arr0,
         'arr1': dep0,
+        
+        "dep2": "",
+        "dep3": "",
+        
+        
+        "arr2": "",
+        "arr3": "",
         'depdate0': depdate0,
         'depdate1': depdate1,
         'retdate': retdate,
-        'comp': 'Y',
-        'adt': '1',
-        'chd': '0',
-        'inf': '0',
-        'car': 'YY',
-        'idt': 'ALL',
-        'isBfm': 'Y',
-        'CBFare': 'YY',
-        'miniFares': 'Y',
-        'sessionKey': sesion_powercall
+        
+        "depdate2": "",
+        "depdate3": "",
+        
+        "val": "",
+        "comp": "Y",
+        "adt": "1",
+        "chd": "0",
+        "inf": "0",
+        "car": "YY",
+        "idt": "ALL",
+        "isBfm": "Y",
+        "CBFare": "YY",
+        "skipFilter": "Y",
+        "miniFares": "Y",
+         "sessionKey": sesion_powercall
     }
+    if dep0 not in ["PUS", "ICN"]:
+        form_data["arr1"] = ""
+        
     if sochieu==1 :
-        form_data["activedAirport"] = f"{dep0}-{arr0}"
+       
         form_data["trip"] ="OW"
         form_data["dep1"] =""
+        
         form_data["depdate1"] =""
-        form_data["interval02Val"] =""
+        
         form_data["retdate"] =""
-        form_data["activedCLSS2"] =""
-
 
     
     
