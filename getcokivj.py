@@ -7,8 +7,9 @@ def login_and_save(page, context):
     print("🔐 Đăng nhập...")
     page.goto("https://agents2.vietjetair.com/login")
 
-    page.fill('input[name="username"]', "KR242009A18KXM")
-    page.fill('input[name="password"]', "Glvav@31613017")
+    page.fill('input[name="username"]', "KR242012A18KXM")
+    
+    page.fill('input[name="password"]', "Grgnbd@34562312")
     page.click('button[class="mat-focus-indicator button_login font_16 font_button full-width mat-raised-button mat-button-base"]')
 
     page.wait_for_load_state("networkidle")
@@ -19,7 +20,7 @@ def login_and_save(page, context):
     print("💾 Đã lưu state!")
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=True)
 
     if os.path.exists(STATE_FILE):
         print("🍪 Tìm thấy state.json, tạo context từ state...")
@@ -33,12 +34,11 @@ with sync_playwright() as p:
         # Lấy localStorage/sessionStorage (có thể chứa token)
     local_storage = page.evaluate("window.localStorage.getItem('Authorization')")
     session_storage = page.evaluate("window.sessionStorage.getItem('Authorization')")
-    print(f"localStorage Authorization: {local_storage}")
-    print(f"sessionStorage Authorization: {session_storage}")
+    
     if "/login" in page.url:
         print("⚠️ Session hết hạn hoặc chưa login, login lại...")
         login_and_save(page, context)
    
    
     print("🎯 Đang ở:", page.url)
-    time.sleep(10000)
+   
