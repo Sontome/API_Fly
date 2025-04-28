@@ -107,7 +107,7 @@ async def get_vietjet_flight_options(city_pair, departure_place, departure_place
         "departure": departure_date,
         "return": return_date,
         "currency": "KRW",
-        "company": "hA0syYxT72sdFED0bwazxXXZXgHIbmt%C6%92Ppgjd1l4dCU=",
+        #"company": "hA0syYxT72sdFED0bwazxXXZXgHIbmt%C6%92Ppgjd1l4dCU=",
         "adultCount": adult_count,
         "childCount": child_count,
         "infantCount": "0",
