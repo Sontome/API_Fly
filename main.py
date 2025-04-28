@@ -6,7 +6,19 @@ from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
 from fastapi import Query
+import asyncio
 
+async def safe_send_vj(result):
+    try:
+        await send_vj(result)
+    except Exception as e:
+        print(f"❌ Lỗi khi gửi Telegram VJ: {e}")
+
+async def safe_send_vna(result):
+    try:
+        await send_vna(result)
+    except Exception as e:
+        print(f"❌ Lỗi khi gửi Telegram VNA: {e}")
 app = FastAPI()
 
 # Bật CORS full quyền
@@ -20,7 +32,7 @@ app.add_middleware(
 
 @app.get("/")
 async def hello():
-    return {"message": "👋 Xin chào! API VJ và VNA đã gộp, tha hồ mà chiến!"}
+    return {"message": "👋 Xin chào! API VJ và VNA đã gộp"}
 
 # ====================================================
 # 🛩 VJ ROUTES
@@ -52,7 +64,7 @@ async def check_ve_vj(
         sochieu=sochieu,
         name=name
     )
-    await send_vj(result)
+    asyncio.create_task(safe_send_vj(result))
     return {"message": result}
 
 # ====================================================
@@ -77,7 +89,7 @@ async def vna_api(
             sochieu=sochieu
         )
         if result:
-            await send_vna(result)
+            asyncio.create_task(safe_send_vna(result))
             return { "message": result}
         else:
             return { "message": "Không tìm được vé phù hợp"}
