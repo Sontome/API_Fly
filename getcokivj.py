@@ -12,7 +12,7 @@ def login_and_save(page, context):
     page.fill('input[name="password"]', "Grgnbd@34562312")
   
     page.click('button[class="mat-focus-indicator button_login font_16 font_button full-width mat-raised-button mat-button-base"]')
-    time.sleep(10)
+    time.sleep(5)
     page.wait_for_load_state("networkidle")
     print("✅ Đăng nhập thành công:", page.url)
 
@@ -42,5 +42,5 @@ with sync_playwright() as p:
    
    
     print("🎯 Đang ở:", page.url)
-    time.sleep(10)
+    time.sleep(5)
    
