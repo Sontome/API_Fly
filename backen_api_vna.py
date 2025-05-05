@@ -102,9 +102,9 @@ def thong_tin_ve(data, sochieu, name):
     kieubay = "Bay Thẳng" if data.get("VA") == "0" else "Nối Tuyến"
     chieu_text = "1 Chiều" if str(sochieu) == "1" else "Khứ hồi"
     if data.get('IT')=='ADT':
-        hanhly= "12kg xách tay, 23kg ký gửi, giá vé ="
+        hanhly= "10kg xách tay, 23kg ký gửi, giá vé ="
     else:
-        hanhly= "12kg xách tay, 46kg ký gửi, giá vé ="
+        hanhly= "10kg xách tay, 46kg ký gửi, giá vé ="
     thongtin_chang = ""
     for s in data.get("SK", []):
         ga_di = s.get("DA", "??")
