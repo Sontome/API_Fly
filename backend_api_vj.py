@@ -127,6 +127,7 @@ async def get_vietjet_flight_options(city_pair, departure_place, departure_place
             response = await client.get(url, headers=headers, params=params)
             if response.status_code == 200:
                 print("✅ Lấy dữ liệu chuyến bay thành công!")
+                print(response.text)
                 return response.json()
             else:
                 print("❌ Có lỗi xảy ra vcl:", response.status_code, response.text)

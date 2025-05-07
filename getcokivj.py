@@ -8,11 +8,10 @@ def login_and_save(page, context):
     page.goto("https://agents2.vietjetair.com/login")
 
     page.fill('input[name="username"]', "KR242012A18KXM")
-   
+    
     page.fill('input[name="password"]', "Grgnbd@34562312")
-  
     page.click('button[class="mat-focus-indicator button_login font_16 font_button full-width mat-raised-button mat-button-base"]')
-    time.sleep(5)
+    time.sleep(10)
     page.wait_for_load_state("networkidle")
     print("✅ Đăng nhập thành công:", page.url)
 
@@ -21,7 +20,7 @@ def login_and_save(page, context):
     print("💾 Đã lưu state!")
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=True)
 
     if os.path.exists(STATE_FILE):
         print("🍪 Tìm thấy state.json, tạo context từ state...")
@@ -31,6 +30,7 @@ with sync_playwright() as p:
 
     page = context.new_page()
     page.goto("https://agents2.vietjetair.com/booking")
+    time.sleep(6)
     page.wait_for_load_state("networkidle")
         # Lấy localStorage/sessionStorage (có thể chứa token)
     #local_storage = page.evaluate("window.localStorage.getItem('Authorization')")
@@ -42,5 +42,5 @@ with sync_playwright() as p:
    
    
     print("🎯 Đang ở:", page.url)
-    time.sleep(5)
+    time.sleep(6)
    

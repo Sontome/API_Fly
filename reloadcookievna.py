@@ -7,4 +7,4 @@ while True:
     print("✅ Xong! Ngủ 180s ..\n")
     subprocess.run(["python", "getcokivj.py"])
     print("✅ Xong! Ngủ 180s ..\n")
-    time.sleep(180)  # 300 giây = 5 phút
+    time.sleep(120)  # 300 giây = 5 phút
