@@ -11,7 +11,9 @@ DEFAULT_CONFIG_GIA = {
     "HANH_LY_ECO": 40000,
     "PHI_XUAT_VE_2_CHIEU": 15000,
     "PHI_XUAT_VE_1CH_DELUXE": 40000,
-    "PHI_XUAT_VE_1CH_ECO": 32000
+    "PHI_XUAT_VE_1CH_ECO": 32000,
+    "HANH_LY_ECO_KM": 0, 
+    "KM_END_DATE": "2025-06-26 00:00"  
 }
 
 # 📦 Load cấu hình giá
@@ -26,12 +28,13 @@ def load_config_gia():
                     "HANH_LY_ECO": int(data.get("HANH_LY_ECO", DEFAULT_CONFIG_GIA["HANH_LY_ECO"])),
                     "PHI_XUAT_VE_1CH_DELUXE": int(data.get("PHI_XUAT_VE_1CH_DELUXE", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_DELUXE"])),
                     "PHI_XUAT_VE_1CH_ECO": int(data.get("PHI_XUAT_VE_1CH_ECO", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_ECO"])),
+                    "HANH_LY_ECO_KM" : int(data.get("HANH_LY_ECO_KM", DEFAULT_CONFIG_GIA["HANH_LY_ECO_KM"])),
+                    "KM_END_DATE" : str(data.get("KM_END_DATE", DEFAULT_CONFIG_GIA["KM_END_DATE"]))
                 }
 
                 # 🖨️ In ra log
                 print("📥 Đã load cấu hình giá từ file:")
-                for key, value in config_loaded.items():
-                    print(f"  - {key}: {value:,}đ")
+                
 
                
                 return config_loaded
@@ -39,8 +42,8 @@ def load_config_gia():
             print("❌ Lỗi khi đọc config_gia.json:", e)
 
     print("⚠️ Không tìm thấy hoặc lỗi file config_gia.json, dùng mặc định:")
-    for key, value in DEFAULT_CONFIG_GIA.items():
-        print(f"  - {key}: {value:,}đ")
+    
+    
 
     
     return DEFAULT_CONFIG_GIA.copy()
@@ -49,26 +52,39 @@ config_gia = load_config_gia()
 def price_add(chieudi: dict, chieuve: dict | None, config_gia: dict) -> int:
     tong = 0
 
+    def get_hanh_ly_price(flight: dict) -> int:
+        loai = flight["Type"].lower()
+        if loai == "eco":
+            try:
+                etd = datetime.strptime(flight["ETD"], "%Y-%m-%d %H:%M")
+                km_end = datetime.strptime(config_gia["KM_END_DATE"], "%Y-%m-%d %H:%M")
+                if etd < km_end:
+                    print("km")
+                    return config_gia["HANH_LY_ECO_KM"]
+                    
+            except:
+                pass
+            print("ko km")
+            return config_gia["HANH_LY_ECO"]
+        elif loai == "deluxe":
+            return config_gia["HANH_LY_DELUXE"]
+        return 0
+
     # 👕 Hành lý chiều đi
-    if chieudi["Type"].lower() == "eco":
-        tong += config_gia["HANH_LY_ECO"]
-    elif chieudi["Type"].lower() == "deluxe":
-        tong += config_gia["HANH_LY_DELUXE"]
+    tong += get_hanh_ly_price(chieudi)
 
     if chieuve:
-        # 🎒 Hành lý chiều về (nếu có)
-        if chieuve["Type"].lower() == "eco":
-            tong += config_gia["HANH_LY_ECO"]
-        elif chieuve["Type"].lower() == "deluxe":
-            tong += config_gia["HANH_LY_DELUXE"]
+        # 🎒 Hành lý chiều về
+        tong += get_hanh_ly_price(chieuve)
 
         # 🧾 Phí xuất vé 2 chiều
         tong += config_gia["PHI_XUAT_VE_2_CHIEU"]
     else:
         # 🧾 Phí xuất vé 1 chiều (theo loại vé đi)
-        if chieudi["Type"].lower() == "eco":
+        loai = chieudi["Type"].lower()
+        if loai == "eco":
             tong += config_gia["PHI_XUAT_VE_1CH_ECO"]
-        elif chieudi["Type"].lower() == "deluxe":
+        elif loai == "deluxe":
             tong += config_gia["PHI_XUAT_VE_1CH_DELUXE"]
 
     return tong
@@ -130,13 +146,13 @@ async def get_vietjet_flight_options(city_pair, departure_place, departure_place
                 print(response.text)
                 return response.json()
             else:
-                print("❌ Có lỗi xảy ra vcl:", response.status_code, response.text)
+                print("❌ Có lỗi xảy ra :", response.status_code, response.text)
                 return None
     except Exception as e:
         print("💥 Lỗi khi gọi API async:", e)
         return None
 
-def extract_flight(data, list_key):
+def extract_flight(data, list_key, config):
     try:
         list_chuyen = data.get("data", {}).get(list_key, [])
         eco_min, deluxe_min = None, None
@@ -155,6 +171,8 @@ def extract_flight(data, list_key):
                 "Type": fare.get("Description")
             }
 
+        
+
         for chuyen in list_chuyen:
             segments = chuyen.get("segmentOptions", [])
             if not segments:
@@ -169,8 +187,18 @@ def extract_flight(data, list_key):
                         deluxe_min = make_flight_info(flight_info, fare)
 
         if eco_min and deluxe_min:
-            return [eco_min if deluxe_min["FareCost"] - eco_min["FareCost"] >= 40000 else deluxe_min]
+            
+            etd = datetime.strptime(eco_min["ETD"], "%Y-%m-%d %H:%M")
+            
+            km_end = datetime.strptime(config["KM_END_DATE"], "%Y-%m-%d %H:%M")
+             
+            
+            hanh_ly_eco = config["HANH_LY_ECO_KM"] if etd and etd < km_end else config["HANH_LY_ECO"]
+            chenhlech = deluxe_min["FareCost"] - eco_min["FareCost"]
+            return [eco_min if chenhlech >= hanh_ly_eco else deluxe_min]
+
         return [eco_min] if eco_min else [deluxe_min] if deluxe_min else []
+
     except Exception as e:
         print("❌ Lỗi xử lý dữ liệu flight:", e)
         return []
@@ -245,7 +273,7 @@ async def api_vj(name,city_pair, departure_place, departure_place_name, return_p
     if not result_data:
         return "❌ Không tải được danh sách chuyến bay"
 
-    vechieudi = extract_flight(result_data, "list_Travel_Options_Departure")
+    vechieudi = extract_flight(result_data, "list_Travel_Options_Departure", config_gia)
     if not vechieudi:
         return f"👤Tên Khách:  {name}\n\n❌ Không có chuyến đi nào hợp lệ"
 
@@ -253,7 +281,7 @@ async def api_vj(name,city_pair, departure_place, departure_place_name, return_p
     giave_chieu_di = get_tax(token, vechieudi[0]['BookingKey'])
 
     if str(sochieu) == "2":
-        vechieuve = extract_flight(result_data, "list_Travel_Options_Arrival")
+        vechieuve = extract_flight(result_data, "list_Travel_Options_Arrival", config_gia)
         if not vechieuve:
             return "❌ Không có chuyến về nào hợp lệ"
         giave_chieu_ve = get_tax(token, vechieuve[0]['BookingKey'])
