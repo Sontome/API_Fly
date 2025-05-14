@@ -72,10 +72,10 @@ def price_add(sochieu, config_gia: dict) -> int:
 # ====== 🔍 LỌC VÉ ====== #
 async def doc_va_loc_ve_re_nhat(data, session, headers, form_data):
     fares = data.get("FARES", [])
-    def loc_fare_vn(fare): return fare.get("IT") == "VFR" and fare.get("CA") == "VN" and fare.get("VA") == "0"
-    def loc_fare_vn_noituyen(fare): return fare.get("IT") == "VFR" and fare.get("CA") == "VN" and fare.get("VA") == "1"
-    def loc_fare_vn_1pc(fare): return fare.get("IT") == "ADT" and fare.get("CA") == "VN" and fare.get("VA") == "0"
-    def loc_fare_vn_1pc_noituyen(fare): return fare.get("IT") == "ADT" and fare.get("CA") == "VN" and fare.get("VA") == "1"
+    def loc_fare_vn(fare): return fare.get("IT") == "VFR" and fare.get("CA") == "VN" and fare.get("VA") == "0" and (fare.get("OC") != "KE")
+    def loc_fare_vn_noituyen(fare): return fare.get("IT") == "VFR" and fare.get("CA") == "VN" and fare.get("VA") == "1" and (fare.get("OC") != "KE")
+    def loc_fare_vn_1pc(fare): return fare.get("IT") == "ADT" and fare.get("CA") == "VN" and fare.get("VA") == "0" and (fare.get("OC") != "KE")
+    def loc_fare_vn_1pc_noituyen(fare): return fare.get("IT") == "ADT" and fare.get("CA") == "VN" and fare.get("VA") == "1" and (fare.get("OC") != "KE")
     fares_nt = list(filter(loc_fare_vn_noituyen, fares))
     fares_thang = list(filter(loc_fare_vn, fares))
     fares_thang_1pc = list(filter(loc_fare_vn_1pc, fares))
@@ -86,17 +86,29 @@ async def doc_va_loc_ve_re_nhat(data, session, headers, form_data):
                 if not fares_nt_1pc:
                     print("❌ Không có vé phù hợp điều kiện VN + VFR")
                     return None
-                return min(fares_nt_1pc, key=lambda f: int(f.get("MA", 999999999)))
-            return min(fares_thang_1pc, key=lambda f: int(f.get("MA", 999999999)))
+                return {
+                "ve_min": min(fares_nt_1pc, key=lambda f: int(f.get("MA", 999999999))),
+                "all_ve" :fares_nt_1pc
+                }
+            return {
+            "ve_min": min(fares_thang_1pc, key=lambda f: int(f.get("MA", 999999999))),
+            "all_ve" :fares_thang_1pc
+            }
         
-        return min(fares_nt, key=lambda f: int(f.get("MA", 999999999)))
-    return min(fares_thang, key=lambda f: int(f.get("MA", 999999999)))
+        return {
+        "ve_min": min(fares_nt, key=lambda f: int(f.get("MA", 999999999))),
+        "all_ve" :fares_nt
+        }
+    return {
+        "ve_min": min(fares_thang, key=lambda f: int(f.get("MA", 999999999))),
+        "all_ve" :fares_thang
+    }
 
 # ====== 📄 IN THÔNG TIN VÉ ====== #
 def thong_tin_ve(data, sochieu, name):
     if not data:
         return "❌ Không có dữ liệu vé!"
-
+    
     hang = "Vietnam Airlines"
     chang_bay = data.get("AP", "??-??")
     kieubay = "Bay Thẳng" if data.get("VA") == "0" else "Nối Tuyến"
@@ -120,11 +132,48 @@ def thong_tin_ve(data, sochieu, name):
     gia_ve = int(data.get("MA", 0)) + price_add(sochieu, config_gia)
     gia_str = to_price(gia_ve)
     return f"""👤 Tên Khách: {name}
-Hãng: {hang} - Chặng bay: {chang_bay} | {chieu_text} ({kieubay})  
+Hãng: {hang} - Chặng bay: {chang_bay} | {chieu_text} ({kieubay})
+"""
+def thong_tin_ve_tong(data, sochieu, name):
+    if not data:
+        return "❌ Không có dữ liệu vé!"
+    
+    hang = "Vietnam Airlines"
+    chang_bay = data.get("AP", "??-??")
+    kieubay = "Bay Thẳng" if data.get("VA") == "0" else "Nối Tuyến"
+    chieu_text = "1 Chiều" if str(sochieu) == "1" else "Khứ hồi"
+    if data.get('IT')=='ADT':
+        hanhly= "10kg xách tay, 23kg ký gửi, giá vé ="
+    else:
+        hanhly= "10kg xách tay, 46kg ký gửi, giá vé ="
+    thongtin_chang = ""
+    for s in data.get("SK", []):
+        ga_di = s.get("DA", "??")
+        ga_den = s.get("AA", "??")
+        gio_di = format_time(s.get("DT", 0))
+        ngay_di = format_date(str(s.get("DD", "")))
+        ga_noi = s.get("VA1", "??")
+        if ga_noi != "??":
+            thongtin_chang += f"\n {ga_di}-{ga_noi}-{ga_den} {gio_di} ngày {ngay_di}"
+        else:
+            thongtin_chang += f"\n {ga_di}-{ga_den} {gio_di} ngày {ngay_di}"
+
+    gia_ve = int(data.get("MA", 0)) + price_add(sochieu, config_gia)
+    gia_str = to_price(gia_ve)
+    return f"""-------------------------------
+ 
 {thongtin_chang}
 {hang} {hanhly} {gia_str}
 """
+def thong_tin_ve_all(list_data, sochieu, name):
+    if not list_data or not isinstance(list_data, list):
+        return "❌ Không có danh sách vé hợp lệ!"
 
+    ketqua = []
+    for idx, data in enumerate(list_data, 1):
+        info = thong_tin_ve_tong(data, sochieu, name)
+        ketqua.append(info)
+    return "\n" + "\n"  + "\n".join(ketqua)
 # ====== 🚀 CALL API POWERCALL ====== #
 async def get_vna_flight_options(trip, dep0, arr0, depdate0, depdate1, retdate, sochieu, activedVia="0"):
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
@@ -250,8 +299,9 @@ async def get_vna_flight_options(trip, dep0, arr0, depdate0, depdate1, retdate, 
         print("lưu vào test.json")
         with open("test.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
-
-    return await doc_va_loc_ve_re_nhat(result, session, headers, form_data)
+    kq= await doc_va_loc_ve_re_nhat(result, session, headers, form_data)
+    
+    return kq
 
 # ====== 🧪 HÀM API CHÍNH ====== #
 async def api_vna(dep0, arr0, depdate0, depdate1="", name="khách lẻ", sochieu="1"):
@@ -268,4 +318,6 @@ async def api_vna(dep0, arr0, depdate0, depdate1="", name="khách lẻ", sochieu
         sochieu=sochieu
     )
     print(result)
-    return thong_tin_ve(result, sochieu, name)
+    all_ve = thong_tin_ve(result.get("ve_min"), sochieu, name)+thong_tin_ve_all(result.get("all_ve"), sochieu, name)
+    
+    return all_ve
