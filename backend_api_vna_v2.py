@@ -231,24 +231,28 @@ async def api_vna_v2(dep0, arr0, depdate0):
     result = []
     #print(data)
     for item in data["body"]:
-        flight_info = {
+        flight_info = { "chiều_đi":{
+            
             "hãng":"VNA",
+            "id": item["I"],
             "nơi_đi": item["SK"][0]["DA"],
             "nơi_đến": item["SK"][0]["AA"],
-            "giờ_cất_cánh": (str(item["SK"][0]["DT"])),
-            "ngày_cất_cánh": (item["SK"][0]["DD"]),
-            "thời_gian_bay": item["SK"][0]["TT"],
-            "thời_gian_chờ": item["SK"][0]["HTX"],
-            "giờ_hạ_cánh": (str(item["SK"][0]["AT"])),
-            "ngày_hạ_cánh": (item["SK"][0]["AD"]),
-            "hành_lý_vna": item["P"],
-            "giá_vé": item["MA"],
-            "số_điểm_dừng": item["SK"][0]["VA"],
+            "giờ_cất_cánh": format_time(int(item["SK"][0]["DT"])),
+            "ngày_cất_cánh": format_date(str(item["SK"][0]["DD"])),
+            "thời_gian_bay": str(item["SK"][0]["TT"]),
+            "thời_gian_chờ": format_time(int(item["SK"][0].get("HTX") or 0)),
+            "giờ_hạ_cánh": format_time(int(item["SK"][0]["AT"])),
+            "ngày_hạ_cánh": format_date(str(item["SK"][0]["AD"])),
+            "hành_lý_vna": item["IT"],
+            "giá_vé": str(item["MA"]),
+            "số_điểm_dừng": str(item["SK"][0]["VA"]),
             "điểm_dừng_1": item["SK"][0].get("VA1", ""),
-            "điểm_dừng_2": item["SK"][0].get("VA2", "")
+            "điểm_dừng_2": item["SK"][0].get("VA2", ""),
+            "số_ghế_còn":  str(item["FA"][0]["AV"]),
+            "loại_vé": item["CS"][:1]
             
-
-        }
+            
+        }}
         result.append(flight_info)
     data["body"] = result
     print(data)
