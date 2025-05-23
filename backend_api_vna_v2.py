@@ -5,12 +5,9 @@ from datetime import datetime
 import os
 
 # ====== ⚙️ CONFIG ====== #
-CONFIG_GIA_FILE = "config_gia_vna.json"
+
 COOKIE_FILE = "statevna.json"
-DEFAULT_CONFIG_GIA = {
-    "PHI_XUAT_VE_1CH": 30000,
-    "PHI_XUAT_VE_2CH": 10000
-}
+
 
 # ====== 🧠 UTIL ====== #
 async def is_json_response(text):
@@ -43,28 +40,7 @@ def create_session_powercall():
     return datetime.now().strftime("%Y%m%d_%H")
 
 # ====== 🔧 LOAD CONFIG ====== #
-def load_config_gia():
-    if os.path.exists(CONFIG_GIA_FILE):
-        try:
-            with open(CONFIG_GIA_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                config = {
-                    "PHI_XUAT_VE_1CH": int(data.get("PHI_XUAT_VE_1CH", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH"])),
-                    "PHI_XUAT_VE_2CH": int(data.get("PHI_XUAT_VE_2CH", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_2CH"]))
-                }
-                print("📥 Đã load config:")
-                for k, v in config.items():
-                    print(f"  - {k}: {v:,}đ")
-                return config
-        except Exception as e:
-            print("❌ Lỗi đọc file config:", e)
 
-    print("⚠️ Dùng config mặc định:")
-    for k, v in DEFAULT_CONFIG_GIA.items():
-        print(f"  - {k}: {v:,}đ")
-    return DEFAULT_CONFIG_GIA.copy()
-
-config_gia = load_config_gia()
 
 
 
@@ -91,11 +67,12 @@ async def doc_va_loc_ve_re_nhat(data):
     }
 
 
-async def get_vna_flight_options( dep0, arr0, depdate0):
+async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,sochieu):
+        
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
         raw_cookies = json.load(f)["cookies"]
     cookies = {c["name"]: c["value"] for c in raw_cookies}
-    session_key = create_session_powercall()
+    
 
     headers = {
         "accept": "application/json, text/javascript, */*; q=0.01",
@@ -125,7 +102,7 @@ async def get_vna_flight_options( dep0, arr0, depdate0):
         'filterTimeSlideMax0': '2355',
         'filterTimeSlideMin1': '5',
         'filterTimeSlideMax1': '2345',
-        'trip':"OW",
+        'trip':sochieu,
         'dayInd': 'N',
         'strDateSearch': depdate0[:6],
         'daySeq': '0',
@@ -137,9 +114,9 @@ async def get_vna_flight_options( dep0, arr0, depdate0):
         'depdate1': "",
         'retdate': "",
         'comp': 'Y',
-        'adt': '1',
-        'chd': '0',
-        'inf': '0',
+        'adt': adt,
+        'chd': chd,
+        'inf': inf,
         'car': 'YY',
         'idt': 'ALL',
         'isBfm': 'Y',
@@ -218,15 +195,19 @@ async def get_vna_flight_options( dep0, arr0, depdate0):
 
 # ====== 🧪 HÀM API CHÍNH ====== #
 
-async def api_vna_v2(dep0, arr0, depdate0):
+async def api_vna_v2(dep0, arr0, depdate0,adt,chd,inf,sochieu):
     
     
-    
+    session_key = create_session_powercall()
     print(f"From {dep0} to {arr0} | Ngày đi: {format_date(depdate0)} ")
 
-    data = await get_vna_flight_options(
+    data = await get_vna_flight_options(session_key=session_key,
         dep0=dep0, arr0=arr0,
-        depdate0=format_date(depdate0)
+        depdate0=format_date(depdate0),
+        adt=adt,
+        chd=chd,
+        inf=inf,
+        sochieu=sochieu
     )
     result = []
     #print(data)
@@ -249,7 +230,8 @@ async def api_vna_v2(dep0, arr0, depdate0):
             "điểm_dừng_1": item["SK"][0].get("VA1", ""),
             "điểm_dừng_2": item["SK"][0].get("VA2", ""),
             "số_ghế_còn":  str(item["FA"][0]["AV"]),
-            "loại_vé": item["CS"][:1]
+            "loại_vé": item["CS"][:1],
+            "session_key" : session_key
             
             
         }}

@@ -1,11 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
 from backen_api_vna import api_vna
+from backend_api_vna_v2 import api_vna_v2
 from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
 from fastapi import Query
+from datetime import datetime
 import asyncio
 
 async def safe_send_vj(result):
@@ -32,7 +34,7 @@ app.add_middleware(
 
 @app.get("/")
 async def hello():
-    return {"message": "👋 Xin chào! API VJ và VNA đã gộp"}
+    return {"message": "API sẵn sàng"}
 
 # ====================================================
 # 🛩 VJ ROUTES
@@ -96,3 +98,64 @@ async def vna_api(
 
     except Exception as e:
         return {"success": False, "message": str(e)}
+@app.get("/vna/check-ve-v2")
+async def vna_api_v2(
+    dep0: str = Query(..., description="Sân bay đi, ví dụ: SGN"),
+    arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
+    depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-mm-dd"),
+    depdate1: Optional[str] = Query(None, description="Ngày về (nếu có), định dạng yyyy-mm-dd"),
+    adt: str = Query("1", description="Số người lớn"),
+    chd: str = Query("0", description="Số trẻ em"),
+    inf: str = Query("0", description="Số trẻ sơ sinh"),
+    
+    sochieu: str = Query("OW", description="OW: Một chiều, RT: Khứ hồi")
+):
+    try:
+        depdate0_dt = datetime.strptime(depdate0, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
+        # Nếu RT mà không có ngày về -> gán = ngày đi
+    if sochieu.upper() == "RT":
+        if not depdate1:
+            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
+        try:
+            depdate1_dt = datetime.strptime(depdate1, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
+
+        if depdate1_dt < depdate0_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày về phải sau hoặc bằng ngày đi "
+            )
+    try:
+        if sochieu.upper()!="RT":
+            result = await api_vna_v2(
+                dep0=dep0,
+                arr0=arr0,
+                depdate0=depdate0,
+                
+                adt=adt,
+                chd=chd,
+                inf=inf,
+                sochieu=sochieu
+            )
+        if sochieu.upper()== "RT":
+            result = await api_vna_rt_v2(
+                dep0=dep0,
+                arr0=arr0,
+                depdate0=depdate0,
+                depdate1=depdate1,
+                adt=adt,
+                chd=chd,
+                inf=inf,
+                sochieu=sochieu
+            )
+        if result:
+            #asyncio.create_task(safe_send_vna("status_code : 200"))
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu"}
+
+    except Exception as e:
+        return {"status_code": 401, "body": str(e)}
