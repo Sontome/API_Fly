@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
 from backen_api_vna import api_vna
-from backend_api_vna_v2 import api_vna_v2
+from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
 from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
@@ -74,7 +74,7 @@ async def check_ve_vj(
 # ====================================================
 @app.get("/vna/check-ve-vna")
 async def vna_api(
-    dep0: str = Query(..., description="Sân bay đi, ví dụ: SGN"),
+    dep0: str = Query(..., description="Sân bay đi, ví dụ: ICN"),
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-MM-dd hoặc yyyyMMdd"),
     depdate1: Optional[str] = Query("", description="Ngày về (nếu có), định dạng yyyy-MM-dd"),
@@ -104,11 +104,18 @@ async def vna_api_v2(
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-mm-dd"),
     depdate1: Optional[str] = Query(None, description="Ngày về (nếu có), định dạng yyyy-mm-dd"),
+    activedVia: str = Query("0,1,2", description="Bay thẳng = '0', dừng 1 chặng ='1', dừng 2 chặng ='2', tất cả ='0,1,2'" ),
+    activedIDT: str = Query("ADT,VFR", description="việt kiều = VFR, người lớn phổ thông = ADT " ),
     adt: str = Query("1", description="Số người lớn"),
     chd: str = Query("0", description="Số trẻ em"),
     inf: str = Query("0", description="Số trẻ sơ sinh"),
-    
-    sochieu: str = Query("OW", description="OW: Một chiều, RT: Khứ hồi")
+    page: str = Query("1", description="Số thứ tự trang"),
+    sochieu: str = Query("RT", description="OW: Một chiều, RT: Khứ hồi"),
+    filterTimeSlideMin0: str = Query("5", description="Thời gian xuất phát sớm nhất chiều đi (00h05p)"),
+    filterTimeSlideMax0: str = Query("2355", description="Thời gian xuất phát muộn nhất chiều đi (23h55p)"),
+    filterTimeSlideMin1: str = Query("5", description="Thời gian xuất phát sớm nhất chiều về (00h05p)"),
+    filterTimeSlideMax1: str = Query("2355", description="Thời gian xuất phát muộn nhất chiều về (23h55p)"),
+    session_key: str = Query(None, description="session_key")
 ):
     try:
         depdate0_dt = datetime.strptime(depdate0, "%Y-%m-%d")
@@ -134,11 +141,18 @@ async def vna_api_v2(
                 dep0=dep0,
                 arr0=arr0,
                 depdate0=depdate0,
-                
+                activedVia=activedVia,
+                activedIDT=activedIDT,
+                filterTimeSlideMin0=filterTimeSlideMin0,
+                filterTimeSlideMax0=filterTimeSlideMax0,
+                filterTimeSlideMin1=filterTimeSlideMin1,
+                filterTimeSlideMax1=filterTimeSlideMax1,
+                page=page,
                 adt=adt,
                 chd=chd,
                 inf=inf,
-                sochieu=sochieu
+                sochieu=sochieu,
+                session_key=session_key
             )
         if sochieu.upper()== "RT":
             result = await api_vna_rt_v2(
@@ -146,10 +160,18 @@ async def vna_api_v2(
                 arr0=arr0,
                 depdate0=depdate0,
                 depdate1=depdate1,
+                activedVia=activedVia,
+                activedIDT=activedIDT,
+                filterTimeSlideMin0=filterTimeSlideMin0,
+                filterTimeSlideMax0=filterTimeSlideMax0,
+                filterTimeSlideMin1=filterTimeSlideMin1,
+                filterTimeSlideMax1=filterTimeSlideMax1,
+                page=page,
                 adt=adt,
                 chd=chd,
                 inf=inf,
-                sochieu=sochieu
+                sochieu=sochieu,
+                session_key=session_key
             )
         if result:
             #asyncio.create_task(safe_send_vna("status_code : 200"))
