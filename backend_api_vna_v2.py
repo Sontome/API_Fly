@@ -3,6 +3,7 @@ import json
 import asyncio
 from datetime import datetime
 import os
+from collections import OrderedDict
 
 # ====== ⚙️ CONFIG ====== #
 
@@ -39,6 +40,18 @@ def create_session_powercall():
     print(datetime.now().strftime("%Y%m%d_%H"))
     return datetime.now().strftime("%Y%m%d_%H")
 
+def parse_gia_ve(raw_str):
+    parts = list(map(int, raw_str.split("/")))
+    gia_goc = parts[0]
+    tong_thue_phi = parts[1]
+    phi_nhien_lieu = parts[2]
+
+    return {
+        "giá_vé": str(gia_goc + tong_thue_phi),
+        "giá_vé_gốc": str(gia_goc),
+        "phí_nhiên_liệu": str(phi_nhien_lieu),
+        "thuế_phí_công_cộng": str(tong_thue_phi - phi_nhien_lieu)
+    }
 # ====== 🔧 LOAD CONFIG ====== #
 
 
@@ -46,8 +59,11 @@ def create_session_powercall():
 
 # ====== 🔍 LỌC VÉ ====== #
 async def doc_va_loc_ve_re_nhat(data):
+    print(data)
+    trang = str(data.get("PAGE", "1"))
+    tong_trang = str(data.get("TOTALPAGE", "1"))
     fares = data.get("FARES", [])
-    print(fares)
+    session_key = str(data.get("SessionKey", "0"))
     def loc_fare_vn(fare): return fare.get("CA") == "VN"  and (fare.get("OC") != "KE")
     
     
@@ -58,16 +74,22 @@ async def doc_va_loc_ve_re_nhat(data):
         print("❌ Không có vé phù hợp điều kiện VN + VFR")
         return {
         "status_code": 200,
+        "trang": trang,
+        "tổng_trang": tong_trang,
+        "session_key" : session_key,
         "body" : "null"
         }
         
     return {
         "status_code": 200,
+        "trang": trang,
+        "tổng_trang": tong_trang,
+        "session_key" : session_key,
         "body" :fares_thang
     }
 
 
-async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,sochieu):
+async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,depdate1=""):
         
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
         raw_cookies = json.load(f)["cookies"]
@@ -89,19 +111,20 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,s
         'activedCLSS2': '',
         'activedAirport': f"{dep0}-{arr0}",
         
-        'activedVia': '0',
+        'activedVia': activedVia,
         'activedStatus': 'OK,HL',
-        'activedIDT': 'ADT,VFR',
-        'minAirFareView': '10000',
-        'maxAirFareView': '1500000',
-        'page': '1',
+        'activedIDT': activedIDT,
+        'minAirFareView': '1',
+        'maxAirFareView': '2000000',
+        'page': page,
+        
         'sort': 'priceAsc',
         'interval01Val': '1000',
         'interval02Val': '',
-        'filterTimeSlideMin0': '5',
-        'filterTimeSlideMax0': '2355',
-        'filterTimeSlideMin1': '5',
-        'filterTimeSlideMax1': '2345',
+        'filterTimeSlideMin0': filterTimeSlideMin0,
+        'filterTimeSlideMax0': filterTimeSlideMax0,
+        'filterTimeSlideMin1': filterTimeSlideMin1,
+        'filterTimeSlideMax1': filterTimeSlideMax1,
         'trip':sochieu,
         'dayInd': 'N',
         'strDateSearch': depdate0[:6],
@@ -111,8 +134,8 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,s
         'arr0': arr0,
         'arr1': "",
         'depdate0': depdate0,
-        'depdate1': "",
-        'retdate': "",
+        'depdate1': depdate1,
+        'retdate': depdate1,
         'comp': 'Y',
         'adt': adt,
         'chd': chd,
@@ -124,7 +147,16 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,s
         'miniFares': 'Y',
         'sessionKey': session_key
     }
-
+    if sochieu=="RT":
+        form_data.update({
+            "activedAirport": f"{dep0}-{arr0}-{arr0}-{dep0}",
+            'activedCLSS2': 'M,E,S,H,R,L,U,I,Z,W,J,K,T,B,A,N,Q,Y,V',
+            "dep1": arr0,
+            "depdate1": depdate1,
+            "interval02Val": "1000",
+            "retdate": depdate1
+           
+        })
     
 
     connector = aiohttp.TCPConnector(ssl=False)
@@ -164,24 +196,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,s
             if status == "OK":
                 break
         
-        fares = result.get("FARES", [])
         
-        def loc_fare_vn(fare): return fare.get("CA") == "VN" 
-        
-    
-        
-        
-        fares_thang = list(filter(loc_fare_vn, fares))
-       
-        form_data.update({
-            "activedVia": "1"
-
-
-
-        })
-        if not fares_thang  :
-            print("gọi api lần 3 do ko có bay thẳng")
-            status, result = await call_vna_api(session,form_data)
 
         
 
@@ -195,48 +210,154 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,adt,chd,inf,s
 
 # ====== 🧪 HÀM API CHÍNH ====== #
 
-async def api_vna_v2(dep0, arr0, depdate0,adt,chd,inf,sochieu):
+async def api_vna_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,session_key):
     
-    
-    session_key = create_session_powercall()
+    if session_key==None:
+        session_key = create_session_powercall()
     print(f"From {dep0} to {arr0} | Ngày đi: {format_date(depdate0)} ")
 
     data = await get_vna_flight_options(session_key=session_key,
         dep0=dep0, arr0=arr0,
         depdate0=format_date(depdate0),
+        activedVia=activedVia,
+        activedIDT=activedIDT,
+        filterTimeSlideMin0=filterTimeSlideMin0,
+        filterTimeSlideMax0=filterTimeSlideMax0,
+        filterTimeSlideMin1=filterTimeSlideMin1,
+        filterTimeSlideMax1=filterTimeSlideMax1,        
+        page=page,
         adt=adt,
         chd=chd,
         inf=inf,
         sochieu=sochieu
     )
+    if data["body"]=="null":
+        return data
     result = []
     #print(data)
     for item in data["body"]:
-        flight_info = { "chiều_đi":{
+        flight_info = { 
+            "chiều_đi":{
             
-            "hãng":"VNA",
-            "id": item["I"],
-            "nơi_đi": item["SK"][0]["DA"],
-            "nơi_đến": item["SK"][0]["AA"],
-            "giờ_cất_cánh": format_time(int(item["SK"][0]["DT"])),
-            "ngày_cất_cánh": format_date(str(item["SK"][0]["DD"])),
-            "thời_gian_bay": str(item["SK"][0]["TT"]),
-            "thời_gian_chờ": format_time(int(item["SK"][0].get("HTX") or 0)),
-            "giờ_hạ_cánh": format_time(int(item["SK"][0]["AT"])),
-            "ngày_hạ_cánh": format_date(str(item["SK"][0]["AD"])),
-            "hành_lý_vna": item["IT"],
-            "giá_vé": str(item["MA"]),
-            "số_điểm_dừng": str(item["SK"][0]["VA"]),
-            "điểm_dừng_1": item["SK"][0].get("VA1", ""),
-            "điểm_dừng_2": item["SK"][0].get("VA2", ""),
-            "số_ghế_còn":  str(item["FA"][0]["AV"]),
-            "loại_vé": item["CS"][:1],
-            "session_key" : session_key
+                "hãng":"VNA",
+                "id": item["I"],
+                "nơi_đi": item["SK"][0]["DA"],
+                "nơi_đến": item["SK"][0]["AA"],
+                "giờ_cất_cánh": format_time(int(item["SK"][0]["DT"])),
+                "ngày_cất_cánh": format_date(str(item["SK"][0]["DD"])),
+                "thời_gian_bay": str(item["SK"][0]["TT"]),
+                "thời_gian_chờ": format_time(int(item["SK"][0].get("HTX") or 0)),
+                "giờ_hạ_cánh": format_time(int(item["SK"][0]["AT"])),
+                "ngày_hạ_cánh": format_date(str(item["SK"][0]["AD"])),
+                
+                
+                "số_điểm_dừng": str(item["SK"][0]["VA"]),
+                "điểm_dừng_1": item["SK"][0].get("VA1", ""),
+                "điểm_dừng_2": item["SK"][0].get("VA2", ""),
+                
+                "loại_vé": item["CS"][:1]
+                
+            },
+            "thông_tin_chung":{
+                **parse_gia_ve(str(item["FA"][0]["FD"])),
+                "số_ghế_còn":  str(item["FA"][0]["AV"]),
+                "hành_lý_vna": item["IT"]
+
+
+            }
             
             
-        }}
+        }
         result.append(flight_info)
     data["body"] = result
+   
+    print(data)
+    
+    
+    return data
+async def api_vna_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,depdate1,session_key):
+    
+    if session_key==None:
+        session_key = create_session_powercall()
+    print(f"From {dep0} to {arr0}-khứ hồi | Ngày đi: {format_date(depdate0)} ")
+
+    data = await get_vna_flight_options(session_key=session_key,
+        dep0=dep0, arr0=arr0,
+        depdate0=format_date(depdate0),
+        depdate1=format_date(depdate1),
+        activedVia=activedVia,
+        activedIDT=activedIDT,
+        filterTimeSlideMin0=filterTimeSlideMin0,
+        filterTimeSlideMax0=filterTimeSlideMax0,
+        filterTimeSlideMin1=filterTimeSlideMin1,
+        filterTimeSlideMax1=filterTimeSlideMax1,
+        page=page,
+        adt=adt,
+        chd=chd,
+        inf=inf,
+        sochieu=sochieu
+    )
+
+    result = []
+    if data["body"]=="null":
+        return data
+    print(data)
+    for item in data["body"]:
+        flight_info = { 
+            "chiều_đi":{
+            
+                "hãng":"VNA",
+                "id": item["I"],
+                "nơi_đi": item["SK"][0]["DA"],
+                "nơi_đến": item["SK"][0]["AA"],
+                "giờ_cất_cánh": format_time(int(item["SK"][0]["DT"])),
+                "ngày_cất_cánh": format_date(str(item["SK"][0]["DD"])),
+                "thời_gian_bay": str(item["SK"][0]["TT"]),
+                "thời_gian_chờ": format_time(int(item["SK"][0].get("HTX") or 0)),
+                "giờ_hạ_cánh": format_time(int(item["SK"][0]["AT"])),
+                "ngày_hạ_cánh": format_date(str(item["SK"][0]["AD"])),
+                
+               
+                "số_điểm_dừng": str(item["SK"][0]["VA"]),
+                "điểm_dừng_1": item["SK"][0].get("VA1", ""),
+                "điểm_dừng_2": item["SK"][0].get("VA2", ""),
+                
+                "loại_vé": item["CS"][:1]
+                
+            },
+            "chiều_về":{
+            
+                "hãng":"VNA",
+                "id": item["I"],
+                "nơi_đi": item["SK"][1]["DA"],
+                "nơi_đến": item["SK"][1]["AA"],
+                "giờ_cất_cánh": format_time(int(item["SK"][1]["DT"])),
+                "ngày_cất_cánh": format_date(str(item["SK"][1]["DD"])),
+                "thời_gian_bay": str(item["SK"][1]["TT"]),
+                "thời_gian_chờ": format_time(int(item["SK"][1].get("HTX") or 0)),
+                "giờ_hạ_cánh": format_time(int(item["SK"][1]["AT"])),
+                "ngày_hạ_cánh": format_date(str(item["SK"][1]["AD"])),
+                
+                
+                "số_điểm_dừng": str(item["SK"][1]["VA"]),
+                "điểm_dừng_1": item["SK"][1].get("VA1", ""),
+                "điểm_dừng_2": item["SK"][1].get("VA2", ""),
+                
+                "loại_vé": item["CS"][3:4]
+                
+            },
+            "thông_tin_chung":{
+                **parse_gia_ve(str(item["FA"][0]["FD"])),
+                "số_ghế_còn":  str(item["FA"][0]["AV"]),
+                "hành_lý_vna": item["IT"]
+
+            }
+            
+            
+        }
+        result.append(flight_info)
+    data["body"] = result
+    
     print(data)
     
     
