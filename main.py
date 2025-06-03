@@ -7,8 +7,31 @@ from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
 from fastapi import Query
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
+from pydantic import BaseModel, Field
+from typing import Optional
+
+tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
+day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
+
+class VnaRequest(BaseModel):
+    dep0: str ="ICN"
+    arr0: str ="HAN"
+    depdate0: str = tomorrow
+    depdate1: Optional[str] = day_after
+    activedVia: str = "0,1,2"
+    activedIDT: str = "ADT,VFR"
+    adt: str = "1"
+    chd: str = "0"
+    inf: str = "0"
+    page: str = "1"
+    sochieu: str = "RT"
+    filterTimeSlideMin0: str = "5"
+    filterTimeSlideMax0: str = "2355"
+    filterTimeSlideMin1: str = "5"
+    filterTimeSlideMax1: str = "2355"
+    session_key: Optional[str] = ""
 
 async def safe_send_vj(result):
     try:
@@ -100,7 +123,7 @@ async def vna_api(
         return {"success": False, "message": str(e)}
 @app.get("/vna/check-ve-v2")
 async def vna_api_v2(
-    dep0: str = Query(..., description="Sân bay đi, ví dụ: SGN"),
+    dep0: str = Query(..., description="Sân bay đi, ví dụ: ICN"),
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-mm-dd"),
     depdate1: Optional[str] = Query(None, description="Ngày về (nếu có), định dạng yyyy-mm-dd"),
@@ -178,6 +201,73 @@ async def vna_api_v2(
             return result
         else:
             return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu"}
+
+    except Exception as e:
+        return {"status_code": 401, "body": str(e)}
+@app.post("/vna/check-ve-v2")
+async def vna_api_v2(request: VnaRequest):
+    try:
+        depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
+
+    if request.sochieu.upper() == "RT":
+        if not request.depdate1:
+            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
+        try:
+            depdate1_dt = datetime.strptime(request.depdate1, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
+
+        if depdate1_dt < depdate0_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày về phải sau hoặc bằng ngày đi "
+            )
+
+    try:
+        if request.sochieu.upper() != "RT":
+            result = await api_vna_v2(
+                dep0=request.dep0,
+                arr0=request.arr0,
+                depdate0=request.depdate0,
+                activedVia=request.activedVia,
+                activedIDT=request.activedIDT,
+                filterTimeSlideMin0=request.filterTimeSlideMin0,
+                filterTimeSlideMax0=request.filterTimeSlideMax0,
+                filterTimeSlideMin1=request.filterTimeSlideMin1,
+                filterTimeSlideMax1=request.filterTimeSlideMax1,
+                page=request.page,
+                adt=request.adt,
+                chd=request.chd,
+                inf=request.inf,
+                sochieu=request.sochieu,
+                session_key=request.session_key
+            )
+        else:
+            result = await api_vna_rt_v2(
+                dep0=request.dep0,
+                arr0=request.arr0,
+                depdate0=request.depdate0,
+                depdate1=request.depdate1,
+                activedVia=request.activedVia,
+                activedIDT=request.activedIDT,
+                filterTimeSlideMin0=request.filterTimeSlideMin0,
+                filterTimeSlideMax0=request.filterTimeSlideMax0,
+                filterTimeSlideMin1=request.filterTimeSlideMin1,
+                filterTimeSlideMax1=request.filterTimeSlideMax1,
+                page=request.page,
+                adt=request.adt,
+                chd=request.chd,
+                inf=request.inf,
+                sochieu=request.sochieu,
+                session_key=request.session_key
+            )
+
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}

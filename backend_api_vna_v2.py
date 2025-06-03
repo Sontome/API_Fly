@@ -214,6 +214,8 @@ async def api_vna_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideM
     
     if session_key==None:
         session_key = create_session_powercall()
+    if session_key=="":
+        session_key = create_session_powercall()
     print(f"From {dep0} to {arr0} | Ngày đi: {format_date(depdate0)} ")
 
     data = await get_vna_flight_options(session_key=session_key,
@@ -278,6 +280,8 @@ async def api_vna_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideM
 async def api_vna_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,depdate1,session_key):
     
     if session_key==None:
+        session_key = create_session_powercall()
+    if session_key=="":
         session_key = create_session_powercall()
     print(f"From {dep0} to {arr0}-khứ hồi | Ngày đi: {format_date(depdate0)} ")
 
