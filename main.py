@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
+from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
 from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
@@ -32,6 +33,24 @@ class VnaRequest(BaseModel):
     filterTimeSlideMin1: str = "5"
     filterTimeSlideMax1: str = "2355"
     session_key: Optional[str] = ""
+class VnadetailRequest(BaseModel):
+    dep0: str ="ICN"
+    arr0: str ="HAN"
+    depdate0: str = tomorrow
+    depdate1: Optional[str] = day_after
+    activedVia: str = "0,1,2"
+    activedIDT: str = "ADT,VFR"
+    adt: str = "1"
+    chd: str = "0"
+    inf: str = "0"
+    page: str = "1"
+    sochieu: str = "RT"
+    filterTimeSlideMin0: str = "5"
+    filterTimeSlideMax0: str = "2355"
+    filterTimeSlideMin1: str = "5"
+    filterTimeSlideMax1: str = "2355"
+    miniFares: str =""
+    session_key: str = ""
 
 async def safe_send_vj(result):
     try:
@@ -63,7 +82,7 @@ async def hello():
 # 🛩 VJ ROUTES
 # ====================================================
 @app.get("/vj/check-ve-vj")
-async def check_ve_vj(
+async def VJ(
     city_pair: str = Query(...),
     departure_place: str = Query(""),
     departure_place_name: str = Query(""),
@@ -96,7 +115,7 @@ async def check_ve_vj(
 # ✈ VNA ROUTES
 # ====================================================
 @app.get("/vna/check-ve-vna")
-async def vna_api(
+async def VNA(
     dep0: str = Query(..., description="Sân bay đi, ví dụ: ICN"),
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-MM-dd hoặc yyyyMMdd"),
@@ -122,7 +141,7 @@ async def vna_api(
     except Exception as e:
         return {"success": False, "message": str(e)}
 @app.get("/vna/check-ve-v2")
-async def vna_api_v2(
+async def VNA_v2(
     dep0: str = Query(..., description="Sân bay đi, ví dụ: ICN"),
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-mm-dd"),
@@ -205,7 +224,7 @@ async def vna_api_v2(
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
 @app.post("/vna/check-ve-v2")
-async def vna_api_v2(request: VnaRequest):
+async def VNA_V2(request: VnaRequest):
     try:
         depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
     except ValueError:
@@ -271,3 +290,82 @@ async def vna_api_v2(request: VnaRequest):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+@app.post("/vna/detail-v2")
+async def vna_detail_v2(request_detail: VnadetailRequest):
+    try:
+        depdate0_dt = datetime.strptime(request_detail.depdate0, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
+
+    if request_detail.sochieu.upper() == "RT":
+        if not request_detail.depdate1:
+            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
+        try:
+            depdate1_dt = datetime.strptime(request_detail.depdate1, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
+
+        if depdate1_dt < depdate0_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày về phải sau hoặc bằng ngày đi "
+            )
+    if request_detail.session_key == "":
+            raise HTTPException(
+                status_code=400,
+                detail="Thiếu tham số session_key"
+            )
+    if request_detail.miniFares == "":
+            raise HTTPException(
+                status_code=400,
+                detail="Thiếu số thứ tự chuyến bay cần lấy thông tin"
+            )
+    print(f"0{request_detail.miniFares},0{int(request_detail.miniFares)+2}")
+    try:
+        if request_detail.sochieu.upper() != "RT":
+            result = await api_vna_detail_v2(
+                dep0=request_detail.dep0,
+                arr0=request_detail.arr0,
+                depdate0=request_detail.depdate0,
+                activedVia=request_detail.activedVia,
+                activedIDT=request_detail.activedIDT,
+                filterTimeSlideMin0=request_detail.filterTimeSlideMin0,
+                filterTimeSlideMax0=request_detail.filterTimeSlideMax0,
+                filterTimeSlideMin1=request_detail.filterTimeSlideMin1,
+                filterTimeSlideMax1=request_detail.filterTimeSlideMax1,
+                page=request_detail.page,
+                adt=request_detail.adt,
+                chd=request_detail.chd,
+                inf=request_detail.inf,
+                sochieu=request_detail.sochieu,
+                miniFares=f"02{request_detail.miniFares},02{int(request_detail.miniFares)+2}",
+                session_key=request_detail.session_key
+            )
+        else:
+            result = await api_vna_detail_rt_v2(
+                dep0=request_detail.dep0,
+                arr0=request_detail.arr0,
+                depdate0=request_detail.depdate0,
+                depdate1=request_detail.depdate1,
+                activedVia=request_detail.activedVia,
+                activedIDT=request_detail.activedIDT,
+                filterTimeSlideMin0=request_detail.filterTimeSlideMin0,
+                filterTimeSlideMax0=request_detail.filterTimeSlideMax0,
+                filterTimeSlideMin1=request_detail.filterTimeSlideMin1,
+                filterTimeSlideMax1=request_detail.filterTimeSlideMax1,
+                page=request_detail.page,
+                adt=request_detail.adt,
+                chd=request_detail.chd,
+                inf=request_detail.inf,
+                sochieu=request_detail.sochieu,
+                miniFares=f"02{request_detail.miniFares},02{int(request_detail.miniFares)+2}",
+                session_key=request_detail.session_key
+            )
+        
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+        
+    except Exception as e:
+        return {"status_code": 401, "body": "session hết hạn,index vé đã thay đổi"}
