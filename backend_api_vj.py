@@ -3,6 +3,7 @@ import json
 import httpx
 from datetime import datetime
 import os
+import math
 CONFIG_GIA_FILE = "config_gia.json"
 
 # 🔧 Giá mặc định
@@ -13,7 +14,7 @@ DEFAULT_CONFIG_GIA = {
     "PHI_XUAT_VE_1CH_DELUXE": 40000,
     "PHI_XUAT_VE_1CH_ECO": 32000,
     "HANH_LY_ECO_KM": 0, 
-    "KM_END_DATE": "2025-06-26 00:00"  
+    "KM_END_DATE": "2025-05-26 00:00"  
 }
 
 # 📦 Load cấu hình giá
@@ -236,8 +237,10 @@ def save_all_results(sochieu, vechieudi, giave_chieu_di, vechieuve=None, giave_c
         "gia_ve_chieu_ve": giave_chieu_ve
     }
 def to_price(number: float) -> str:
+    number = math.ceil(number / 100) * 100
     so_ngan = number / 1000
     return f"{so_ngan:,.3f}w".replace(",", ".")
+
 def thongtinve(data, sochieu,name):
     try:
         text = ""
