@@ -9,7 +9,7 @@ def login_and_save(page, context):
 
     page.fill('input[name="username"]', "KR242012A18KXM")
     
-    page.fill('input[name="password"]', "Grgnbd@34562312")
+    page.fill('input[name="password"]', "Glvav@31613064")
     page.click('button[class="mat-focus-indicator button_login font_16 font_button full-width mat-raised-button mat-button-base"]')
     time.sleep(10)
     page.wait_for_load_state("networkidle")
