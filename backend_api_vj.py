@@ -5,6 +5,7 @@ from datetime import datetime
 import os
 import math
 CONFIG_GIA_FILE = "config_gia.json"
+import subprocess
 
 # 🔧 Giá mặc định
 DEFAULT_CONFIG_GIA = {
@@ -109,10 +110,9 @@ def get_app_access_token_from_state(file_path="state.json"):
                 return item.get("value")
     return None
 
-# ✅ Gọi API async lấy flight options
 async def get_vietjet_flight_options(city_pair, departure_place, departure_place_name,
     return_place, return_place_name, departure_date, return_date,
-    adult_count, child_count, auth_token):
+    adult_count, child_count, auth_token, retry=False):
 
     url = "https://agentapi.vietjetair.com/api/v13/Booking/findtraveloptions"
     params = {
@@ -124,7 +124,6 @@ async def get_vietjet_flight_options(city_pair, departure_place, departure_place
         "departure": departure_date,
         "return": return_date,
         "currency": "KRW",
-        #"company": "hA0syYxT72sdFED0bwazxXXZXgHIbmt%C6%92Ppgjd1l4dCU=",
         "adultCount": adult_count,
         "childCount": child_count,
         "infantCount": "0",
@@ -139,20 +138,47 @@ async def get_vietjet_flight_options(city_pair, departure_place, departure_place
         "platform": "3",
         "referer": "https://agents2.vietjetair.com/",
     }
+
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=40) as client:
             response = await client.get(url, headers=headers, params=params)
+            data = response.json()
+
+            # ✅ Nếu bị 401 bên trong JSON
+            if data.get("resultcode") == 401:
+
+                print("🔐 Token hết hạn, chạy lại getcokivj.py để lấy token mới...")
+                try:
+                    subprocess.run(["python", "getcokivj.py"], check=True)
+                    if not retry:
+                        # 🧠 Gọi lại chính nó sau khi có token mới
+                        new_token = get_app_access_token_from_state()
+                        data = await get_vietjet_flight_options(
+                            city_pair, departure_place, departure_place_name,
+                            return_place, return_place_name,
+                            departure_date, return_date,
+                            adult_count, child_count, new_token, retry=True
+                        )
+                        return data 
+                        
+                        
+                except Exception as e:
+                    print("❌ Lỗi khi chạy getcokivj.py:", e)
+                return None
+
             if response.status_code == 200:
                 print("✅ Lấy dữ liệu chuyến bay thành công!")
                 print(response.text)
-                return response.json()
+                if retry==True:
+                    return data    
+                return data
             else:
                 print("❌ Có lỗi xảy ra :", response.status_code, response.text)
                 return None
+
     except Exception as e:
         print("💥 Lỗi khi gọi API async:", e)
         return None
-
 def extract_flight(data, list_key, config):
     try:
         list_chuyen = data.get("data", {}).get(list_key, [])
@@ -261,7 +287,7 @@ def thongtinve(data, sochieu,name):
             text += f"Vietjet 7kg xách tay, 20kg ký gửi, giá vé = {to_price(data['gia_ve_chieu_di']['data']['totalamountdeparture']+price_add(chieudi, None, config_gia))}"
         return text
     except Exception as e:
-        return f"❌ Lỗi show info: {e}"
+        return f"❌ Lỗi show info: Cookie đã refresh, ấn check lại lần nữa"
 
 async def api_vj(name,city_pair, departure_place, departure_place_name, return_place, return_place_name, 
                  departure_date, return_date,adult_count=1, child_count=0, sochieu=2):
