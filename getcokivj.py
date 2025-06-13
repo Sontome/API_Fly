@@ -42,5 +42,5 @@ with sync_playwright() as p:
    
    
     print("🎯 Đang ở:", page.url)
-    time.sleep(6)
+    
    
