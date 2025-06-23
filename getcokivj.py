@@ -29,18 +29,15 @@ with sync_playwright() as p:
         context = browser.new_context()
 
     page = context.new_page()
-    page.goto("https://agents2.vietjetair.com/booking")
-    time.sleep(6)
-    page.wait_for_load_state("networkidle")
+
         # Lấy localStorage/sessionStorage (có thể chứa token)
     #local_storage = page.evaluate("window.localStorage.getItem('Authorization')")
     #session_storage = page.evaluate("window.sessionStorage.getItem('Authorization')")
     
-    if "/login" in page.url:
-        print("⚠️ Session hết hạn hoặc chưa login, login lại...")
-        login_and_save(page, context)
+
+    login_and_save(page, context)
    
    
-    print("🎯 Đang ở:", page.url)
+
     
    
