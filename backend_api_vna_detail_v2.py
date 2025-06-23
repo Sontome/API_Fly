@@ -258,9 +258,19 @@ async def api_vna_detail_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTim
     if data["body"]=="null":
         return data
     result = []
-    #print(data)
+    print(data)
     for item in data["body"]:
+        detail = parse_gia_ve_tre_em(item["FARE"])
         flight_info = { 
+            
+            "detail":{
+                "người lớn":parse_gia_ve(detail[0]),
+                "trẻ em":parse_gia_ve(detail[1]),
+                "trẻ sơ sinh":parse_gia_ve(detail[2]),
+                "số_ghế_còn":  str(item["FA"][0]["AV"]),
+                "hành_lý_vna": item["IT"]
+
+            },
             "chiều_đi":{
             
                 "hãng":"VNA",
@@ -288,13 +298,12 @@ async def api_vna_detail_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTim
                 "hành_lý_vna": item["IT"]
 
 
-            }
-            
+            }            
             
         }
         result.append(flight_info)
     data["body"] = result
-   
+    
     print(data)
     
     
@@ -340,9 +349,55 @@ async def api_vna_detail_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filter
                 "số_ghế_còn":  str(item["FA"][0]["AV"]),
                 "hành_lý_vna": item["IT"]
 
-            }
+            },
+            "chiều_đi":{
             
+                "hãng":"VNA",
+                "id": item["I"],
+                "nơi_đi": item["SK"][0]["DA"],
+                "nơi_đến": item["SK"][0]["AA"],
+                "giờ_cất_cánh": format_time(int(item["SK"][0]["DT"])),
+                "ngày_cất_cánh": format_date(str(item["SK"][0]["DD"])),
+                "thời_gian_bay": str(item["SK"][0]["TT"]),
+                "thời_gian_chờ": format_time(int(item["SK"][0].get("HTX") or 0)),
+                "giờ_hạ_cánh": format_time(int(item["SK"][0]["AT"])),
+                "ngày_hạ_cánh": format_date(str(item["SK"][0]["AD"])),
+                
+               
+                "số_điểm_dừng": str(item["SK"][0]["VA"]),
+                "điểm_dừng_1": item["SK"][0].get("VA1", ""),
+                "điểm_dừng_2": item["SK"][0].get("VA2", ""),
+                
+                "loại_vé": item["CS"][:1]
+                
+            },
+            "chiều_về":{
             
+                "hãng":"VNA",
+                "id": item["I"],
+                "nơi_đi": item["SK"][1]["DA"],
+                "nơi_đến": item["SK"][1]["AA"],
+                "giờ_cất_cánh": format_time(int(item["SK"][1]["DT"])),
+                "ngày_cất_cánh": format_date(str(item["SK"][1]["DD"])),
+                "thời_gian_bay": str(item["SK"][1]["TT"]),
+                "thời_gian_chờ": format_time(int(item["SK"][1].get("HTX") or 0)),
+                "giờ_hạ_cánh": format_time(int(item["SK"][1]["AT"])),
+                "ngày_hạ_cánh": format_date(str(item["SK"][1]["AD"])),
+                
+                
+                "số_điểm_dừng": str(item["SK"][1]["VA"]),
+                "điểm_dừng_1": item["SK"][1].get("VA1", ""),
+                "điểm_dừng_2": item["SK"][1].get("VA2", ""),
+                
+                "loại_vé": item["CS"][3:4]
+                
+            },
+            "thông_tin_chung":{
+                **parse_gia_ve(str(item["FA"][0]["FD"])),
+                "số_ghế_còn":  str(item["FA"][0]["AV"]),
+                "hành_lý_vna": item["IT"]
+
+            }  
         }
         result.append(flight_info)
     data["body"] = result
