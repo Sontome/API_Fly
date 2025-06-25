@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
+from backend_api_vj_v2 import api_vj_v2
+from backend_api_vj_v2 import api_vj_rt_v2
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
 from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
@@ -16,6 +18,20 @@ from typing import Optional
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 
+   
+class VjRequest(BaseModel):
+    dep0: str ="ICN"
+    arr0: str ="HAN"
+    depdate0: str = tomorrow
+    depdate1: Optional[str] = day_after
+    
+    
+    adt: str = "1"
+    chd: str = "0"
+    inf: str = "0"
+   
+    sochieu: str = "RT"
+    
 class VnaRequest(BaseModel):
     dep0: str ="ICN"
     arr0: str ="HAN"
@@ -369,3 +385,65 @@ async def vna_detail_v2(request_detail: VnadetailRequest):
         
     except Exception as e:
         return {"status_code": 401, "body": "session hết hạn,index vé đã thay đổi"}
+@app.post("/vj/check-ve-v2")
+async def VJ_V2(request: VjRequest):
+    try:
+        depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
+
+    if request.sochieu.upper() == "RT":
+        if not request.depdate1:
+            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
+        try:
+            depdate1_dt = datetime.strptime(request.depdate1, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
+
+        if depdate1_dt < depdate0_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày về phải sau hoặc bằng ngày đi "
+            )
+    if int(request.inf) > 2 or int(request.inf)> int(request.adt):
+            raise HTTPException(
+                status_code=400,
+                detail="Số lượng trẻ sơ sinh không được vượt quá số lượng hành khách người lớn và tối đa là 2 "
+            )  
+    if int(request.adt) + int(request.chd)> 9 :
+            raise HTTPException(
+                status_code=400,
+                detail="Tổng Số lượng hành khách người lớn + trẻ em tối đa là 9"
+            )   
+    try:
+        if request.sochieu.upper() != "RT":
+            result = await api_vj_v2(
+                departure_place=request.dep0,
+                return_place=request.arr0,
+                departure_date=request.depdate0,
+                return_date="",
+                adult_count=request.adt,
+                child_count=request.chd,
+                infant_count=request.inf,
+                sochieu=request.sochieu
+                
+            )
+        else:
+            result = await api_vj_rt_v2(
+                departure_place=request.dep0,
+                return_place=request.arr0,
+                departure_date=request.depdate0,
+                return_date=request.depdate1,
+                adult_count=request.adt,
+                child_count=request.chd,
+                infant_count=request.inf,
+                sochieu=request.sochieu
+            )
+
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+
+    except Exception as e:
+        return {"status_code": 401, "body": str(e)}
