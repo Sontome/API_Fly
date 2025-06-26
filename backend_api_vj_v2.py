@@ -192,7 +192,7 @@ async def get_vietjet_flight_options( departure_place,
         "platform": "3",
         "referer": "https://agents2.vietjetair.com/",
     }
-    print(url)
+    #print(url)
     try:
         async with httpx.AsyncClient(timeout=40) as client:
             response = await client.get(url, headers=headers)
@@ -463,7 +463,7 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
     token = get_app_access_token_from_state()
     com = get_company(token)
     company = url_encode(com['data'][1]['company']['key'])
-    print(company)
+    #print(company)
     token = get_app_access_token_from_state()
     result_data = await get_vietjet_flight_options(
         departure_place,
@@ -552,12 +552,14 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
             "message" : "Hết vé chiều đi"
         }
     print ('tạo list vé chiều đi xong')
+    ket_qua =vechieudi
+    ket_qua.sort(key=lambda x: int(x["thông_tin_chung"]["giá_vé"]))
     result = {
         "status_code": 200,
         "trang": "1",
         "tổng_trang": "1",
         "session_key": "",
-        "body": vechieudi
+        "body": ket_qua
     }
 
     return result
@@ -566,7 +568,7 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
     token = get_app_access_token_from_state()
     com = get_company(token)
     company = url_encode(com['data'][1]['company']['key'])
-    print(company)
+    #print(company)
     token = get_app_access_token_from_state()
     result_data = await get_vietjet_flight_options(
         departure_place,
@@ -668,12 +670,43 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
             "body": [],
             "message" : "Hết vé chiều ve"
         }
+    ket_qua = []
+
+    for chieu_di in vechieudi:
+        for chieu_ve in vechieuve:
+            # Parse giá trị số từ string
+            gia_ve = int(chieu_di["thông_tin_chung"]["giá_vé"]) + int(chieu_ve["thông_tin_chung"]["giá_vé"])
+            gia_ve_goc = int(chieu_di["thông_tin_chung"]["giá_vé_gốc"]) + int(chieu_ve["thông_tin_chung"]["giá_vé_gốc"])
+            phi_nhien_lieu = int(chieu_di["thông_tin_chung"]["phí_nhiên_liệu"]) + int(chieu_ve["thông_tin_chung"]["phí_nhiên_liệu"])
+            thue_phi = int(chieu_di["thông_tin_chung"]["thuế_phí_công_cộng"]) + int(chieu_ve["thông_tin_chung"]["thuế_phí_công_cộng"])
+            
+            # Số ghế còn lấy số nhỏ hơn
+            so_ghe_con = min(int(chieu_di["thông_tin_chung"]["số_ghế_còn"]), int(chieu_ve["thông_tin_chung"]["số_ghế_còn"]))
+            
+            # Hành lý giữ nguyên "None" như mẫu
+            hanh_ly_vna = "None"
+
+            to_hop = {
+                "chiều đi": chieu_di["chiều đi"],
+                "chiều về": chieu_ve["chiều về"],
+                "thông_tin_chung": {
+                    "giá_vé": str(gia_ve),
+                    "giá_vé_gốc": str(gia_ve_goc),
+                    "phí_nhiên_liệu": str(phi_nhien_lieu),
+                    "thuế_phí_công_cộng": str(thue_phi),
+                    "số_ghế_còn": str(so_ghe_con),
+                    "hành_lý_vna": hanh_ly_vna
+                }
+            }
+
+            ket_qua.append(to_hop)
+            ket_qua.sort(key=lambda x: int(x["thông_tin_chung"]["giá_vé"]))
     result = {
         "status_code": 200,
         "trang": "1",
         "tổng_trang": "1",
         "session_key": "",
-        "body": [vechieudi,vechieuve]
+        "body": ket_qua
     }
 
     return result
