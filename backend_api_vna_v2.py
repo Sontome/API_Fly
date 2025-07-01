@@ -59,7 +59,7 @@ def parse_gia_ve(raw_str):
 
 # ====== 🔍 LỌC VÉ ====== #
 async def doc_va_loc_ve_re_nhat(data):
-    print(data)
+    #print(data)
     trang = str(data.get("PAGE", "1"))
     tong_trang = str(data.get("TOTALPAGE", "1"))
     fares = data.get("FARES", [])
@@ -172,7 +172,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
         try:
             async with session.post(url, headers=headers, data=form_data) as response:
                 text = await response.text()
-                print(text[:100])
+                print(text[:30])
                 if response.status != 200:
                     print("❌ Status:", response.status)
                     return "HTTP_ERROR", text
@@ -273,7 +273,7 @@ async def api_vna_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideM
         result.append(flight_info)
     data["body"] = result
    
-    print(data)
+    #print(data)
     
     
     return data
@@ -305,7 +305,7 @@ async def api_vna_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSli
     result = []
     if data["body"]=="null":
         return data
-    print(data)
+    #print(data)
     for item in data["body"]:
         flight_info = { 
             "chiều_đi":{
@@ -362,7 +362,7 @@ async def api_vna_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSli
         result.append(flight_info)
     data["body"] = result
     
-    print(data)
+    #print(data)
     
     
     return data
