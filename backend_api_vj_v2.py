@@ -114,6 +114,82 @@ def url_encode(text):
         return encoded + "="
     else:
         return urllib.parse.quote(text)
+#lấy giá hành lý eco-deluxe
+def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
+    url = "https://agentapi.vietjetair.com/api/v13/Booking/ancillaryOptions"
+
+    params = {
+        "bookingKey": booking_key,
+        "bookingKeyReturn": booking_key_return,
+        "languageCode": "vi"
+    }
+
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+        "authorization": f"Bearer {bearer_token}",
+        "content-type": "application/json",
+        "languagecode": "vi",
+        "platform": "3",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site"
+    }
+
+    try:
+        result = {
+            "chiều_đi":{
+                "HANH_LY_DELUXE": 0,
+                "HANH_LY_ECO": 0
+            },
+            "chiều_về":{
+                "HANH_LY_DELUXE": 0,
+                "HANH_LY_ECO": 0
+
+            }
+        }
+        response = requests.get(url, headers=headers, params=params)
+        data = response.json()
+        
+        data= data.get("data", [])
+        
+        baggage_item = next((item for item in data if item.get("code") == "Baggage"), None)
+        
+        if baggage_item:
+            ancillaries_departure = baggage_item.get("ancillariesDeparture", [])
+            ancillaries_return = baggage_item.get("ancillariesReturn", [])
+            
+        if ancillaries_departure:
+            
+            hành_lý_ECO_chiều_đi = next((item for item in ancillaries_departure if item.get("originalName") == "Bag 20kgs"), None)
+            
+            giá_hành_lý_eco_chiều_đi = hành_lý_ECO_chiều_đi.get("totalAmount",0)
+            result["chiều_đi"]["HANH_LY_ECO"]= giá_hành_lý_eco_chiều_đi
+        if ancillaries_return:
+            hành_lý_ECO_chiều_về = next((item for item in ancillaries_return if item.get("originalName") == "Bag 20kgs"), None)
+            giá_hành_lý_eco_chiều_về = hành_lý_ECO_chiều_về.get("totalAmount",0)
+            
+            result["chiều_về"]["HANH_LY_ECO"]= giá_hành_lý_eco_chiều_về
+        defaultWithFare_item = next((item for item in data if item.get("code") == "DefaultWithFare"), None)  
+        if defaultWithFare_item:
+            default_ancillaries_departure = defaultWithFare_item.get("ancillariesDeparture", [])
+            default_ancillaries_return = defaultWithFare_item.get("ancillariesReturn", [])
+        if default_ancillaries_departure:
+            hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Deluxe 20kgs"), [])
+            giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("totalAmount",0)
+            
+            result["chiều_đi"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_đi
+        if default_ancillaries_return:
+            hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Deluxe 20kgs"), [])
+            giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
+            result["chiều_về"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_về
+        return result
+    except Exception as e:
+        return {}
 def get_company(bear,retry=False):
     global token
     url = "https://agentapi.vietjetair.com/api/v13/Booking/getlistcompanies"
@@ -289,6 +365,8 @@ def extract_tax(tax,departure):
                 "Admin Fee ITL": 0,
                 "Airport Tax ITL": 0,
                 "Airport Tax ChidITL": 0,
+                "Airport Security": 0,
+                "Airport Security CHD": 0,
                 "INFANT CHARGE ITL": 0
             }
 
@@ -302,13 +380,15 @@ def extract_tax(tax,departure):
                     result[name] = round(amount_per_ticket)
 
             thue_phi_cong_cong =  result
-
+            #print(thue_phi_cong_cong)
         except Exception as e:
             print("❌ Lỗi khi xử lý feetaxs:", e)
             thue_phi_cong_cong = {
                 "Admin Fee ITL": 0,
                 "Airport Tax ITL": 0,
                 "Airport Tax ChidITL": 0,
+                "Airport Security": 0,
+                "Airport Security CHD": 0,
                 "INFANT CHARGE ITL": 0
             }
         
@@ -361,10 +441,12 @@ def extract_tax(tax,departure):
             "thuế_phí_công_cộng": 0,
             "phí_nhiên_liệu": 0
         }
-def extract_flight(data, list_key, config,phi_chieu_di):
+def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
     chieu = "chiều đi"
+    config = giá_hành_lý["chiều_đi"]
     if list_key == "list_Travel_Options_Arrival": 
         chieu = "chiều về"
+        config = giá_hành_lý["chiều_về"]
     try:
         
         list_chuyen = data.get("data", {}).get(list_key, [])
@@ -377,7 +459,11 @@ def extract_flight(data, list_key, config,phi_chieu_di):
             thoi_gian_1 = flight_info.get("ETALocal")
             ngay0, gio0 = thoi_gian_0.split(" ")
             ngay1, gio1 = thoi_gian_1.split(" ")
-            
+            thue_phi_cong_cong = math.floor(
+                phi_chieu_di.get("feetaxs", {}).get("Admin Fee ITL", 0) +
+                phi_chieu_di.get("feetaxs", {}).get("Airport Tax ITL", 0) +
+                phi_chieu_di.get("feetaxs", {}).get("Airport Security", 0)
+            )    
             return {
                 chieu :{
                 "hãng": "VJ",
@@ -401,7 +487,7 @@ def extract_flight(data, list_key, config,phi_chieu_di):
                     "giá_vé": 0,
                     "giá_vé_gốc": fare.get("FareCost"),
                     "phí_nhiên_liệu": math.floor(phi_chieu_di.get("services").get("Management Fee ITL")+ phi_chieu_di.get("services").get("Fuel Surcharge") ),
-                    "thuế_phí_công_cộng": math.floor(phi_chieu_di.get("feetaxs").get("Admin Fee ITL")+ phi_chieu_di.get("feetaxs").get("Airport Tax ITL")),
+                    "thuế_phí_công_cộng" : thue_phi_cong_cong,
                     "số_ghế_còn": str(fare.get("SeatsAvailable")),
                     "hành_lý_vna": "None"
                 }
@@ -425,12 +511,10 @@ def extract_flight(data, list_key, config,phi_chieu_di):
 
                 if eco and deluxe:
                     
-                    etd = datetime.strptime(flight_info.get("ETDLocal"), "%Y-%m-%d %H:%M")
-                    
-                    km_end = datetime.strptime(config["KM_END_DATE"], "%Y-%m-%d %H:%M")
+                   
                     
                     
-                    hanh_ly_eco = config["HANH_LY_ECO_KM"] if etd and etd < km_end else config["HANH_LY_ECO"]
+                    hanh_ly_eco =  config["HANH_LY_ECO"]
                     chenhlech = deluxe["thông_tin_chung" ]["giá_vé_gốc"] - eco["thông_tin_chung" ]["giá_vé_gốc"]
                     if chenhlech >= hanh_ly_eco :
                         
@@ -485,8 +569,32 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
             
             if list_departure[0]["fareOption"]:
                 try : 
+
                     booking_key_chieu_di = list_departure[0]["fareOption"][0].get("BookingKey")
                     print("có booking key")
+                    try:
+                        BookingKeyDeluxe = None
+
+                        for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
+                            fare_option = list_departure[i].get("fareOption", [])
+                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Deluxe":
+                                BookingKeyDeluxe = fare_option[1].get("BookingKey")
+                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
+                        giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe)
+                        if giá_hành_lý:
+                            print ("lấy được giá hành lý")
+                        else :
+                            return {
+                                "status_code": 200,
+                                "trang": "1",
+                                "tổng_trang": "1",
+                                "session_key": "",
+                                "body": [],
+                                "message" : "Lỗi lấy giá hành lý"
+                            }
+                        
+                    except:
+                        print("không có booking key deluxe chiều đi")                    
                     
                 except :
                     print ( "không có booking key ,lấy TravelOptionKey ")
@@ -540,7 +648,7 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
             "message" : "Lỗi khi xử lý lấy booking key hoặc tax:"
         }
 
-    vechieudi = extract_flight(result_data, "list_Travel_Options_Departure", config_gia, phi_chieu_di["departure"])
+    vechieudi = extract_flight(result_data, "list_Travel_Options_Departure", giá_hành_lý, phi_chieu_di["departure"])
     
     if not vechieudi:
         return {
@@ -594,9 +702,21 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
             
             if list_departure[0]["fareOption"]:
                 try : 
+                  
                     booking_key_chieu_di = list_departure[0]["fareOption"][0].get("BookingKey")
                     print("có booking key chiều đi")
-                    
+                    try:
+                        BookingKeyDeluxe = None
+
+                        for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
+                            fare_option = list_departure[i].get("fareOption", [])
+                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Deluxe":
+                                BookingKeyDeluxe = fare_option[1].get("BookingKey")
+                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
+                        
+                        
+                    except:
+                        print("không có booking key deluxe chiều đi")                      
                 except :
                     print ( "không có booking key chiều đi ")
                     return "❌ hết vé chiều đi"
@@ -618,7 +738,30 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                 try : 
                     booking_key_chieu_ve = list_arrival[0]["fareOption"][0].get("BookingKey")
                     print("có booking key chiều về")
-                    
+                    try:
+                        BookingKeyDeluxeArrival = None
+
+                        for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
+                            fare_option = list_departure[i].get("fareOption", [])
+                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Deluxe":
+                                BookingKeyDeluxeArrival = fare_option[1].get("BookingKey")
+                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
+                        giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe,BookingKeyDeluxeArrival)
+                        if giá_hành_lý:
+                            print ("lấy được giá hành lý")
+                        else :
+                            return {
+                                "status_code": 200,
+                                "trang": "1",
+                                "tổng_trang": "1",
+                                "session_key": "",
+                                "body": [],
+                                "message" : "Lỗi lấy giá hành lý"
+                            }
+                        
+
+                    except:
+                        print("không có booking key deluxe chiều về")                    
                 except :
                     print ( "không có booking key chiều về ")
                     return "❌ hết vé chiều về"
@@ -650,8 +793,8 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                     "message" : "Lỗi xử lý lấy booking key hoặc tax"
                 }
 
-    vechieudi = extract_flight(result_data, "list_Travel_Options_Departure", config_gia, phi_chieu_di["departure"])
-    vechieuve = extract_flight(result_data, "list_Travel_Options_Arrival",  config_gia, phi_chieu_di["arrival"])
+    vechieudi = extract_flight(result_data, "list_Travel_Options_Departure", giá_hành_lý, phi_chieu_di["departure"])
+    vechieuve = extract_flight(result_data, "list_Travel_Options_Arrival",  giá_hành_lý, phi_chieu_di["arrival"])
     if not vechieudi:
         return {
             "status_code": 200,
