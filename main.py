@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
+from backend_api_vj_detail_v2 import api_vj_detail_v2
 from backend_api_vj_v2 import api_vj_rt_v2
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
@@ -18,7 +19,13 @@ from typing import Optional
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 
-   
+class VjdetailRequest(BaseModel):
+    booking_key: str =""
+    adt: str = "1"
+    chd: str = "0"
+    inf: str = "0"
+    booking_key_arrival: Optional[str] =""
+    sochieu: str = "RT"   
 class VjRequest(BaseModel):
     dep0: str ="ICN"
     arr0: str ="HAN"
@@ -447,3 +454,45 @@ async def VJ_V2(request: VjRequest):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+@app.post("/vj/detail-v2")
+async def vj_detail_v2(request: VjdetailRequest):
+    if int(request.inf) > 2 or int(request.inf)> int(request.adt):
+            raise HTTPException(
+                status_code=400,
+                detail="Số lượng trẻ sơ sinh không được vượt quá số lượng hành khách người lớn và tối đa là 2 "
+            )  
+    if int(request.adt) + int(request.chd)> 9 :
+            raise HTTPException(
+                status_code=400,
+                detail="Tổng Số lượng hành khách người lớn + trẻ em tối đa là 9"
+            )
+    if request.sochieu.upper() == "RT":
+        if not request.booking_key_arrival:
+            raise HTTPException(status_code=400, detail="chưa có bookingkey chuyến về")  
+    
+
+    try:
+        if request.sochieu.upper() != "RT":
+            result = await api_vj_detail_v2(
+                booking_key=request.booking_key,
+                adult_count=int(request.adt),
+                child_count=int(request.chd),
+                infant_count=int(request.inf)
+                
+            )
+        else:
+            result = await api_vj_detail_v2(
+                booking_key=request.booking_key,
+                adult_count=int(request.adt),
+                child_count=int(request.chd),
+                infant_count=int(request.inf),
+                booking_key_arrival=request.booking_key_arrival
+            )
+
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+
+    except Exception as e:
+        return {"status_code": 500, "body": str(e)}
