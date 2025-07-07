@@ -9,46 +9,7 @@ import subprocess
 import urllib.parse
 global token
 # 🔧 Giá mặc định
-DEFAULT_CONFIG_GIA = {
-    "HANH_LY_DELUXE": 2000,
-    "HANH_LY_ECO": 40000,
-    "PHI_XUAT_VE_2_CHIEU": 15000,
-    "PHI_XUAT_VE_1CH_DELUXE": 40000,
-    "PHI_XUAT_VE_1CH_ECO": 32000,
-    "HANH_LY_ECO_KM": 0, 
-    "KM_END_DATE": "2025-05-26 00:00"  
-}
-def load_config_gia():
-    if os.path.exists(CONFIG_GIA_FILE):
-        try:
-            with open(CONFIG_GIA_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                config_loaded = {
-                    "PHI_XUAT_VE_2_CHIEU": int(data.get("PHI_XUAT_VE_2_CHIEU", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_2_CHIEU"])),
-                    "HANH_LY_DELUXE": int(data.get("HANH_LY_DELUXE", DEFAULT_CONFIG_GIA["HANH_LY_DELUXE"])),
-                    "HANH_LY_ECO": int(data.get("HANH_LY_ECO", DEFAULT_CONFIG_GIA["HANH_LY_ECO"])),
-                    "PHI_XUAT_VE_1CH_DELUXE": int(data.get("PHI_XUAT_VE_1CH_DELUXE", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_DELUXE"])),
-                    "PHI_XUAT_VE_1CH_ECO": int(data.get("PHI_XUAT_VE_1CH_ECO", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_ECO"])),
-                    "HANH_LY_ECO_KM" : int(data.get("HANH_LY_ECO_KM", DEFAULT_CONFIG_GIA["HANH_LY_ECO_KM"])),
-                    "KM_END_DATE" : str(data.get("KM_END_DATE", DEFAULT_CONFIG_GIA["KM_END_DATE"]))
-                }
 
-                # 🖨️ In ra log
-                print("📥 Đã load cấu hình giá từ file:")
-                
-
-               
-                return config_loaded
-        except Exception as e:
-            print("❌ Lỗi khi đọc config_gia.json:", e)
-
-    print("⚠️ Không tìm thấy hoặc lỗi file config_gia.json, dùng mặc định:")
-    
-    
-
-    
-    return DEFAULT_CONFIG_GIA.copy()
-config_gia = load_config_gia()
 def price_add(chieudi: dict, chieuve: dict | None, config_gia: dict) -> int:
     tong = 0
 

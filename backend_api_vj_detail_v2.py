@@ -9,46 +9,7 @@ import subprocess
 import urllib.parse
 global token
 # 🔧 Giá mặc định
-DEFAULT_CONFIG_GIA = {
-    "HANH_LY_DELUXE": 2000,
-    "HANH_LY_ECO": 40000,
-    "PHI_XUAT_VE_2_CHIEU": 15000,
-    "PHI_XUAT_VE_1CH_DELUXE": 40000,
-    "PHI_XUAT_VE_1CH_ECO": 32000,
-    "HANH_LY_ECO_KM": 0, 
-    "KM_END_DATE": "2025-05-26 00:00"  
-}
-def load_config_gia():
-    if os.path.exists(CONFIG_GIA_FILE):
-        try:
-            with open(CONFIG_GIA_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                config_loaded = {
-                    "PHI_XUAT_VE_2_CHIEU": int(data.get("PHI_XUAT_VE_2_CHIEU", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_2_CHIEU"])),
-                    "HANH_LY_DELUXE": int(data.get("HANH_LY_DELUXE", DEFAULT_CONFIG_GIA["HANH_LY_DELUXE"])),
-                    "HANH_LY_ECO": int(data.get("HANH_LY_ECO", DEFAULT_CONFIG_GIA["HANH_LY_ECO"])),
-                    "PHI_XUAT_VE_1CH_DELUXE": int(data.get("PHI_XUAT_VE_1CH_DELUXE", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_DELUXE"])),
-                    "PHI_XUAT_VE_1CH_ECO": int(data.get("PHI_XUAT_VE_1CH_ECO", DEFAULT_CONFIG_GIA["PHI_XUAT_VE_1CH_ECO"])),
-                    "HANH_LY_ECO_KM" : int(data.get("HANH_LY_ECO_KM", DEFAULT_CONFIG_GIA["HANH_LY_ECO_KM"])),
-                    "KM_END_DATE" : str(data.get("KM_END_DATE", DEFAULT_CONFIG_GIA["KM_END_DATE"]))
-                }
 
-                # 🖨️ In ra log
-                print("📥 Đã load cấu hình giá từ file:")
-                
-
-               
-                return config_loaded
-        except Exception as e:
-            print("❌ Lỗi khi đọc config_gia.json:", e)
-
-    print("⚠️ Không tìm thấy hoặc lỗi file config_gia.json, dùng mặc định:")
-    
-    
-
-    
-    return DEFAULT_CONFIG_GIA.copy()
-config_gia = load_config_gia()
 
 
 
@@ -153,6 +114,92 @@ def get_tax(authorization, booking_key, adult_count, child_count, infant_count,b
     except requests.RequestException as e:
         print("❌ Lỗi khi gọi API thuế:", e)
         return None
+def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
+    url = "https://agentapi.vietjetair.com/api/v13/Booking/ancillaryOptions"
+
+    params = {
+        "bookingKey": booking_key,
+        "bookingKeyReturn": booking_key_return,
+        "languageCode": "vi"
+    }
+
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
+        "authorization": f"Bearer {bearer_token}",
+        "content-type": "application/json",
+        "languagecode": "vi",
+        "platform": "3",
+        "priority": "u=1, i",
+        "sec-ch-ua": '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site"
+    }
+
+    try:
+        result = {
+            "chiều_đi":{
+                "HANH_LY_DELUXE": 0,
+                "HANH_LY_ECO": 0,
+                "HANH_LY": 0,
+                "KEY_HANH_LY":""
+            },
+            "chiều_về":{
+                "HANH_LY_DELUXE": 0,
+                "HANH_LY_ECO": 0,
+                "HANH_LY": 0,
+                "KEY_HANH_LY":""
+
+            }
+        }
+        response = requests.get(url, headers=headers, params=params)
+        data = response.json()
+        
+        data= data.get("data", [])
+        
+        baggage_item = next((item for item in data if item.get("code") == "Baggage"), None)
+        
+        if baggage_item:
+            ancillaries_departure = baggage_item.get("ancillariesDeparture", [])
+            ancillaries_return = baggage_item.get("ancillariesReturn", [])
+            
+        if ancillaries_departure:
+            
+            hành_lý_ECO_chiều_đi = next((item for item in ancillaries_departure if item.get("originalName") == "Bag 20kgs"), None)
+            
+            giá_hành_lý_eco_chiều_đi = hành_lý_ECO_chiều_đi.get("totalAmount",0)
+            result["chiều_đi"]["HANH_LY_ECO"]= giá_hành_lý_eco_chiều_đi
+            result["chiều_đi"]["HANH_LY"]= giá_hành_lý_eco_chiều_đi
+        if ancillaries_return:
+            hành_lý_ECO_chiều_về = next((item for item in ancillaries_return if item.get("originalName") == "Bag 20kgs"), None)
+            giá_hành_lý_eco_chiều_về = hành_lý_ECO_chiều_về.get("totalAmount",0)
+            
+            result["chiều_về"]["HANH_LY_ECO"]= giá_hành_lý_eco_chiều_về
+            result["chiều_về"]["HANH_LY"]= giá_hành_lý_eco_chiều_về
+        defaultWithFare_item = next((item for item in data if item.get("code") == "DefaultWithFare"), None)  
+        default_ancillaries_departure=[]
+        default_ancillaries_return=[]
+        if defaultWithFare_item :
+            
+            default_ancillaries_departure = defaultWithFare_item.get("ancillariesDeparture", [])
+            default_ancillaries_return = defaultWithFare_item.get("ancillariesReturn", [])
+        if default_ancillaries_departure:
+            hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Deluxe 20kgs"), [])
+            giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("totalAmount",0)
+            result["chiều_đi"]["HANH_LY"]= giá_hành_lý_deluxe_chiều_đi
+            result["chiều_đi"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_đi
+        if default_ancillaries_return:
+            hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Deluxe 20kgs"), [])
+            giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
+            result["chiều_về"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_về
+            result["chiều_về"]["HANH_LY"]= giá_hành_lý_deluxe_chiều_về
+        return result
+    except Exception as e:
+        print (e)
+        return {}
 def extract_tax(tax,departure):
     """
     Hàm xử lý dữ liệu thuế từ API VietJet
@@ -339,7 +386,7 @@ def convert_price(data):
                 detail[k][subk] += arr_detail[k][subk]
 
     return {"detail": detail}
-async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_count=0,booking_key_arrival = None):
+async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_count=0):
     global token
 
     token = get_app_access_token_from_state()
@@ -347,8 +394,34 @@ async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_cou
     
     #print(company)
     token = get_app_access_token_from_state()
-    result_data = get_tax(token,booking_key,adult_count, child_count, infant_count,booking_key_arrival)
+    result_data = get_tax(token,booking_key,adult_count, child_count, infant_count)
+    
+    
     result = convert_price(result_data)
+    giá_hành_lý = get_ancillary_options(token,booking_key)
+    if giá_hành_lý:
+        #print(giá_hành_lý)
+        result["detail"]["người lớn"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        if child_count == 0:
+           result["detail"]["trẻ em"]["giá_vé"] = 0
+           result["detail"]["trẻ em"]["giá_vé_gốc"] = 0
+           result["detail"]["trẻ em"]["phí_nhiên_liệu"] = 0
+           result["detail"]["trẻ em"]["thuế_phí_công_cộng"] = 0
+        
+    else :
+        
+        return {
+                    "status_code": 	200,
+                    "trang": "1",
+                    "tổng_trang": "1",
+                    "session_key": "",
+                    "body": [],
+                    "message" : "Không lấy được giá hành lý"
+                }
+    
     if not result:
         return {
                     "status_code": 	200,
@@ -368,3 +441,62 @@ async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_cou
                     "body": [result]
                     
                 }    
+async def api_vj_detail_rt_v2(booking_key,booking_key_arrival, adult_count=1, child_count=0, infant_count=0):
+    global token
+
+    token = get_app_access_token_from_state()
+    com = get_company(token)
+    
+    #print(company)
+    token = get_app_access_token_from_state()
+    result_data = get_tax(token,booking_key,adult_count, child_count, infant_count,booking_key_arrival)
+    
+    
+    result = convert_price(result_data)
+    giá_hành_lý = get_ancillary_options(token,booking_key,booking_key_arrival)
+    if giá_hành_lý:
+        #print(giá_hành_lý)
+        result["detail"]["người lớn"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé_gốc"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé_gốc"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
+        if child_count == 0:
+           result["detail"]["trẻ em"]["giá_vé"] = 0
+           result["detail"]["trẻ em"]["giá_vé_gốc"] = 0
+           result["detail"]["trẻ em"]["phí_nhiên_liệu"] = 0
+           result["detail"]["trẻ em"]["thuế_phí_công_cộng"] = 0
+        
+    else :
+        
+        return {
+                    "status_code": 	200,
+                    "trang": "1",
+                    "tổng_trang": "1",
+                    "session_key": "",
+                    "body": [],
+                    "message" : "Không lấy được giá hành lý"
+                }
+    
+    if not result:
+        return {
+                    "status_code": 	200,
+                    "trang": "1",
+                    "tổng_trang": "1",
+                    "session_key": "",
+                    "body": [],
+                    "message" : "Không lấy được phí"
+                }
+
+    else :
+        return {
+                    "status_code": 	200,
+                    "trang": "1",
+                    "tổng_trang": "1",
+                    "session_key": "",
+                    "body": [result]
+                    
+                }   

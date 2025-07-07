@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
-from backend_api_vj_detail_v2 import api_vj_detail_v2
+from backend_api_vj_detail_v2 import api_vj_detail_v2,api_vj_detail_rt_v2
 from backend_api_vj_v2 import api_vj_rt_v2
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
@@ -481,7 +481,7 @@ async def vj_detail_v2(request: VjdetailRequest):
                 
             )
         else:
-            result = await api_vj_detail_v2(
+            result = await api_vj_detail_rt_v2(
                 booking_key=request.booking_key,
                 adult_count=int(request.adt),
                 child_count=int(request.chd),
