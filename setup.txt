@@ -78,4 +78,4 @@ sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx -d api.thuhongtour.com
 sudo rm /etc/nginx/sites-enabled/ip_default
 sudo nginx -t && sudo systemctl reload nginx
-
+python3 -m playwright install-deps
