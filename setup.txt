@@ -55,11 +55,26 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 }
+
+-----------------------------------------
+sudo nano /etc/nginx/sites-available/ip_default
+-----------------------------------------
+server {
+    listen 80 default_server;
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:8000;  # ← chỗ này đại ca sửa theo cổng API backend
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
 -----------------------------------------
 sudo ln -s /etc/nginx/sites-available/api.thuhongtour.com /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 
 sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx -d api.thuhongtour.com
-
+sudo rm /etc/nginx/sites-enabled/ip_default
+sudo nginx -t && sudo systemctl reload nginx
 
