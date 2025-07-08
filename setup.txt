@@ -4,4 +4,62 @@ pip3 install --user playwright
 python3 -m playwright install
 python3 -m playwright install-deps
 pip3 install --user uvicorn fastapi requests
+pip3 install -r requirements.txt
+
+
+Cài setup uvicorn 24/24 reboot:
+nano /etc/systemd/system/uvicorn.service
+----------------------------------------------
+[Unit]
+Description=FastAPI app with Uvicorn
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/API_Fly
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
+-----------------------------------------
+
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable uvicorn
+systemctl start uvicorn
+
+
+check status :
+systemctl status uvicorn    thoát (q)
+
+
+
+Mở port :
+sudo ufw allow 80
+sudo ufw allow 443
+sudo apt update && sudo apt install nginx -y
+sudo nano /etc/nginx/sites-available/api.thuhongtour.com
+
+-----------------------------------------
+server {
+    listen 80;
+    server_name thuhongtour.com;
+
+    location / {
+        proxy_pass http://localhost:8000;  # Giả sử API backend đang chạy port 8000
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+-----------------------------------------
+sudo ln -s /etc/nginx/sites-available/api.thuhongtour.com /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d api.thuhongtour.com
+
 
