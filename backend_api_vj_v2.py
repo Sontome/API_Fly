@@ -31,11 +31,11 @@ def price_add(chieudi: dict, chieuve: dict | None, config_gia: dict) -> int:
             return config_gia["HANH_LY_DELUXE"]
         return 0
 
-    # 👕 Hành lý chiều đi
+    # 👕 Hành lý chiều_đi
     tong += get_hanh_ly_price(chieudi)
 
     if chieuve:
-        # 🎒 Hành lý chiều về
+        # 🎒 Hành lý chiều_về
         tong += get_hanh_ly_price(chieuve)
 
         # 🧾 Phí xuất vé 2 chiều
@@ -403,10 +403,10 @@ def extract_tax(tax,departure):
             "phí_nhiên_liệu": 0
         }
 def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
-    chieu = "chiều đi"
+    chieu = "chiều_đi"
     config = giá_hành_lý["chiều_đi"]
     if list_key == "list_Travel_Options_Arrival": 
-        chieu = "chiều về"
+        chieu = "chiều_về"
         config = giá_hành_lý["chiều_về"]
     try:
         
@@ -526,7 +526,7 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
         list_departure = result_data.get("data", {}).get("list_Travel_Options_Departure", [])
         
         if list_departure :
-            print("lấy được list chiều đi")
+            print("lấy được list chiều_đi")
             
             if list_departure[0]["fareOption"]:
                 try : 
@@ -555,21 +555,21 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                             }
                         
                     except:
-                        print("không có booking key deluxe chiều đi")                    
+                        print("không có booking key deluxe chiều_đi")                    
                     
                 except :
                     print ( "không có booking key ,lấy TravelOptionKey ")
-                    return "❌ hết vé chiều đi"
+                    return "❌ hết vé chiều_đi"
             else : 
                 traveloptionkey = list_departure[0]["TravelOptionKey"]
-                print("có traveloptionkey > hết vé chiều đi")
+                print("có traveloptionkey > hết vé chiều_đi")
                 return {
                     "status_code": 	200,
                     "trang": "1",
                     "tổng_trang": "1",
                     "session_key": "",
                     "body": [],
-                    "message" : "Hết vé chiều đi"
+                    "message" : "Hết vé chiều_đi"
                 }
                     
             
@@ -578,25 +578,25 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                 phi_chieu_di = get_tax(token, booking_key_chieu_di, adult_count, child_count, infant_count)
             else:
                 
-                print("⚠️ có traveloptionkey , ko có booking key hết vé chiều đi")
+                print("⚠️ có traveloptionkey , ko có booking key hết vé chiều_đi")
                 return {
                     "status_code": 	200,
                     "trang": "1",
                     "tổng_trang": "1",
                     "session_key": "",
                     "body": [],
-                    "message" : "Hết vé chiều đi"
+                    "message" : "Hết vé chiều_đi"
                 }
         else:
             
-            print("⚠️ Không có dữ liệu chuyến bay chiều đi")
+            print("⚠️ Không có dữ liệu chuyến bay chiều_đi")
             return {
                 "status_code": 	200,
                 "trang": "1",
                 "tổng_trang": "1",
                 "session_key": "",
                 "body": [],
-                "message" : "Hết vé chiều đi"
+                "message" : "Hết vé chiều_đi"
             }
     except Exception as e:
         print("❌ ", e)
@@ -618,9 +618,9 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
             "tổng_trang": "1",
             "session_key": "",
             "body": [],
-            "message" : "Hết vé chiều đi"
+            "message" : "Hết vé chiều_đi"
         }
-    print ('tạo list vé chiều đi xong')
+    print ('tạo list vé chiều_đi xong')
     ket_qua =vechieudi
     ket_qua.sort(key=lambda x: int(x["thông_tin_chung"]["giá_vé"]))
     result = {
@@ -659,13 +659,13 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
         list_arrival = result_data.get("data", {}).get("list_Travel_Options_Arrival", [])
         
         if list_departure :
-            print("lấy được list chiều đi")
+            print("lấy được list chiều_đi")
             
             if list_departure[0]["fareOption"]:
                 try : 
                   
                     booking_key_chieu_di = list_departure[0]["fareOption"][0].get("BookingKey")
-                    print("có booking key chiều đi")
+                    print("có booking key chiều_đi")
                     try:
                         BookingKeyDeluxe = None
 
@@ -677,28 +677,28 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                         
                         
                     except:
-                        print("không có booking key deluxe chiều đi")                      
+                        print("không có booking key deluxe chiều_đi")                      
                 except :
-                    print ( "không có booking key chiều đi ")
-                    return "❌ hết vé chiều đi"
+                    print ( "không có booking key chiều_đi ")
+                    return "❌ hết vé chiều_đi"
             else : 
                 
-                print(" hết vé chiều đi")
+                print(" hết vé chiều_đi")
                 return {
                     "status_code": 200,
                     "trang": "1",
                     "tổng_trang": "1",
                     "session_key": "",
                     "body": [],
-                    "message" : "Hết vé chiều đi"
+                    "message" : "Hết vé chiều_đi"
                 }
         if list_arrival :
-            print("lấy được list chiều về")
+            print("lấy được list chiều_về")
             
             if list_arrival[0]["fareOption"]:
                 try : 
                     booking_key_chieu_ve = list_arrival[0]["fareOption"][0].get("BookingKey")
-                    print("có booking key chiều về")
+                    print("có booking key chiều_về")
                     try:
                         BookingKeyDeluxeArrival = None
 
@@ -722,20 +722,20 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                         
 
                     except:
-                        print("không có booking key deluxe chiều về")                    
+                        print("không có booking key deluxe chiều_về")                    
                 except :
-                    print ( "không có booking key chiều về ")
-                    return "❌ hết vé chiều về"
+                    print ( "không có booking key chiều_về ")
+                    return "❌ hết vé chiều_về"
             else : 
                 
-                print(" hết vé chiều về")
+                print(" hết vé chiều_về")
                 return {
                     "status_code": 200,
                     "trang": "1",
                     "tổng_trang": "1",
                     "session_key": "",
                     "body": [],
-                    "message" : "Hết vé chiều về"
+                    "message" : "Hết vé chiều_về"
                 }
         
         if booking_key_chieu_ve and booking_key_chieu_di:
@@ -763,7 +763,7 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
             "tổng_trang": "1",
             "session_key": "",
             "body": [],
-            "message" : "Hết vé chiều đi"
+            "message" : "Hết vé chiều_đi"
         }
     if not vechieuve:
         return {
@@ -791,8 +791,8 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
             hanh_ly_vna = "None"
 
             to_hop = {
-                "chiều đi": chieu_di["chiều đi"],
-                "chiều về": chieu_ve["chiều về"],
+                "chiều_đi": chieu_di["chiều_đi"],
+                "chiều_về": chieu_ve["chiều_về"],
                 "thông_tin_chung": {
                     "giá_vé": str(gia_ve),
                     "giá_vé_gốc": str(gia_ve_goc),
