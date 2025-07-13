@@ -78,13 +78,18 @@ def get_company(bear,retry=False):
         return None
 def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
     url = "https://agentapi.vietjetair.com/api/v13/Booking/ancillaryOptions"
-
-    params = {
-        "bookingKey": booking_key,
-        "bookingKeyReturn": booking_key_return,
-        "languageCode": "vi"
-    }
-
+    if booking_key_return:
+        params = {
+            "bookingKey": booking_key,
+            "bookingKeyReturn": booking_key_return,
+            "languageCode": "vi"
+        }
+    else : 
+        params = {
+            "bookingKey": booking_key,
+            
+            "languageCode": "vi"
+        }
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -103,7 +108,8 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
 
     try:
         result = {
-           
+            "key_hành_lý_chiều_đi" :"",
+            "key_hành_lý_chiều_về" :""
         }
         response = requests.get(url, headers=headers, params=params)
         data = response.json()
@@ -150,13 +156,281 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
     except Exception as e:
         print (e)
         return {}
+def get_payment_methods(token,bookingkey_departure, bookingkey_arrival=None):
+    url = "https://agentapi.vietjetair.com/api/v13/Booking/paymentMethods"
     
-token = get_app_access_token_from_state()
-get_company(token)
-token = get_app_access_token_from_state()
+    # Params truyền qua URL
+    if bookingkey_arrival:
+        params = {
+            "bookingkeydeparture": bookingkey_departure,
+            "bookingkeyarrival": bookingkey_arrival
+        }
+    else:
+        params = {
+            "bookingkeydeparture": bookingkey_departure
+            
+        }
+
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "authorization": f"Bearer {token}",
+        "content-type": "application/json",
+        "languagecode": "vi",
+        "platform": "3",
+        "priority": "u=1, i",
+        "referer": "https://agents2.vietjetair.com/"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        data0  = data.get("data",[])
+        paykey = data0[0].get("key","")
+
+        
+        return paykey
+    except requests.exceptions.RequestException as err:
+        print("❌ Không lấy được get_payment_methods", err)
+        print("Status:", response.status_code if 'response' in locals() else "Unknown")
+      
+        return None  
+def create_booking(payload_dict, bearer_token):
+    url = "https://agentapi.vietjetair.com/api/v13/Booking/createbooking"
+
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "authorization": f"Bearer {bearer_token}",
+        "content-type": "application/json",
+        "languagecode": "vi",
+        "platform": "3",
+        "referer": "https://agents2.vietjetair.com/"
+    }
+
+    try:
+        res = requests.post(url, headers=headers, json=payload_dict)
+        res.raise_for_status()
+        
+        return res.json()
+    except Exception as e:
+        print("❌ Lỗi create booking:", e)
+        if res is not None:
+            print("Status:", res.status_code)
+            print("Response text:", res.text[:1000])  # in 1000 ký tự đầu
+        return None  
 
 
-key0="Mshf45MT70SUbvc9j1n0%C2%A5iEqoDoHXUtXQZLDaPrJfZ255y8b%C6%92zovWUG%C2%A5zE8l3WYMMLhW%C2%A5jCBk%C6%92OlHl3Be82PmMPj5rhwjMEIKY65oOtSwHD31Avwlyj%C2%A5Q8V7sLbQCthw6W4j8U2HlUGfp9sIAbF4JqUqEKT14l7v4AcOOwIkYokywbCqHigOblxeRzaabeyNuARc2CjVcjPSXFC6YLCFsjZ%C2%A5%C2%A5HIl4bTfNH2O%C6%92i%C6%92huGbO28nHOMg%C2%A5RN6%C2%A5QjfxfApDDKNkECHkB56g67gfU7yJu5uw0TKhJCnaGtVkPxBTzPKGLWXozmyIMWo%C2%A5mVtEElcmLAvQ81IxaMUG%C6%92bAobi1JN7n%C6%92IbtmdSArb1oQLruSJ9rVm5UEuoG9y0wOn6aSld%C2%A5F8yWgvw3%C2%A506Z7cr2yVrbpga20K%C2%A5LkfIYqY2agKt1Vpb35Peu96Pox1hW85QdWERcIuN2etaXCBHDtcCcMp5sWQ8NIsfEQYZEP7ehlThb3ledoOSJi8fd5DjHgKZ50AKvKKPjtAY1Py3ug8NfahgCiTZqlYd%C6%92jPgvUpFBRqJiw%C6%92P0="
+
+def build_passenger_data(passenger_list,soluong,start_index=1, is_child=False, is_infant=False):
+    passengers = []
+    index = start_index
+   
+
+    for p in passenger_list:
+        gioitinh = p["gioitinh"].strip().lower()
+        title = "Mr" if gioitinh == "nam" else "Mrs"
+        if is_child or is_infant:
+            title = None  # sửa lại null → None (Python chuẩn)
+        gender = "Male" if gioitinh == "nam" else "Female"
+
+        quoctich = p["quoctich"].strip().upper()
+        nation_code = "VNM" if quoctich == "VN" else "Korea"
+        nation_name = "Vietnam" if quoctich == "VN" else "Korea"
+
+        sendmail_flag = True if index == 1 else False
+
+        passenger = {
+            "index": index,
+            "sendmail": sendmail_flag,
+            "passengerSuffix": f" {index}" if index <  soluong  else "",
+            "fareApplicability": {
+                "child": is_child,
+                "adult": not is_child and not is_infant
+            },
+            "reservationProfile": {
+                "lastName": p["ten"],
+                "firstName": p["ho"],
+                "title": title,
+                "gender": gender,
+                "address": {
+                    "location": {
+                        "country": {
+                            "code": nation_code,
+                            "name": nation_name
+                        }
+                    }
+                } if index == 1 else {"location": {}},
+                
+                
+                "passport": {
+                    "number": p["cccd"]
+                },
+                "loyaltyProgram": {}
+            }
+        }
+        if index == 1:
+            passenger["reservationProfile"]["nationCountry"]={
+                "code": nation_code,
+                "name": nation_name
+            }
+            passenger["reservationProfile"]["personalContactInformation"] = {
+                "number": "764301092",
+                "mobileIsoCode": "VN",
+                "mobileNumber": "764301092",
+                "extension": "84",
+                "isoCode": "VN",
+                "phoneNumber": "764301092",
+                "email": "TRINH@gmail.com"
+            }
+
+        passengers.append(passenger)
+        index += 1
+
+    return passengers, index
+
+
+def build_journeys(passengers_count, bookingkey, bookingkeychieuve=None):
+    journeys = [{
+        "index": 1,
+        "passengerJourneyDetails": [
+            {"passenger": {"index": i + 1}, "bookingKey": bookingkey}
+            for i in range(passengers_count)
+        ]
+    }]
+    if bookingkeychieuve:
+        journeys.append({
+            "index": 2,
+            "passengerJourneyDetails": [
+                {"passenger": {"index": i + 1}, "bookingKey": bookingkeychieuve}
+                for i in range(passengers_count)
+            ]
+        })
+    return journeys
+
+def build_ancillary(passengers_count, keyhanhly, keyhanhlychieuve=None):
+    ancillary = [
+        {
+            "purchaseKey": keyhanhly,
+            "passenger": { "index": i + 1 },
+            "journey": { "index": 1 }
+        }
+        for i in range(passengers_count)
+    ]
+    if keyhanhlychieuve:
+        ancillary += [
+            {
+                "purchaseKey": keyhanhlychieuve,
+                "passenger": { "index": i + 1 },
+                "journey": { "index": 2 }
+            }
+            for i in range(passengers_count)
+        ]
+    return ancillary
+
+def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate, bookingkeychieuve=None, keyhanhlychieuve=None):
+    all_passengers = []
+    index = 1
+    soluong = len(passenger_data.get("nguoilon", [])) + len(passenger_data.get("treem", [])) + len(passenger_data.get("embe", []))
+    nguoilon, index = build_passenger_data(passenger_data.get("nguoilon", []),soluong,start_index=index, is_child=False)
+    all_passengers += nguoilon
+    treem, index = build_passenger_data(passenger_data.get("treem", []),soluong,start_index=index, is_child=True)
+    all_passengers += treem
+    embe, index = build_passenger_data(passenger_data.get("embe", []),soluong, start_index=index,is_child=False, is_infant=True)
+    all_passengers += embe
+    total_passengers = len(all_passengers)
+    journeys = build_journeys(total_passengers, bookingkey, bookingkeychieuve)
+    ancillaries = build_ancillary(total_passengers, keyhanhly, keyhanhlychieuve)
+    #print(ancillaries)
+    #print(journeys)
+    #print(all_passengers)
+    payload = {
+        "languagecode": "vi",
+        "bookingInformation": {
+            "contactInformation": {
+                "isoCode": "VN",
+                "extension": "84",
+                "phoneNumber": "765471420",
+                "name": "KOR HANVIET AIR",
+                "email": "Hanvietair@gmail.com"
+            }
+        },
+        "departureAirportCode": "ICN",
+        "passengers": all_passengers,
+        "journeys": journeys,
+        "seatSelections": [],
+        "ancillaryPurchases": ancillaries,
+        "paymentTransactions": [
+            {
+                "allPassengers": True,
+                "paymentMethod": {
+                    "key": keypaylate,
+                    "identifier": "PL"
+                },
+                "currencyAmounts": [
+                    {
+                        "totalAmount": 0,
+                        "exchangeRate": 1,
+                        "currency": { "code": "KRW" }
+                    }
+                ]
+            }
+        ]
+    }
+    return payload
+
+def booking(passenger_data,bookingkey,sochieu,bookingkeychieuve=None):
+    token = get_app_access_token_from_state()
+    get_company(token)
+    token = get_app_access_token_from_state()
+    if sochieu =="RT":
+        keyhanhly = get_ancillary_options(token,bookingkey,bookingkeychieuve)
+        
+    else :
+        keyhanhly = get_ancillary_options(token,bookingkey)
+    keyhanhlychieudi = keyhanhly["key_hành_lý_chiều_đi"]
+    keyhanhlychieuve = keyhanhly["key_hành_lý_chiều_về"]
+        
+    keypaylate = get_payment_methods(token,bookingkey,bookingkeychieuve)
+    #print(keyhanhly)
+    #print(keypaylate)
+    payload = build_payload_all(passenger_data, bookingkey, keyhanhlychieudi, keypaylate, bookingkeychieuve, keyhanhlychieuve)
+    print(payload)
+    result = create_booking(payload,token)
+    print(result)
+    mess = result["message"]
+    try:
+        mã_giữ_vé = result["data"]["locator"]
+        hạn_thanh_toán = result["data"]["datePayLater"]
+        print(mã_giữ_vé)
+        print(hạn_thanh_toán)
+        return {
+            "mã_giữ_vé" : mã_giữ_vé,
+            "hạn_thanh_toán" : hạn_thanh_toán,
+            "mess" : mess
+        }
+    except :
+        print(mess)
+        return {
+            "mã_giữ_vé" : "",
+            "hạn_thanh_toán" : "",
+            "mess" : mess
+        }
+    
+
+
+key0="NMHMbupgo3NPlnCPX4TsfvGl2Og¥xCGngnfCyxzG5zqkxzRdz9Wko5RMGUBSmUvNJniwZ45p83UWzKja9DMR3RadsIuPs2v53pMISSoT¥vag6ohoyouhRLGl3QsXPyue5M8P04H9ZPmqKlNATkmLW0XJk7QgVE1ay7Rw5jHE2yzHLbb5FgMbVpqY7cC4c9ChLmpOnf0QbuUEfK4g6p6vf9NQzCmlm61GUƒUHVssrcfywGHpEmihibekwfKdfcpkNpVmYR0oxXZJe1ƒU287u0zouez4Hfxk95c130QvOVnUreOzQHbWKGrhgSpyORgWsUK5hkwWS41¥vM7iOtxDA92JneuƒALQBtJPrx615N3i¥9bXkbynb3OAqƒuGJxkA1PBiE0URh1Kg8nYxwreurLc6YHrY8z4xdd4Ome95U8ave4KSfG3ZYBxERzG5r¥CSEaTHXQXpSxR9L1Qxv8zS¥PQ2rbpOxyCkVvVD1m1E5H2PlrVI2gvVpWsnS7ku8D¥HacB7Oh098igqTG6FjgKYJMyJdjkpUY61n8Z1Fa4EUUNCuw="
+
+
 key1="Mshf45MT70SUbvc9j1n0%C2%A5pItqj6RM9X%C6%92tj1EqDCLxAOISt2WtYEmWPV0WpUUYBrZjkVNS2eAF2knxYE6SGlkc4gCHR7NqNxSwtrC%C6%925YuHDGl7Qv79LP%C6%92Hkdb7zAK%C6%92yptqAkcxC9o%C6%92UoyM28rNgOl%C2%A5t9S6Zkhn0hbkzj017bVyRqmT8I8a7mSd%C6%92ZyGjOvA1Fz50iuNwrQBAOQYHJS%C6%92rE62yNxHXsF78uWMOX0KeU4cRqb0QzMHwJb1SpA40p%C2%A5XUnGfjp%C2%A5Ph3QQZqPUf8ufD1mpdpwj3YUW2iS36qMmy6p%C6%92yuIRd2G8obFM3XJOI5zO%C2%A5pn6ciT80O0V5QALcK%C6%925m1d0a%C2%A5dXr8ruLxThVLbu4Ti%C6%92jTAov1ymLvycdP3QKSw%C2%A5cqIlvtkyKaQjrKzwmvNvElG%C6%92T36vlpGMMVcWpsFXvQtJvkSXjxtXDMA7hpi7GfFDYzimAJ5m3TID4FfQuK6YhEyELMRUld5rIHx40Bsjmep282OzzVNmszuOlY73WmT1vwpYkQqhZO%C2%A5N2e4C50t9AUxfguM3Nb%C6%92HIODhr2IpXPpghY="
-test = get_ancillary_options(token,key0,key1)
-print(test)
+ds_khach = {
+    "nguoilon": [
+        {"ho": "Nguyen", "ten": "An", "cccd": "123123123123", "gioitinh": "nam", "quoctich": "VN"},
+        {"ho": "Le", "ten": "Hoa", "cccd": "456456456456", "gioitinh": "nu", "quoctich": "VN"},
+    ],
+    "treem": [
+        {"ho": "Tran", "ten": "Bo", "cccd": "789789789789", "gioitinh": "nam", "quoctich": "VN"},
+    ],
+    "embe": []
+}
+booking(ds_khach,key0,"OW")
