@@ -15,9 +15,28 @@ from datetime import datetime, timedelta
 import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
+from holdbookingkeyVJ import booking
 
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
+class HanhKhach(BaseModel):
+    Họ: str = Field(..., example="Nguyen")
+    Tên: str = Field(..., example="An")
+    Hộ_chiếu: str = Field(..., example="B12345678")
+    Giới_tính: str = Field(..., example="nam")
+    Quốc_tịch: str = Field(..., example="VN")
+
+class DSKhach(BaseModel):
+    người_lớn: list[HanhKhach]
+    trẻ_em: Optional[list[HanhKhach]] = []
+    em_bé: Optional[list[HanhKhach]] = []
+
+class BookingRequest(BaseModel):
+    ds_khach: DSKhach
+    bookingkey: str = Field(..., description="Booking Key chiều đi", example="")
+    sochieu: str = Field(..., description="OW (1 chiều) hoặc RT (khứ hồi)", example="OW")
+    sanbaydi: Optional[str] = Field(None, description="Sân bay đi (ví dụ: ICN)", example="")
+    bookingkeychieuve: Optional[str] = Field(None, description="Booking Key chiều về (nếu có)", example="")
 
 class VjdetailRequest(BaseModel):
     booking_key: str =""
@@ -496,3 +515,25 @@ async def vj_detail_v2(request: VjdetailRequest):
 
     except Exception as e:
         return {"status_code": 500, "body": str(e)}
+@app.post("/vj/booking", summary="Tạo giữ vé", tags=[" Booking"])
+async def create_booking(request: BookingRequest):
+    def preprocess(khach: HanhKhach):
+        return {
+            "Họ": khach.Họ,
+            "Tên": khach.Tên,
+            "Hộ_chiếu": khach.Hộ_chiếu,
+            "Giới_tính": khach.Giới_tính,
+            "Quốc_tịch": khach.Quốc_tịch
+        }
+
+    ds_khach = {
+        "nguoilon": [preprocess(x) for x in request.ds_khach.người_lớn],
+        "treem": [preprocess(x) for x in request.ds_khach.trẻ_em],
+        "embe": [preprocess(x) for x in request.ds_khach.em_bé]
+    }
+
+    # Bọc hàm sync thành bất đồng bộ
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.bookingkeychieuve)
+    asyncio.create_task(safe_send_vj(result))
+    return result
