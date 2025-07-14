@@ -1,3 +1,17 @@
+Main IP: 103.149.28.32
+
+Port: 22
+
+Username: root
+
+Password: gT5dC7!!
+
+
+
+
+
+
+
 apt update && apt upgrade -y
 apt install python3 python3-pip git curl unzip -y
 pip3 install --user playwright
