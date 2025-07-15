@@ -95,8 +95,29 @@ sudo nginx -t && sudo systemctl reload nginx
 python3 -m playwright install-deps
 
 
+nano ~/fix.sh
+------------------------------------------------
+#!/bin/bash
+
+cd ~/API_Fly/ || exit 1
+python3 getcokivj.py
+----------------------------------------------------
+chmod +x ~/fix.sh
+
 
 #  updategithub
+
+nano ~/update_api.sh
+------------------------
+#!/bin/bash
+
+cd /root/API_Fly || exit
+git pull origin main
+systemctl restart uvicorn
+-------------------------------
+chmod +x ~/update_api.sh
+
+
 
 ~/update_api.sh
 
