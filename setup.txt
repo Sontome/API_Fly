@@ -99,3 +99,7 @@ python3 -m playwright install-deps
 #  updategithub
 
 ~/update_api.sh
+
+#fix lỗi vj ko ra vé 
+
+~/fix.sh
