@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
+from backend_api_vj_lowest_v2 import lay_danh_sach_ve_re_nhat
 from backend_api_vj_detail_v2 import api_vj_detail_v2,api_vj_detail_rt_v2
 from backend_api_vj_v2 import api_vj_rt_v2
 from backen_api_vna import api_vna
@@ -37,7 +38,14 @@ class BookingRequest(BaseModel):
     sochieu: str = Field(..., description="OW (1 chiều) hoặc RT (khứ hồi)", example="OW")
     sanbaydi: Optional[str] = Field(None, description="Sân bay đi (ví dụ: ICN)", example="")
     bookingkeychieuve: Optional[str] = Field(None, description="Booking Key chiều về (nếu có)", example="")
-
+class VjLowFareRequest(BaseModel):
+    departure: str  = Field(..., description="Mã sân bay đi (VD: ICN)",example="ICN")
+    arrival: str    = Field(..., description="Mã sân bay đến (VD: HAN)", example="HAN")
+    sochieu: str   = Field(..., description="OW (1 chiều) hoặc RT (khứ hồi)", example="OW")
+    departure_date: str   = Field(..., description="Ngày đi (YYYY-MM-DD)", example="YYYY-MM-DD")
+    return_date: Optional[str] = Field(None, description="Ngày về (YYYY-MM-DD)",example="")
+    
+   
 class VjdetailRequest(BaseModel):
     booking_key: str =""
     adt: str = "1"
@@ -537,3 +545,33 @@ async def create_booking(request: BookingRequest):
     result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.bookingkeychieuve)
     asyncio.create_task(safe_send_vj(result))
     return result
+@app.post("/vj/lowfare-v2")
+async def vj_lowfare_v2(request: VjLowFareRequest):
+      
+    
+    if request.sochieu.upper() == "RT":
+        if not request.return_date:
+            raise HTTPException(status_code=400, detail="chưa có ngày về")  
+    
+
+    try:
+        
+        return_date =None
+        if request.return_date:
+            return_date=request.return_date
+        result = await lay_danh_sach_ve_re_nhat(
+            departure=request.departure,
+            arrival=request.arrival,
+            sochieu=request.sochieu,
+            departure_date=request.departure_date,
+            return_date= return_date
+        )
+        
+
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+
+    except Exception as e:
+        return {"status_code": 500, "body": str(e)}

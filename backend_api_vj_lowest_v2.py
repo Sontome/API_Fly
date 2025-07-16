@@ -1,22 +1,16 @@
-import requests
 import json
-
+import httpx
 from datetime import datetime
-
-CONFIG_GIA_FILE = "config_gia.json"
-import subprocess
-import urllib.parse
-global token
-# 🔧 Giá mặc định
-
-
-
+import asyncio
 
 # ✅ Lấy token từ state.json
-def get_app_access_token_from_state(file_path="state.json"):
-    
-    with open(file_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+async def get_app_access_token_from_state(file_path="state.json"):
+    def read_file():
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    data = await asyncio.to_thread(read_file)
+    # Đọc xong mới return
     origins = data.get("origins", [])
     for origin in origins:
         local_storage = origin.get("localStorage", [])
@@ -24,112 +18,134 @@ def get_app_access_token_from_state(file_path="state.json"):
             if item.get("name") == "app_access_token":
                 return item.get("value")
     return None
-def get_company(bear,retry=False):
-    global token
+
+# ✅ Lấy danh sách công ty từ API VJ
+async def get_company(token: str):
     url = "https://agentapi.vietjetair.com/api/v13/Booking/getlistcompanies"
     headers = {
         "accept": "application/json, text/plain, */*",
-        "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
-        "authorization": f"Bearer {bear}",
+        "authorization": f"Bearer {token}",
         "content-type": "application/json",
         "languagecode": "vi",
-        "platform": "3",
-        "priority": "u=1, i",
-        "sec-ch-ua": '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site"
+        "platform": "3"
     }
-    
-    response = requests.get(url, headers=headers)
-    if response.status_code == 401:
 
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, headers=headers)
 
-        print("🔐 Token hết hạn, chạy lại getcokivj.py để lấy token mới...")
-        try:
-            subprocess.run(["python", "getcokivj.py"], check=True)
-            if not retry:
-                # 🧠 Gọi lại chính nó sau khi có token mới
-                new_token = get_app_access_token_from_state()
-                token = new_token
-                data =  get_company(new_token,retry=True)
-                return data 
-                
-                
-        except Exception as e:
-            print("❌ Lỗi khi chạy getcokivj.py:", e)
-        return None        
-
-    if response.status_code == 200:
-        
-        return response.json()
-    else:
-        print(f"Lỗi , status code: {response.status_code}")
-        print(response.text)
+    if resp.status_code == 401:
+        print("🔐 Token hết hạn. Đại ca cần chạy lại `getcokivj.py` để làm mới token.")
         return None
-def get_lowfare_options(bearer_token, company,departure,departure_date ,arrival,return_date=None):
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/lowFareOptions"
 
+    if resp.status_code == 200:
+        return resp.json()
+    else:
+        print(f"Lỗi khi lấy công ty - status: {resp.status_code}")
+        print(resp.text)
+        return None
+
+# ✅ Format lại dữ liệu chuyến bay
+def format_flight_data(raw_data):
+    formatted_flights = []
+    
+    for flight in raw_data:
+        departure_date = flight['departureDate']
+        date_obj = datetime.strptime(departure_date, '%Y-%m-%d')
+        formatted_date = date_obj.strftime('%d/%m/%Y')
+        
+        fare_charges = flight['fareOption']['fareCharges'][0]
+        base_amount = fare_charges['currencyAmounts'][0]['baseAmount']
+        
+        fare_class_code = flight['fareOption']['fareClass']['code']
+        fare_type = fare_class_code.split('_')[1] if '_' in fare_class_code else fare_class_code
+        
+        formatted_flight = {
+            "ngày": formatted_date,
+            "giá_vé_gốc": int(base_amount),
+            "loại_vé": fare_type
+        }
+        
+        formatted_flights.append(formatted_flight)
+    
+    return formatted_flights
+
+# ✅ Gọi API lấy vé VJ
+async def get_vietjet_flights(token, company, departure, arrival, departure_date, return_date=None,
+                              currency="KRW", adult_count=1, child_count=0,
+                              cabin_class="Y", infant_count=0):
+    base_url = "https://agentapi.vietjetair.com/api/v13/Booking/lowFareOptions"
+    
     params = {
-        "cityPair": departure +"-"+arrival,
-        "departure": departure_date,
-        "currency": "KRW",
-        "adultCount": "1" ,
-        "childCount": "0",
-        "infantCount": "0",
-        "cabinClass": "Y",
-        "Return": return_date,
-        "company": company
-
-
-
+        'cityPair': f"{departure}-{arrival}",
+        'departure': departure_date,
+        'currency': currency,
+        'adultCount': adult_count,
+        'childCount': child_count,
+        'cabinClass': cabin_class,
+        'infantCount': infant_count,
+        'company': company
     }
+    if return_date:
+        params["Return"] = return_date
 
     headers = {
-        "accept": "application/json, text/plain, */*",
-        "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
-        "authorization": f"Bearer {bearer_token}",
-        "content-type": "application/json",
-        "languagecode": "vi",
-        "platform": "3",
-        "priority": "u=1, i",
-        "sec-ch-ua": '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site"
+        'accept': 'application/json, text/plain, */*',
+        'authorization': f"Bearer {token}",
+        'content-type': 'application/json',
+        'languagecode': 'vi',
+        'platform': '3'
     }
 
-    try:
-        result = {
-            "chiều_đi":[],
-            "chiều_về":[],
-            "resultcode" : 0,
-            "message" : ""
-        }  
-        response = requests.get(url, headers=headers, params=params)
-        res = response.json()
-        data = res.get("data",[])
-        datachieudi = data.get("departure",[])
-        datachieuve = data.get("arrival",[])
-        result["chiều_đi"] = datachieudi
-        result["chiều_về"] = datachieuve
-        return result
-    except Exception as e:
-        print (e)
-        return result
-def lay_danh_sach_ve_re_nhat(departure,departure_date ,sochieu,arrival,return_date=None):
-    if sochieu == "OW":
-        
-        return_date= None
-    token = get_app_access_token_from_state()
-    company = get_company(token)
-    token = get_app_access_token_from_state()
-    result = get_lowfare_options(token,company,departure,departure_date,arrival,return_date)
-    return result
+    async with httpx.AsyncClient() as client:
+        response = await client.get(base_url, headers=headers, params=params)
 
-test = lay_danh_sach_ve_re_nhat("ICN","2025-07-15","OW","HAN")
-print(test)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Lỗi khi gọi API lowFare: {response.status_code}")
+        print(response.text)
+        return None
+
+# ✅ Hàm chính để lấy vé rẻ nhất
+async def lay_danh_sach_ve_re_nhat(departure, arrival, sochieu, departure_date, return_date=None):
+    if sochieu == "OW":
+        return_date = None
+
+    res = {
+        "status_code": "200",
+        "message": "",
+        "body": {
+            "chiều_đi": [],
+            "chiều_về": []
+        }
+    }
+
+    token = await get_app_access_token_from_state()
+    if not token:
+        res["status_code"] = "401"
+        res["message"] = "Không lấy được token"
+        return res
+
+    company_info = await get_company(token)
+    if not company_info:
+        res["status_code"] = "403"
+        res["message"] = "Không lấy được danh sách công ty"
+        return res
+
+    company = company_info['data'][1]['company']['key']
+
+    flight_result = await get_vietjet_flights(token, company, departure, arrival, departure_date, return_date)
+
+    if flight_result:
+        res["message"] = flight_result.get("message", "")
+        if flight_result.get("resultcode") == 1:
+            datachieudi = flight_result.get("data", {}).get("departure", [])
+            datachieuve = flight_result.get("data", {}).get("arrival", [])
+            res["body"]["chiều_đi"] = format_flight_data(datachieudi)
+            res["body"]["chiều_về"] = format_flight_data(datachieuve)
+        else:
+            res["resultcode"] = flight_result.get("resultcode", "")
+    else:
+        res["message"] = "Lỗi không lấy được danh sách"
+
+    return res
