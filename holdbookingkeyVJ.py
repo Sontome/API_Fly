@@ -109,7 +109,9 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
     try:
         result = {
             "key_hành_lý_chiều_đi" :"",
-            "key_hành_lý_chiều_về" :""
+            "key_hành_lý_chiều_về" :"",
+            "loai_hành_lý_chiều_về" :"",
+            "loai_hành_lý_chiều_đi" :"",
         }
         response = requests.get(url, headers=headers, params=params)
         data = response.json()
@@ -129,12 +131,14 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             giá_hành_lý_eco_chiều_đi = hành_lý_ECO_chiều_đi.get("purchaseKey","")
             
             result["key_hành_lý_chiều_đi"]= giá_hành_lý_eco_chiều_đi
+            result["loai_hành_lý_chiều_đi"]= "ECO"
         if ancillaries_return:
             hành_lý_ECO_chiều_về = next((item for item in ancillaries_return if item.get("originalName") == "Bag 20kgs"), None)
             giá_hành_lý_eco_chiều_về = hành_lý_ECO_chiều_về.get("purchaseKey","")
             
             
             result["key_hành_lý_chiều_về"]= giá_hành_lý_eco_chiều_về
+            result["loai_hành_lý_chiều_về"]= "ECO"
         defaultWithFare_item = next((item for item in data if item.get("code") == "DefaultWithFare"), None)  
         default_ancillaries_departure=[]
         default_ancillaries_return=[]
@@ -146,12 +150,15 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Deluxe 20kgs"), [])
             giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("purchaseKey","")
             result["key_hành_lý_chiều_đi"]= giá_hành_lý_deluxe_chiều_đi
+            result["loai_hành_lý_chiều_đi"]= "DELUXE"
             
         if default_ancillaries_return:
             hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Deluxe 20kgs"), [])
             giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("purchaseKey","")
             
             result["key_hành_lý_chiều_về"]= giá_hành_lý_deluxe_chiều_về
+            result["loai_hành_lý_chiều_về"]= "DELUXE"
+        print (result)
         return result
     except Exception as e:
         print (e)
@@ -192,6 +199,7 @@ def get_payment_methods(token,bookingkey_departure, bookingkey_arrival=None):
         
         return paykey
     except requests.exceptions.RequestException as err:
+        print (response)
         print("❌ Không lấy được get_payment_methods", err)
         print("Status:", response.status_code if 'response' in locals() else "Unknown")
       
@@ -334,15 +342,17 @@ def build_journeys(passengers_count, bookingkey, bookingkeychieuve=None):
         })
     return journeys
 
-def build_ancillary(passengers_count, keyhanhly, keyhanhlychieuve=None):
-    ancillary = [
-        {
-            "purchaseKey": keyhanhly,
-            "passenger": { "index": i + 1 },
-            "journey": { "index": 1 }
-        }
-        for i in range(passengers_count)
-    ]
+def build_ancillary(passengers_count, keyhanhly=None, keyhanhlychieuve=None):
+    ancillary = []
+    if keyhanhly:
+        ancillary = [
+            {
+                "purchaseKey": keyhanhly,
+                "passenger": { "index": i + 1 },
+                "journey": { "index": 1 }
+            }
+            for i in range(passengers_count)
+        ]
     if keyhanhlychieuve:
         ancillary += [
             {
@@ -416,8 +426,14 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,bookingkeychieuve=None):
         
     else :
         keyhanhly = get_ancillary_options(token,bookingkey)
-    keyhanhlychieudi = keyhanhly["key_hành_lý_chiều_đi"]
-    keyhanhlychieuve = keyhanhly["key_hành_lý_chiều_về"]
+    if keyhanhly["loai_hành_lý_chiều_đi"] == "ECO":
+        keyhanhlychieudi = keyhanhly["key_hành_lý_chiều_đi"]
+    else :
+        keyhanhlychieudi = None
+    if keyhanhly["loai_hành_lý_chiều_về"] == "ECO":    
+        keyhanhlychieuve = keyhanhly["key_hành_lý_chiều_về"]
+    else:
+        keyhanhlychieuve = None
         
     keypaylate = get_payment_methods(token,bookingkey,bookingkeychieuve)
     #print(keyhanhly)
