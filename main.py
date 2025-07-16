@@ -5,6 +5,7 @@ from backend_api_vj_v2 import api_vj_v2
 from backend_api_vj_lowest_v2 import lay_danh_sach_ve_re_nhat
 from backend_api_vj_detail_v2 import api_vj_detail_v2,api_vj_detail_rt_v2
 from backend_api_vj_v2 import api_vj_rt_v2
+from getinfopnr_vj import checkpnr_vj
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
 from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
@@ -575,3 +576,8 @@ async def vj_lowfare_v2(request: VjLowFareRequest):
 
     except Exception as e:
         return {"status_code": 500, "body": str(e)}
+@app.post("/vj/checkpnr")
+async def vj_checkpnr(pnr):
+    result = await checkpnr_vj(pnr)
+    
+    return result
