@@ -454,7 +454,7 @@ def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
                 "điểm_dừng_1": "",
                 "điểm_dừng_2": "",
                 "loại_vé": (fare.get("Description")).upper(),
-                
+                "giá_vé_gốc": fare.get("FareCost"),
                 "BookingKey": fare.get("BookingKey")
                 },
                 "thông_tin_chung": {
