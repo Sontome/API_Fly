@@ -332,21 +332,21 @@ def convert_price(data):
         return {
             "người lớn": {
                 "giá_vé": lamtron(adult_total),
-                "giá_vé_gốc": adult_base,
-                "phí_nhiên_liệu": adult_fuel,
-                "thuế_phí_công_cộng": adult_tax
+                "giá_vé_gốc": lamtron(adult_base),
+                "phí_nhiên_liệu": lamtron(adult_fuel),
+                "thuế_phí_công_cộng": lamtron(adult_tax)
             },
             "trẻ em": {
                 "giá_vé": lamtron(child_total),
-                "giá_vé_gốc": child_base,
-                "phí_nhiên_liệu": child_fuel,
-                "thuế_phí_công_cộng": child_tax
+                "giá_vé_gốc": lamtron(child_base),
+                "phí_nhiên_liệu": lamtron(child_fuel),
+                "thuế_phí_công_cộng": lamtron(child_tax)
             },
             "trẻ sơ sinh": {
                 "giá_vé": lamtron(infant_total),
-                "giá_vé_gốc": infant_base,
-                "phí_nhiên_liệu": infant_fuel,
-                "thuế_phí_công_cộng": infant_tax
+                "giá_vé_gốc": lamtron(infant_base),
+                "phí_nhiên_liệu": lamtron(infant_fuel),
+                "thuế_phí_công_cộng": lamtron(infant_tax)
             }
         }
 
