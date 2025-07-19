@@ -13,7 +13,7 @@ global token
 
 
 def lamtron(so):
-    return math.ceil(so / 100) * 100
+        return math.ceil(so / 100) * 100
 # ✅ Lấy token từ state.json
 def get_app_access_token_from_state(file_path="state.json"):
     
@@ -178,8 +178,8 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             hành_lý_ECO_chiều_về = next((item for item in ancillaries_return if item.get("originalName") == "Bag 20kgs"), None)
             giá_hành_lý_eco_chiều_về = hành_lý_ECO_chiều_về.get("totalAmount",0)
             
-            result["chiều_về"]["HANH_LY_ECO"]= giá_hành_lý_eco_chiều_về
-            result["chiều_về"]["HANH_LY"]= giá_hành_lý_eco_chiều_về
+            result["chiều_về"]["HANH_LY_ECO"]= (giá_hành_lý_eco_chiều_về)
+            result["chiều_về"]["HANH_LY"]= (giá_hành_lý_eco_chiều_về)
         defaultWithFare_item = next((item for item in data if item.get("code") == "DefaultWithFare"), None)  
         default_ancillaries_departure=[]
         default_ancillaries_return=[]
@@ -190,17 +190,18 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
         if default_ancillaries_departure:
             hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Deluxe 20kgs"), [])
             giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("totalAmount",0)
-            result["chiều_đi"]["HANH_LY"]= giá_hành_lý_deluxe_chiều_đi
-            result["chiều_đi"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_đi
+            result["chiều_đi"]["HANH_LY"]= (giá_hành_lý_deluxe_chiều_đi)
+            result["chiều_đi"]["HANH_LY_DELUXE"]= (giá_hành_lý_deluxe_chiều_đi)
         if default_ancillaries_return:
             hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Deluxe 20kgs"), [])
             giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
-            result["chiều_về"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_về
-            result["chiều_về"]["HANH_LY"]= giá_hành_lý_deluxe_chiều_về
+            result["chiều_về"]["HANH_LY_DELUXE"]= (giá_hành_lý_deluxe_chiều_về)
+            result["chiều_về"]["HANH_LY"]= (giá_hành_lý_deluxe_chiều_về)
         return result
     except Exception as e:
         print (e)
         return {}
+
 def extract_tax(tax,departure):
     """
     Hàm xử lý dữ liệu thuế từ API VietJet
@@ -305,6 +306,7 @@ def extract_tax(tax,departure):
             "phí_nhiên_liệu": 0
         }
 def convert_price(data):
+    
     # Hàm tính toán cho từng chiều
     def calc_detail(flight_data):
         fares = flight_data.get("fares", 0)
@@ -402,9 +404,9 @@ async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_cou
     giá_hành_lý = get_ancillary_options(token,booking_key)
     if giá_hành_lý:
         #print(giá_hành_lý)
-        result["detail"]["người lớn"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_đi"]["HANH_LY"])
         result["detail"]["người lớn"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
-        result["detail"]["trẻ em"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_đi"]["HANH_LY"])
         result["detail"]["trẻ em"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
         if child_count == 0:
            result["detail"]["trẻ em"]["giá_vé"] = 0
@@ -457,13 +459,13 @@ async def api_vj_detail_rt_v2(booking_key,booking_key_arrival, adult_count=1, ch
     giá_hành_lý = get_ancillary_options(token,booking_key,booking_key_arrival)
     if giá_hành_lý:
         #print(giá_hành_lý)
-        result["detail"]["người lớn"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_đi"]["HANH_LY"])
         result["detail"]["người lớn"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
-        result["detail"]["trẻ em"]["giá_vé"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_đi"]["HANH_LY"])
         result["detail"]["trẻ em"]["giá_vé_gốc"] +=giá_hành_lý["chiều_đi"]["HANH_LY"]
-        result["detail"]["người lớn"]["giá_vé"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
+        result["detail"]["người lớn"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_về"]["HANH_LY"])
         result["detail"]["người lớn"]["giá_vé_gốc"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
-        result["detail"]["trẻ em"]["giá_vé"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
+        result["detail"]["trẻ em"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_về"]["HANH_LY"])
         result["detail"]["trẻ em"]["giá_vé_gốc"] +=giá_hành_lý["chiều_về"]["HANH_LY"]
         if child_count == 0:
            result["detail"]["trẻ em"]["giá_vé"] = 0
