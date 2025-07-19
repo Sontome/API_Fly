@@ -56,7 +56,8 @@ def format_time(time_str):
     except Exception as e:
         print("❌ Format lỗi :", e)
         return time_str
-
+def lamtron(so, boi=100):
+    return math.ceil(so / boi) * boi
 # ✅ Lấy token từ state.json
 def get_app_access_token_from_state(file_path="state.json"):
     
@@ -501,7 +502,7 @@ def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
                     ve["thông_tin_chung"]["giá_vé_gốc"] += hanh_ly_eco
                 else:
                     ve["thông_tin_chung"]["giá_vé_gốc"] += config["HANH_LY_DELUXE"]
-                ve["thông_tin_chung"]["giá_vé"] += ve["thông_tin_chung"]["giá_vé_gốc"]+ve["thông_tin_chung"]["phí_nhiên_liệu"]+ve["thông_tin_chung"]["thuế_phí_công_cộng"]
+                ve["thông_tin_chung"]["giá_vé"] += lamtron(ve["thông_tin_chung"]["giá_vé_gốc"]+ve["thông_tin_chung"]["phí_nhiên_liệu"]+ve["thông_tin_chung"]["thuế_phí_công_cộng"])
                 ve["thông_tin_chung"]["giá_vé"]=str(math.floor(ve["thông_tin_chung"]["giá_vé"]))
                 ve["thông_tin_chung"]["giá_vé_gốc"]=str(math.floor(ve["thông_tin_chung"]["giá_vé_gốc"]))
                 ve["thông_tin_chung"]["phí_nhiên_liệu"]=str(ve["thông_tin_chung"]["phí_nhiên_liệu"])
