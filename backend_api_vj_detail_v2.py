@@ -12,7 +12,8 @@ global token
 
 
 
-
+def lamtron(so):
+    return math.ceil(so / 100) * 100
 # ✅ Lấy token từ state.json
 def get_app_access_token_from_state(file_path="state.json"):
     
@@ -330,19 +331,19 @@ def convert_price(data):
 
         return {
             "người lớn": {
-                "giá_vé": adult_total,
+                "giá_vé": lamtron(adult_total),
                 "giá_vé_gốc": adult_base,
                 "phí_nhiên_liệu": adult_fuel,
                 "thuế_phí_công_cộng": adult_tax
             },
             "trẻ em": {
-                "giá_vé": child_total,
+                "giá_vé": lamtron(child_total),
                 "giá_vé_gốc": child_base,
                 "phí_nhiên_liệu": child_fuel,
                 "thuế_phí_công_cộng": child_tax
             },
             "trẻ sơ sinh": {
-                "giá_vé": infant_total,
+                "giá_vé": lamtron(infant_total),
                 "giá_vé_gốc": infant_base,
                 "phí_nhiên_liệu": infant_fuel,
                 "thuế_phí_công_cộng": infant_tax
