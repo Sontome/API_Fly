@@ -111,7 +111,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
         'activedCLSS2': '',
         'activedAirport': f"{dep0}-{arr0}",
         
-        'activedVia': activedVia,
+        'activedVia': "0",
         'activedStatus': 'OK,HL',
         'activedIDT': activedIDT,
         'minAirFareView': '1',
@@ -189,10 +189,14 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
             return "EXCEPTION", str(e)
     
     async with aiohttp.ClientSession(cookies=cookies, connector=connector) as session:
-        await warm_up_session(session)
+        #await warm_up_session(session)
         for attempt in range(2):
+            if attempt == 2 :
+                form_data["activedVia"] = "0,1,2"
             status, result = await call_vna_api(session, form_data)
+            
             print(f"🎯 Gọi API lần {attempt+1} =>", status)
+
             if status == "OK":
                 break
         
