@@ -190,8 +190,8 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
     
     async with aiohttp.ClientSession(cookies=cookies, connector=connector) as session:
         #await warm_up_session(session)
-        for attempt in range(2):
-            if attempt == 2 :
+        for attempt in range(4):
+            if attempt == 4 :
                 form_data["activedVia"] = "0,1,2"
             status, result = await call_vna_api(session, form_data)
             
