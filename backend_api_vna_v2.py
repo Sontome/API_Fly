@@ -111,7 +111,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
         'activedCLSS2': '',
         'activedAirport': f"{dep0}-{arr0}",
         
-        'activedVia': "0",
+        'activedVia': activedVia,
         'activedStatus': 'OK,HL',
         'activedIDT': activedIDT,
         'minAirFareView': '1',
