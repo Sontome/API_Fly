@@ -37,8 +37,9 @@ def format_date(ngay_str):
         return None
 
 def create_session_powercall():
-    print(datetime.now().strftime("%Y%m%d_%H"))
-    return datetime.now().strftime("%Y%m%d_%H")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    print(timestamp)
+    return timestamp
 
 def parse_gia_ve(raw_str):
     parts = list(map(int, raw_str.split("/")))
@@ -58,7 +59,7 @@ def parse_gia_ve(raw_str):
 
 
 # ====== 🔍 LỌC VÉ ====== #
-async def doc_va_loc_ve_re_nhat(data):
+async def doc_va_loc_ve_re_nhat(data,activedVia):
     #print(data)
     trang = str(data.get("PAGE", "1"))
     tong_trang = str(data.get("TOTALPAGE", "1"))
@@ -77,6 +78,7 @@ async def doc_va_loc_ve_re_nhat(data):
         "trang": trang,
         "tổng_trang": tong_trang,
         "session_key" : session_key,
+        "activedVia" : activedVia,
         "body" : "null"
         }
         
@@ -85,6 +87,7 @@ async def doc_va_loc_ve_re_nhat(data):
         "trang": trang,
         "tổng_trang": tong_trang,
         "session_key" : session_key,
+        "activedVia" : activedVia,
         "body" :fares_thang
     }
 
@@ -196,7 +199,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
             status, result = await call_vna_api(session, form_data)
             
             print(f"🎯 Gọi API lần {attempt+1} =>", status)
-
+            activedVia = form_data["activedVia"]
             if status == "OK":
                 break
         
@@ -208,7 +211,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
         
         
     #print(result)
-    kq= await doc_va_loc_ve_re_nhat(result)
+    kq= await doc_va_loc_ve_re_nhat(result,activedVia)
     
     return kq
 
