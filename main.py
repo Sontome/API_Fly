@@ -102,6 +102,7 @@ class VnadetailRequest(BaseModel):
     filterTimeSlideMax1: str = "2355"
     miniFares: str =""
     session_key: str = ""
+    hành_lý_vna: str = ""
 
 async def safe_send_vj(result):
     try:
@@ -371,7 +372,11 @@ async def vna_detail_v2(request_detail: VnadetailRequest):
                 status_code=400,
                 detail="Thiếu số thứ tự chuyến bay cần lấy thông tin"
             )
-    print(f"0{request_detail.miniFares},0{int(request_detail.miniFares)+2}")
+    print(f"02{request_detail.miniFares},02{int(request_detail.miniFares)+2}")
+    if request_detail.hành_lý_vna == "ADT" :
+        mnfare = f"02{request_detail.miniFares},02{int(request_detail.miniFares)}"
+    else:
+        mnfare = f"02{request_detail.miniFares},02{int(request_detail.miniFares)+2}"
     try:
         if request_detail.sochieu.upper() != "RT":
             result = await api_vna_detail_v2(
@@ -389,7 +394,7 @@ async def vna_detail_v2(request_detail: VnadetailRequest):
                 chd=request_detail.chd,
                 inf=request_detail.inf,
                 sochieu=request_detail.sochieu,
-                miniFares=f"02{request_detail.miniFares},02{int(request_detail.miniFares)+2}",
+                miniFares=mnfare,
                 session_key=request_detail.session_key
             )
         else:
@@ -409,7 +414,7 @@ async def vna_detail_v2(request_detail: VnadetailRequest):
                 chd=request_detail.chd,
                 inf=request_detail.inf,
                 sochieu=request_detail.sochieu,
-                miniFares=f"02{request_detail.miniFares},02{int(request_detail.miniFares)+2}",
+                miniFares=mnfare,
                 session_key=request_detail.session_key
             )
         
