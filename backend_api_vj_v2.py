@@ -9,7 +9,10 @@ import subprocess
 import urllib.parse
 global token
 # 🔧 Giá mặc định
-
+def convert_hhmm_to_minutes(hhmm: str) -> int:
+    hours = int(hhmm[:2])
+    minutes = int(hhmm[3:])
+    return hours * 60 + minutes
 def price_add(chieudi: dict, chieuve: dict | None, config_gia: dict) -> int:
     tong = 0
 
@@ -447,7 +450,7 @@ def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
                 "nơi_đến": flight_info.get("arrivalAirport", {}).get("Code"),
                 "giờ_cất_cánh": gio0,
                 "ngày_cất_cánh": f"{ngay0[8:10]}/{ngay0[5:7]}/{ngay0[:4]}",
-                "thời_gian_bay": flight_info.get("Duration"),
+                "thời_gian_bay": str(convert_hhmm_to_minutes(flight_info.get("Duration"))),
                 "thời_gian_chờ": "00:00",
                 "giờ_hạ_cánh": gio1,
                 "ngày_hạ_cánh": f"{ngay1[8:10]}/{ngay1[5:7]}/{ngay1[:4]}",
