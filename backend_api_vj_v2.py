@@ -454,6 +454,7 @@ def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
                 "thời_gian_chờ": "00:00",
                 "giờ_hạ_cánh": gio1,
                 "ngày_hạ_cánh": f"{ngay1[8:10]}/{ngay1[5:7]}/{ngay1[:4]}",
+                "số_hiệu_máy_bay": flight_info.get("Number"),
                 "số_điểm_dừng": "0",
                 "điểm_dừng_1": "",
                 "điểm_dừng_2": "",
