@@ -83,6 +83,7 @@ def format_flight_data(data):
     hanthanhtoan = data.get("datePayLater", "")
     paymentstatus = data.get("paymentstatus", "")
     tongbillgiagoc = data.get("totalamount", "")
+    currency = data.get("currency", "").get("code", "")
     pnr = data.get("locator", "")
     listthongtinchuyenbay = data.get("journeys", [])
 
@@ -150,6 +151,7 @@ async def checkpnr_vj(pnr):
         return None
     print(result)
     return result
+
 
 
 
