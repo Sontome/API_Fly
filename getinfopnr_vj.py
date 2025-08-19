@@ -80,13 +80,18 @@ async def get_vietjet_pnr(token, PNR ):
         print(response.text)
         return None
 def format_flight_data(data):
+    pas = data.get("passengers", [])
+    
     hanthanhtoan = data.get("datePayLater", "")
     paymentstatus = data.get("paymentstatus", "")
     tongbillgiagoc = data.get("totalamount", "")
     currency = data.get("currency", "").get("code", "")
     pnr = data.get("locator", "")
     listthongtinchuyenbay = data.get("journeys", [])
-
+    lastName = pas[0].get("lastName","")
+    firstName = pas[0].get("firstName","")
+    email = pas[0].get("email","")
+    phonenumber = pas[0].get("phonenumber","")
     result = {}
     i = 1  # đặt ngoài vòng for
 
@@ -129,7 +134,10 @@ def format_flight_data(data):
         "tongbillgiagoc": tongbillgiagoc,
         "currency" : currency,
         "paymentstatus": paymentstatus,
-        
+        "lastName":lastName,
+        "firstName":firstName,
+        "email":email,
+        "phonenumber":phonenumber,
         "hanthanhtoan": hanthanhtoan,
         "chieudi": result.get("1"),
         "chieuve": result.get("2",{}),
@@ -153,6 +161,7 @@ async def checkpnr_vj(pnr):
         return None
     print(result)
     return result
+
 
 
 
