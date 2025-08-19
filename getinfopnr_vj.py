@@ -3,9 +3,12 @@ import httpx
 from datetime import datetime
 import asyncio
 import subprocess
-
+vjkrw ="state.json"
+vjvnd ="statevnd.json"
+vjkrwpy ="getcokivj.py"
+vjvndpy ="getcokivjvnd.py"
 # ✅ Lấy token từ state.json
-async def get_app_access_token_from_state(file_path="state.json"):
+async def get_app_access_token_from_state(file_path=vjkrw):
     def read_file():
         with open(file_path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -21,7 +24,7 @@ async def get_app_access_token_from_state(file_path="state.json"):
     return None
 
 # ✅ Lấy danh sách công ty từ API VJ
-async def get_company(token: str):
+async def get_company(token: str,file_path=vjkrwpy):
     url = "https://agentapi.vietjetair.com/api/v13/Booking/getlistcompanies"
     headers = {
         "accept": "application/json, text/plain, */*",
@@ -37,7 +40,7 @@ async def get_company(token: str):
     if resp.status_code == 401:
         print("🔐 Token hết hạn. Đại ca cần chạy lại `getcokivj.py` để làm mới token.")
         try:
-            subprocess.run(["python", "getcokivj.py"])
+            subprocess.run(["python", file_path])
         except:
             print ("lỗi khi reload cookie")
         return None
@@ -151,14 +154,21 @@ async def checkpnr_vj(pnr):
     
 
     company_info = await get_company(token)
-    com =company_info
+    
     token = await get_app_access_token_from_state()
     res = await get_vietjet_pnr(token,pnr)
     if res:
         result = format_flight_data(res)
     else :
-        print(res)
-        return None
+        token = await get_app_access_token_from_state(vjvnd)
+        company_info = await get_company(token,vjvndpy)
+        token = await get_app_access_token_from_state(vjvnd)
+        res = await get_vietjet_pnr(token,pnr)
+        if res:
+            result = format_flight_data(res)
+        else :
+            print(res)
+            return None
     print(result)
     return result
 
