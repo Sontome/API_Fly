@@ -129,7 +129,7 @@ def format_flight_data(data):
         "paymentstatus": paymentstatus,
         "hanthanhtoan": hanthanhtoan,
         "chieudi": result.get("1"),
-        "chieuve": result.get("2"),
+        "chieuve": result.get("2",{}),
     }
 
     return res
@@ -150,6 +150,7 @@ async def checkpnr_vj(pnr):
         return None
     print(result)
     return result
+
 
 
 
