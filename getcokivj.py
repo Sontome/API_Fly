@@ -7,9 +7,9 @@ def login_and_save(page, context):
     print("🔐 Đăng nhập...")
     page.goto("https://agents2.vietjetair.com/login")
 
-    page.fill('input[name="username"]', "KR242009A18KXM")
+    page.fill('input[name="username"]', "KR000242A58H4I")
     
-    page.fill('input[name="password"]', "Bdgsdb@254355615")
+    page.fill('input[name="password"]', "Glvav@3143156487")
     page.click('button[class="mat-focus-indicator button_login font_16 font_button full-width mat-raised-button mat-button-base"]')
     time.sleep(10)
     page.wait_for_load_state("networkidle")
@@ -41,3 +41,4 @@ with sync_playwright() as p:
 
     
    
+
