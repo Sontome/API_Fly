@@ -134,16 +134,22 @@ def format_flight_data(data):
 
     res = {
         "pnr": pnr,
+        "status": "OK",
+        "hang": "VJ",
         "tongbillgiagoc": tongbillgiagoc,
         "currency" : currency,
         "paymentstatus": paymentstatus,
-        "lastName":lastName,
-        "firstName":firstName,
-        "email":email,
-        "phonenumber":phonenumber,
+        
         "hanthanhtoan": hanthanhtoan,
         "chieudi": result.get("1"),
         "chieuve": result.get("2",{}),
+        "passengers": [
+        {
+            "lastName": lastName,
+            "firstName": firstName,
+            "phonenumber":phonenumber,
+            "email": email
+        }]
     }
 
     return res
