@@ -29,7 +29,7 @@ def kill_chrome():
 
 def start_script():
     try:
-        os.chdir(WORK_DIR)
+       
         subprocess.Popen(["python3", SCRIPT_NAME])
         print(f"Đã start lại {SCRIPT_NAME}")
     except Exception as e:
@@ -46,4 +46,5 @@ if __name__ == "__main__":
     time.sleep(3)
 
     # 4. Start lại script
+
     start_script()
