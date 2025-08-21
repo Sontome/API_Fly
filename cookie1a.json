@@ -1,0 +1,222 @@
+[
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apfplus/modules/smkrunninglist",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apfplus/modules/taskHome",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apfplus/modules/searchat",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apfplus/modules/smkmain",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/cryptic/apfplus/modules/cryptic",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apfplus/modules/session",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apf/init",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "JSID",
+    "value": "true",
+    "domain": ".amadeus.com",
+    "path": "/app_ard/apf/view",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apf/view",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "BIGipCookie",
+    "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/app_ard/apfplus",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "JSESSIONID",
+    "value": "trUF-Zf273zGAc_5vIvBSi978jGPtKC41CeCZqFZ.ard-cryptic-7f959f947f-qgtqg",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/cryptic",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "um_jst",
+    "value": "F2CA29350D65A3D7A046F0CD361A46AC5B3A2D216A338729B660DA4C6FC94702",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "ebc2aa992cf645323d0297f24970c1b4",
+    "value": "a1fbf245e90b26c9da0381effa736d0c",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "visid_incap_3123266",
+    "value": "36Q4IYqaTBO5Tc3ugqQOJwGcpWgAAAAAQUIPAAAAAACs9ZDAcJIZr/Gs0ENyNLNm",
+    "domain": ".resdesktop.altea.amadeus.com",
+    "path": "/",
+    "expires": 1787156843.016761,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "incap_ses_291_3123266",
+    "value": "E7X0JJNkvXKuqtRxWdcJBAGcpWgAAAAAICoaqGhiddf8zJbQs2XHcg==",
+    "domain": ".resdesktop.altea.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "lss_loc_id",
+    "value": "074753725C908718B609E5FFAEFF8FCE6C95091216618D75F8C9B5BA7CFE44F7",
+    "domain": "www.accounts.amadeus.com",
+    "path": "/",
+    "expires": 1790243846.231331,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "visid_incap_1943990",
+    "value": "RiVPlMtcTJe6HnahUbSnVgKcpWgAAAAAQUIPAAAAAAC6syIC+g/9g4OdpqcODGRS",
+    "domain": ".accounts.amadeus.com",
+    "path": "/",
+    "expires": 1787163237.85305,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "nlbi_1943990",
+    "value": "Qm2JRbS8nmXgXgfq3kQ37gAAAABTbi3j4s4cvfJja/OTclBN",
+    "domain": ".accounts.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "incap_ses_309_1943990",
+    "value": "f85xFTnsVSWukckNOspJBAKcpWgAAAAAhLxHMvb1yJrfSvZw1VdCtA==",
+    "domain": ".accounts.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "accessToken_ARD_VN_DC",
+    "value": "4AFDWuOlLCLYD506d_o-BHLFfDx5GV2c",
+    "domain": "www.accounts.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "lss_loc_id",
+    "value": "26C1316417464B639E792BF76E01DD4CD52C1A444CFD511E28A97715385111C9",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/",
+    "expires": 1787219849.416373,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "prxCookie",
+    "value": "!Zuj29Cd1Vu5QntWyn7PJcTxiVNWnrzIIhlemisCSG/EATj59Wwsj2bQmV5dIZGh3t5fC8VOh2WI1vYTsRlFXmyVOMxnOgZ1RD5t7Bvwi",
+    "domain": "tc345.resdesktop.altea.amadeus.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  }
+]
