@@ -18,6 +18,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
+from backendapi1a import checkPNR
 
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
@@ -585,4 +586,9 @@ async def vj_lowfare_v2(request: VjLowFareRequest):
 async def vj_checkpnr(pnr):
     result = await checkpnr_vj(pnr)
     
+    return result
+@app.post("/vna/checkpnr")
+async def vna_checkpnr(pnr):
+    result = await checkPNR(pnr)
+    print(result)
     return result
