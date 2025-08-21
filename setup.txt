@@ -22,6 +22,38 @@ pip3 install -r requirements.txt
 sudo ln -s /usr/bin/python3 /usr/bin/python
 python3 -m playwright install-deps
 
+
+
+
+Cài setup autologin1a 24/24 reboot:
+nano /etc/systemd/system/login1A.service
+----------------------------------------------
+[Unit]
+Description=Login 1A Playwright Script
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/API_Fly
+ExecStart=/usr/bin/python3 /root/API_Fly/login1A.py
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
+-----------------------------------------
+
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable login1A
+systemctl start login1A
+
+
+
+
+
 Cài setup uvicorn 24/24 reboot:
 nano /etc/systemd/system/uvicorn.service
 ----------------------------------------------
@@ -50,7 +82,7 @@ systemctl start uvicorn
 
 check status :
 systemctl status uvicorn    thoát (q)
-
+systemctl status login1A    thoát (q)
 
 
 Mở port :
