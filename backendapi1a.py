@@ -261,8 +261,9 @@ async def send_close(client: httpx.AsyncClient, ssid=None):
     return ssid, resp
 async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     ssid, cryp = loadJsession(ssid)
-    if cryp==None:
-        return ssid, None
+    #print(ssid,cryp["status"])
+    if cryp["status"]=="ERROR":
+        return ssid, cryp["code"]
     #print(ssid, cryp)
     jSessionId = cryp["jSessionId"]
     contextId = cryp["dcxid"]
@@ -386,8 +387,9 @@ async def checkPNR(code,ssid=None):
         async with httpx.AsyncClient(http2=False) as client:
             # chỉ gọi send_command lần đầu ở đây
             ssid, res = await send_command(client, "RT"+str(code))
-            if cryp==None:
-                return ("403")
+            
+            if str(res)=="403":
+                return (str(res))
             data = json.loads(res.text)
 
 
@@ -406,8 +408,9 @@ async def checkPNR(code,ssid=None):
             
         print(f"⏱️ Tổng thời gian chạy: {time.time() - start_time:.2f} giây")
         return result
-    except:
+    except Exception as e:
+        print (" lỗi :" +str(e))
         return None
 
 if __name__ == "__main__":
-    asyncio.run(checkPNR("FJRPXF"))
+    print(asyncio.run(checkPNR("FJRPXF")))

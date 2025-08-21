@@ -52,9 +52,9 @@ def createNewSession(
 
         resp = session.post(url_create, headers=headers, data=data)
         if resp.status_code != 200:
-            print(resp.status_code)
+            #print(resp.status_code)
             return {"status": "ERROR", "message": "Tạo session key thất bại", "code": resp.status_code}
-        print(resp.text)
+        #print(resp.text)
         
         # ===== Lấy ENC mới =====
         match = re.search(r'<!\[CDATA\[(.*?)\]\]>', resp.text, re.S)
@@ -92,7 +92,7 @@ def createNewSession(
             "initialAction": "newCrypticSession",
             "waiAria": "false",
             "LOG_PARENT_JSESSIONID": LOG_PARENT_JSESSIONID,
-            "recordLocator": "[object PointerEvent]",  # Cái này chắc phải đổi cho đúng data
+            "recordLocator": "[object PointerEvent]", 
             "ctiAcknowledge": "false",
             "aria.target": "body.main.s1",
             "aria.sprefix": "s1",
@@ -113,11 +113,8 @@ def createNewSession(
         )
         match_cryptic = pattern.search(resp_login.text)
         if match_cryptic==None:
-            print("🔐 Token hết hạn. Đại ca cần chạy lại `getcokivj.py` để làm mới token.")
-            try:
-                subprocess.run(["python", file_path])
-            except:
-                print ("lỗi khi reload cookie")
+            #print("🔐 Token hết hạn.  cần chạy lại `login1A.py` để làm mới token.")
+            
             return None
 
         cryptic_data = None
@@ -153,7 +150,7 @@ def createNewSession(
             
             except:
                 cryptic_data = None
-
+                return None
         return result
 
     except Exception as e:
