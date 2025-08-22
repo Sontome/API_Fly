@@ -588,7 +588,7 @@ async def vj_checkpnr(pnr):
     
     return result
 @app.post("/vna/checkpnr")
-async def vna_checkpnr(pnr):
-    result = await checkPNR(pnr)
+async def vna_checkpnr(pnr,ssid):
+    result = await checkPNR(pnr,ssid)
     print(result)
     return result
