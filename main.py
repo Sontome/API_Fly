@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTa
 from fastapi.middleware.cors import CORSMiddleware
 from backend_read_PDF_VNA_VN import reformat_VNA_VN
 from backend_read_PDF_VNA_EN import reformat_VNA_EN
+from backend_read_PDF_VNA_KR import reformat_VNA_KR
 import os
 from fastapi.responses import FileResponse
 from backend_api_vj import api_vj
@@ -656,6 +657,46 @@ async def process_pdf_VNA_EN(
     # Xử lý PDF
     try:
         reformat_VNA_EN(temp_path, new_text=option,output_path=output_path)
+    except Exception as e:
+        return {"error": str(e)}
+
+    # Xóa file input ngay nếu không cần giữ
+    try:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+    except Exception as e:
+        print(f"Lỗi xóa file input: {e}")
+
+    # Thêm task xóa file output sau khi gửi xong
+    background_tasks.add_task(
+        lambda: os.path.exists(output_path) and os.remove(output_path)
+    )
+
+    # Trả file output về cho client
+    return FileResponse(
+        path=output_path,
+        filename=file.filename,
+        media_type="application/pdf"
+    )
+@app.post("/process-pdf-vna-kr/")
+async def process_pdf_VNA_KR(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    option: str = Form("")
+):
+    # Tạo đường dẫn file tạm input
+    temp_path = os.path.join(TEMP_DIR, f"KR_{file.filename}")
+
+    # Ghi file upload vào thư mục tạm
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+
+    # Tạo đường dẫn file output
+    output_path = os.path.join(TEMP_DIR, f"output_KR_{file.filename}")
+
+    # Xử lý PDF
+    try:
+        reformat_VNA_KR(temp_path, new_text=option,output_path=output_path)
     except Exception as e:
         return {"error": str(e)}
 
