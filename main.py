@@ -22,7 +22,8 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
 from backendapi1a import checkPNR
-
+TEMP_DIR = "/root/API_Fly/tmp_files"
+os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 class HanhKhach(BaseModel):
@@ -599,31 +600,39 @@ async def vna_checkpnr(pnr,ssid):
 async def process_pdf_VNA_VN(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    option: str = Form("") # tham số test
-           # ví dụ chỉ xử lý 1 page
+    option: str = Form("")
 ):
-    temp_path = f"VN{file.filename}"
-    
+    # Tạo đường dẫn file tạm input
+    temp_path = os.path.join(TEMP_DIR, f"VN_{file.filename}")
+
+    # Ghi file upload vào thư mục tạm
     with open(temp_path, "wb") as f:
         f.write(await file.read())
 
     # Tạo đường dẫn file output
-    
+    output_path = os.path.join(TEMP_DIR, f"output_VN_{file.filename}")
 
-    # Gọi hàm xử lý PDF, truyền thêm param nếu cần
+    # Xử lý PDF
     try:
         reformat_VNA_VN(temp_path, new_text=option)
     except Exception as e:
         return {"error": str(e)}
-        
 
-    # Xoá file input nếu không cần giữ
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
-    background_tasks.add_task(os.remove, "output"+temp_path)
-    # Trả file PDF đã xử lý về cho client
+    # Xóa file input ngay nếu không cần giữ
+    try:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+    except Exception as e:
+        print(f"Lỗi xóa file input: {e}")
+
+    # Thêm task xóa file output sau khi gửi xong
+    background_tasks.add_task(
+        lambda: os.path.exists(output_path) and os.remove(output_path)
+    )
+
+    # Trả file output về cho client
     return FileResponse(
-        path="output"+temp_path,
-        filename=f"{file.filename}",
+        path=output_path,
+        filename=file.filename,
         media_type="application/pdf"
     )
