@@ -611,8 +611,11 @@ async def process_pdf_VNA_VN(
     
 
     # Gọi hàm xử lý PDF, truyền thêm param nếu cần
-    reformat_VNA_VN(temp_path, new_text=option)
-    
+    try:
+        reformat_VNA_VN(temp_path, new_text=option)
+    except Exception as e:
+        return {"error": str(e)}
+        
 
     # Xoá file input nếu không cần giữ
     if os.path.exists(temp_path):
