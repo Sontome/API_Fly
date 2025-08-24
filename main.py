@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from backend_read_PDF_VNA_VN import reformat_VNA_VN
-
+import os
 from fastapi.responses import FileResponse
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
