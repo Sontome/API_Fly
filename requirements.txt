@@ -5,3 +5,5 @@ datetime
 requests
 uvicorn
 aiohttp
+PyMuPDF
+python-multipart
