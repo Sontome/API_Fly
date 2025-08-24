@@ -614,7 +614,7 @@ async def process_pdf_VNA_VN(
 
     # Xử lý PDF
     try:
-        reformat_VNA_VN(temp_path, new_text=option)
+        reformat_VNA_VN(temp_path, new_text=option,output_path=output_path)
     except Exception as e:
         return {"error": str(e)}
 

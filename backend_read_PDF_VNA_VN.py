@@ -6,10 +6,10 @@ NEW_TEXT = "Noi xuat ve:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL1
  
 START_PHRASE = "Nơi xuất vé:"
 END_PHRASE = "Ngày:"
-def replace_text_between_phrases(pdf_path,
+def replace_text_between_phrases(pdf_path,output_path,
                                   new_text,start_phrase=START_PHRASE, end_phrase=END_PHRASE,
                                  font_size=10):
-    outputpath = "output"+pdf_path
+    
     doc = fitz.open(pdf_path)
     page = doc[0]  # chỉ page đầu
     fs = font_size * 0.8
@@ -194,11 +194,11 @@ def replace_text_between_phrases(pdf_path,
     })
 
     # ===== LƯU TRỰC TIẾP =====
-    doc.save(outputpath)
+    doc.save(output_path)
     #print(f"[DEBUG] Đã lưu file ra: {outputpath}")
     doc.close()
     time.sleep(0.5)
-    extract_first_page(outputpath)
+    extract_first_page(output_path)
     
 
 def extract_first_page(input_pdf):
