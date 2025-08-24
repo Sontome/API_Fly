@@ -240,6 +240,6 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 # Ví dụ dùng
 
 # ===== TEST =====
-reformat_VNA_KR("input.pdf","output.pdf")
+#reformat_VNA_KR("input.pdf","output.pdf")
 
 #extract_first_page("output.pdf")
