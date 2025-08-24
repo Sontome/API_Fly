@@ -218,12 +218,12 @@ def extract_first_page(input_pdf):
 
 
  
-def reformat_VNA_VN(input_pdf,new_text=NEW_TEXT):
+def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
     if new_text=="":
         new_text=NEW_TEXT
     replace_text_between_phrases(
     input_pdf,
-    
+    output_path,
     new_text
 )
 # Ví dụ dùng
