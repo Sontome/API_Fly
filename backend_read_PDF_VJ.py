@@ -70,7 +70,7 @@ def replace_text_between_phrases(pdf_path, output_path,
     if found_time and found_date:
         try:
             flight_dt = datetime.strptime(f"{found_date} {found_time}", "%d/%m/%Y %H:%M")
-            checkin_dt = flight_dt - timedelta(hours=4)
+            checkin_dt = flight_dt - timedelta(hours=3)
             periodt = "(Sang)" if checkin_dt.hour < 12 else "(Chieu)"
             note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc\n len may bay."
             print(f"[DEBUG] Giờ check-in: {note_str}")
@@ -177,4 +177,5 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 # ===== TEST =====
 
 #reformat_VJ("input.pdf","output.pdf")
+
 #extract_first_page("output.pdf")
