@@ -62,7 +62,7 @@ def replace_text_between_phrases(pdf_path,output_path,
     if found_time and found_date:
         try:
             flight_dt = datetime.strptime(f"{found_date} {found_time}", "%d/%m/%Y %H:%M")
-            checkin_dt = flight_dt - timedelta(hours=4)
+            checkin_dt = flight_dt - timedelta(hours=3)
             periodt = "(AM)" if checkin_dt.hour < 12 else "(PM)"
             note_str = f"Note: Please arrive at the airport before {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} to check in."
             #print(f"[DEBUG] Giờ check-in: {note_str}")
@@ -239,5 +239,6 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT):
 
 # ===== TEST =====
 #reformat_VNA_EN("input.pdf","output.pdf")
+
 
 #extract_first_page("output.pdf")
