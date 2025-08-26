@@ -134,12 +134,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 page.insert_text((adj_x, adj_y+i*(fs+2)), line, fontsize=fs, fill=(0,0,0), render_mode=0)
 
     # ===== GẮN LINK =====
-    rect = fitz.Rect(0,0,600,200)
-    page.insert_link({"kind": fitz.LINK_URI, "from": rect,
-                      "uri":"https://www.facebook.com/HanVietAirCom", "border":[0,0,1]})
-    rect = fitz.Rect(0,500,600,800)
-    page.insert_link({"kind": fitz.LINK_URI, "from": rect,
-                      "uri":"https://www.facebook.com/HanVietAirCom", "border":[0,0,1]})
+    
     # ===== LƯU FILE =====
     doc.save(output_path)
     doc.close()
