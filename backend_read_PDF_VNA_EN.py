@@ -134,23 +134,20 @@ def replace_text_between_phrases(pdf_path,output_path,
     note_text = "(1)OK = confirmed , RQ/SA = Waitlisted"
     search_rects = page.search_for(note_text)
     for rect in search_rects:
-        #print("[DEBUG] Thêm ghi chú cho dòng OK/RQ")
-            # Xác định vùng cần xoá bên dưới dòng này
-        delete_rect = fitz.Rect(
-            rect.x0,                 # giữ nguyên x0
-            rect.y1,                 # bắt đầu ngay dưới dòng
-            rect.x1 + 500,           # kéo rộng để xoá hết ngang
-            rect.y1 + 800            # kéo xuống đủ để xoá hết phần dưới
-        )
-        page.add_redact_annot(delete_rect)
+        # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+        rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
+        page.add_redact_annot(rect_del)
         page.apply_redactions()
+        # Thêm note_str
         page.insert_text(
             (rect.x0, rect.y1 + 20),
             note_str,
-            fontsize=fs*1.4,
+            fontsize=fs*1.7,
             fill=(1, 0, 0),
             render_mode=0
         )
+
+
 
     # ===== REPLACE TEXT CHÍNH =====
     blocks = page.get_text("blocks")
@@ -194,13 +191,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                     )
 
     # ===== GẮN LINK MỚI =====
-    rect = fitz.Rect(000, 000, 600, 200)  # (x1, y1, x2, y2)
-    page.insert_link({
-        "kind": fitz.LINK_URI,
-        "from": rect,
-        "uri": "https://www.facebook.com/HanVietAirCom",
-        "border": [0, 0, 1]
-    })
+   
 
     # ===== LƯU TRỰC TIẾP =====
     doc.save(output_path)
@@ -238,7 +229,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT):
 # Ví dụ dùng
 
 # ===== TEST =====
-#reformat_VNA_EN("input.pdf","output.pdf")
+reformat_VNA_EN("input.pdf","output.pdf")
 
 
 #extract_first_page("output.pdf")

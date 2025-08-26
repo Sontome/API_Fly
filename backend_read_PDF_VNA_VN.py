@@ -134,11 +134,15 @@ def replace_text_between_phrases(pdf_path,output_path,
     note_text = "(1) OK = Đã xác nhận , RQ/SA = Chưa xác nhận chỗ"
     search_rects = page.search_for(note_text)
     for rect in search_rects:
-        #print("[DEBUG] Thêm ghi chú cho dòng OK/RQ")
+        # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+        rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
+        page.add_redact_annot(rect_del)
+        page.apply_redactions()
+        # Thêm note_str
         page.insert_text(
             (rect.x0, rect.y1 + 20),
             note_str,
-            fontsize=fs*1.4,
+            fontsize=fs*1.7,
             fill=(1, 0, 0),
             render_mode=0
         )
@@ -185,13 +189,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                     )
 
     # ===== GẮN LINK MỚI =====
-    rect = fitz.Rect(000, 000, 600, 200)  # (x1, y1, x2, y2)
-    page.insert_link({
-        "kind": fitz.LINK_URI,
-        "from": rect,
-        "uri": "https://www.facebook.com/HanVietAirCom",
-        "border": [0, 0, 1]
-    })
+    
 
     # ===== LƯU TRỰC TIẾP =====
     doc.save(output_path)
