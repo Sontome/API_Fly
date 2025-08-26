@@ -198,6 +198,7 @@ def replace_text_between_phrases(pdf_path,output_path,
     #print(f"[DEBUG] Đã lưu file ra: {outputpath}")
     doc.close()
     time.sleep(0.5)
+    print(output_path)
     extract_first_page(output_path)
     
 
@@ -229,7 +230,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT):
 # Ví dụ dùng
 
 # ===== TEST =====
-reformat_VNA_EN("input.pdf","output.pdf")
+#reformat_VNA_EN("input.pdf","output.pdf")
 
 
 #extract_first_page("output.pdf")
