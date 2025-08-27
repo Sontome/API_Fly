@@ -598,7 +598,7 @@ async def vj_checkpnr(pnr):
     return result
 @app.post("/vna/checkpnr")
 async def vna_checkpnr(pnr,ssid):
-    result = await checkPNR(pnr,ssid)
+    result = await checkPNR(pnr,str(ssid))
     print(result)
     return result
 
@@ -729,6 +729,6 @@ async def check_payment_VJ(
     return res
 @app.post("/check-so-mat-ve-vna/")
 async def check_so_mat_ve_VNA(pnr,ssid):
-    result = await checksomatveVNA(pnr,ssid)
+    result = await checksomatveVNA(pnr,str(ssid))
     print(result)
     return result
