@@ -96,7 +96,23 @@ def parse_flights(data):
         })
 
     return flights
+def formatsove(text):
+    # Cắt từng dòng + bỏ dòng trống
+    lines = [l.strip() for l in text.split("\n") if l.strip()]
 
+    tickets = []
+    seen = set()
+
+    for line in lines:
+        if any(key in line for key in ["FA PAX", "FA INF", "FA CHD"]):
+            parts = line.split()
+            if len(parts) >= 4:
+                ticket_number = parts[3].split("/")[0]
+                if ticket_number not in seen:
+                    seen.add(ticket_number)
+                    tickets.append(ticket_number)
+
+    return tickets
 def formatPNR(text):
     # Cắt từng dòng + bỏ dòng trống
     lines = [l.strip() for l in text.split("\n") if l.strip()]
@@ -393,6 +409,50 @@ async def checkPNR(code,ssid=None):
     except Exception as e:
         print (" lỗi :" +str(e))
         return None
+async def checksomatveVNA(code,ssid=None):
+    start_time = time.time()
+    segments=None
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            # chỉ gọi send_command lần đầu ở đây
+            ssid, res = await send_command(client, "IG", ssid)
+            ssid, res = await send_command(client, "RT"+str(code),ssid)
+            
+            if str(res)=="403":
+                return (str(res))
+            data = json.loads(res.text)
 
-if __name__ == "__main__":
-    print(asyncio.run(checkPNR("FJRPXF","Check")))
+
+            segments = data["model"]["output"]["crypticResponse"]["response"]
+            if segments =="INVALID RECORD LOCATOR\n>":
+                return {
+                    "status": "Không phải VNA"
+                }
+            #print(segments)
+            loop_count=0
+            while ")>" in segments and loop_count < 3:
+                loop_count += 1
+                ssid, res_md = await send_command(client, "md", ssid)
+                data_md = json.loads(res_md.text)
+                segments_md = data_md["model"]["output"]["crypticResponse"]["response"]
+                segments += segments_md  # gộp thêm
+                
+
+                segments = deduplicate_lines(segments)
+            with open("test.json", "w", encoding="utf-8") as f:
+                 f.write(segments)
+            ssid, res = await send_command(client, "IG", ssid)
+            #result = parse_booking(segments)
+            result =len(formatsove(segments))
+        with open("ketqua.json", "w", encoding="utf-8") as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+
+            
+        print(f"⏱️ Tổng thời gian chạy: {time.time() - start_time:.2f} giây")
+        return result
+    except Exception as e:
+        print (" lỗi :" +str(e))
+        return None
+
+# if __name__ == "__main__":
+#     print(asyncio.run(checksomatveVNA("DMSOVU","Check")))

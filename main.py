@@ -26,7 +26,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR
+from backendapi1a import checkPNR,checksomatveVNA
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -727,4 +727,8 @@ async def check_payment_VJ(
 
     # Trả file output về cho client
     return res
-    
+@app.post("/check-so-mat-ve-vna/")
+async def check_so_mat_ve_VNA(pnr,ssid):
+    result = await checksomatveVNA(pnr,ssid)
+    print(result)
+    return result
