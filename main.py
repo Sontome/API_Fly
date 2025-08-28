@@ -5,6 +5,7 @@ from backend_read_PDF_VNA_EN import reformat_VNA_EN
 from backend_read_PDF_VNA_KR import reformat_VNA_KR
 from backend_read_PDF_VJ import reformat_VJ
 from backend_checkpayment_PDF_VJ import check_payment
+from checkdate_VJ import checkdate_VJ
 from backend_read_PDF_VNA import check_ngon_ngu
 import os
 from fastapi.responses import FileResponse
@@ -732,3 +733,39 @@ async def check_so_mat_ve_VNA(pnr,ssid):
     result = await checksomatveVNA(pnr,str(ssid))
     print(result)
     return result
+@app.post("/checkdate-vj/")
+async def checkdate_VJ(
+    
+    file: UploadFile = File(...)
+    
+):
+    # Tạo đường dẫn file tạm input
+    temp_path = os.path.join(TEMP_DIR, f"{file.filename}")
+
+    # Ghi file upload vào thư mục tạm
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+
+    # Tạo đường dẫn file output
+    res = None
+    
+    # Xử lý PDF
+    try:
+        
+        res=checkdate_VJ(temp_path)
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+    # Xóa file input ngay nếu không cần giữ
+    try:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+    except Exception as e:
+        print(f"Lỗi xóa file input: {e}")
+
+    # Thêm task xóa file output sau khi gửi xong
+    
+
+    # Trả file output về cho client
+    return res
