@@ -734,7 +734,7 @@ async def check_so_mat_ve_VNA(pnr,ssid):
     print(result)
     return result
 @app.post("/checkdate-vj/")
-async def checkdate_VJ(
+async def checkdate_VJ_Api(
     
     file: UploadFile = File(...)
     
@@ -768,4 +768,5 @@ async def checkdate_VJ(
     
 
     # Trả file output về cho client
+
     return res
