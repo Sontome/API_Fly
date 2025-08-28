@@ -26,5 +26,3 @@ def checkdate_VJ(pdf_path):
     return "-".join(converted_dates)
 
 # Ví dụ chạy
-result = checkdate_VJ("input.pdf")
-print(result)
