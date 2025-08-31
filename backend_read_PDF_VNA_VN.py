@@ -86,7 +86,7 @@ def replace_text_between_phrases(pdf_path,output_path,
             time_part = line.strip()
             try:
                 t = datetime.strptime(time_part, "%H:%M")
-                hour = checkin_dt.hour
+                hour = t.hour
 
                 if 0 <= hour <= 6:
                     periodt = "(Rang sang)"
@@ -255,6 +255,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
