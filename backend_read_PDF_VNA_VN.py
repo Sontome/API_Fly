@@ -63,7 +63,8 @@ def replace_text_between_phrases(pdf_path,output_path,
         try:
             flight_dt = datetime.strptime(f"{found_date} {found_time}", "%d/%m/%Y %H:%M")
             checkin_dt = flight_dt - timedelta(hours=3)
-            
+            hour = checkin_dt.hour
+
             if 0 <= hour <= 6:
                 periodt = "(Rang sang)"
             elif 6 < hour <= 11:
@@ -85,7 +86,8 @@ def replace_text_between_phrases(pdf_path,output_path,
             time_part = line.strip()
             try:
                 t = datetime.strptime(time_part, "%H:%M")
-                
+                hour = checkin_dt.hour
+
                 if 0 <= hour <= 6:
                     periodt = "(Rang sang)"
                 elif 6 < hour <= 11:
@@ -253,6 +255,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
