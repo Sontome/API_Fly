@@ -98,7 +98,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                     periodt = "(Chieu)"
                 else:
                     periodt = "(Đem)"
-                time_part_new = f"{time_part} {period}"
+                time_part_new = f"{time_part} {periodt}"
                 #print(f"[DEBUG] Đổi giờ: '{time_part}' → '{time_part_new}'")
             except:
                 continue
@@ -255,6 +255,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
