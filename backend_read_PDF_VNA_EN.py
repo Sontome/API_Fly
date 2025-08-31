@@ -75,6 +75,8 @@ def replace_text_between_phrases(pdf_path,output_path,
             time_part = line.strip()
             try:
                 t = datetime.strptime(time_part, "%H:%M")
+               
+                hour = t.hour
                 if 0 <= hour <= 6:
                     periodt = "(Early Morning)"
                 elif 6 < hour <= 11:
@@ -85,7 +87,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                     periodt = "(Afternoon)"
                 else:
                     periodt = "(Night)"
-                time_part_new = f"{time_part} {period}"
+                time_part_new = f"{time_part} {periodt}"
                 #print(f"[DEBUG] Đổi giờ: '{time_part}' → '{time_part_new}'")
             except:
                 continue
@@ -245,4 +247,5 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
