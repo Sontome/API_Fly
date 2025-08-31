@@ -90,7 +90,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                     (rect.x0, rect.y0 + 5),
                     time_part_new,
                     fontsize=fs,
-                    fill=(250/255, 0, 0),
+                    fill=(0, 0, 0),
                     render_mode=0
                 )
 
@@ -128,7 +128,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                 (rect.x0, rect.y0 + 8.7),
                 match,
                 fontsize=fs,
-                fill=(250/255, 0, 0),
+                fill=(0, 0, 0),
                 render_mode=0
             )
 
@@ -143,7 +143,8 @@ def replace_text_between_phrases(pdf_path,output_path,
         # Thêm note_str
         page.insert_text(
             (rect.x0, rect.y1 + 20),
-            note_str,
+            #note_str,
+            "",
             fontsize=fs*1.7,
             fill=(1, 0, 0),
             render_mode=0
@@ -230,6 +231,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 # ===== TEST =====
 #reformat_VNA_KR("input.pdf","output.pdf")
+
 
 
 #extract_first_page("output.pdf")
