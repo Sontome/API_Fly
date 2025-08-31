@@ -65,15 +65,15 @@ def replace_text_between_phrases(pdf_path,output_path,
             checkin_dt = flight_dt - timedelta(hours=3)
             
             if 0 <= hour <= 6:
-                periodt = "(Rạng sáng)"
+                periodt = "(Rang sang)"
             elif 6 < hour <= 11:
-                periodt = "(Sáng)"
+                periodt = "(Sang)"
             elif 11 < hour <= 13:
-                periodt = "(Trưa)"
+                periodt = "(Trua)"
             elif 13 < hour <= 18:
-                periodt = "(Chiều)"
+                periodt = "(Chieu)"
             else:
-                periodt = "(Đêm)"
+                periodt = "(Đem)"
             note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc len may bay."
             #print(f"[DEBUG] Giờ check-in: {note_str}")
         except Exception as e:
@@ -87,15 +87,15 @@ def replace_text_between_phrases(pdf_path,output_path,
                 t = datetime.strptime(time_part, "%H:%M")
                 
                 if 0 <= hour <= 6:
-                    periodt = "(Rạng sáng)"
+                    periodt = "(Rang sang)"
                 elif 6 < hour <= 11:
-                    periodt = "(Sáng)"
+                    periodt = "(Sang)"
                 elif 11 < hour <= 13:
-                    periodt = "(Trưa)"
+                    periodt = "(Trua)"
                 elif 13 < hour <= 18:
-                    periodt = "(Chiều)"
+                    periodt = "(Chieu)"
                 else:
-                    periodt = "(Đêm)"
+                    periodt = "(Đem)"
                 time_part_new = f"{time_part} {period}"
                 #print(f"[DEBUG] Đổi giờ: '{time_part}' → '{time_part_new}'")
             except:
@@ -253,5 +253,6 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
