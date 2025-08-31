@@ -63,7 +63,17 @@ def replace_text_between_phrases(pdf_path,output_path,
         try:
             flight_dt = datetime.strptime(f"{found_date} {found_time}", "%d/%m/%Y %H:%M")
             checkin_dt = flight_dt - timedelta(hours=3)
-            periodt = "(Sang)" if checkin_dt.hour < 12 else "(Chieu)"
+            
+            if 0 <= hour <= 6:
+                periodt = "(Rạng sáng)"
+            elif 6 < hour <= 11:
+                periodt = "(Sáng)"
+            elif 11 < hour <= 13:
+                periodt = "(Trưa)"
+            elif 13 < hour <= 18:
+                periodt = "(Chiều)"
+            else:
+                periodt = "(Đêm)"
             note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc len may bay."
             #print(f"[DEBUG] Giờ check-in: {note_str}")
         except Exception as e:
@@ -233,3 +243,4 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
