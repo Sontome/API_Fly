@@ -14,45 +14,71 @@ def replace_text_between_phrases(pdf_path, output_path,
     page = doc[0]  # chỉ page đầu
     fs = font_size * 0.8
     text = page.get_text()
-    print(text)
+    #print(text)
 
     # ===== LẤY GIỜ BAY =====
     found_time = None
     found_date = None
     for line in text.splitlines():
         match = re.match(r"(\d{2}:\d{2})\s*-\s*.*", line.strip())
+        #print(match)
         if match:
             time_part = match.group(1)
             found_time = time_part
             break
     for line in text.splitlines():
         match = re.match(r"(\d{2}:\d{2})\s*-\s*.*", line.strip())
+        
         if match:
+            print(match)
             time_part = match.group(1)
+            full_part = match.group(0)
+            print(full_part)
             try:
                 t = datetime.strptime(time_part, "%H:%M")
-                period = "(Sang)" if t.hour < 12 else "(Chieu)"
-                time_new = f"{time_part}"
-                print(f"[DEBUG] Giờ bay: {time_part} → {time_new}")
+                hour = t.hour
+                if 0 <= hour <= 6:
+                    period = "(Rang sang)"
+                elif 6 < hour <= 11:
+                    period = "(Sang)"
+                elif 11 < hour <= 13:
+                    period = "(Trua)"
+                elif 13 < hour <= 18:
+                    period = "(Chieu)"
+                else:
+                    period = "(Dem)"
+                
+                time_new = f"{full_part} {period}"
+                #print(f"[DEBUG] Giờ bay: {full_part} → {time_new}")
             except:
                 time_new = time_part
                 period = ""
             
             # Chèn text trực tiếp vào PDF
-            search_rects = page.search_for(time_part)
-            for rect in search_rects:
-                rect_del = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y0+10)
+            search_rects = page.search_for(full_part)
+            print(search_rects)
+            if search_rects:
+                # Gộp tất cả rect lại thành 1 bounding box bao phủ hết
+                x0 = min(r.x0 for r in search_rects)
+                y0 = min(r.y0 for r in search_rects)
+                x1 = max(r.x1 for r in search_rects)
+                y1 = max(r.y1 for r in search_rects)
+                full_rect = fitz.Rect(x0, y0, x1, y1)
+                print("Full rect:", full_rect)
+            
+                rect_del = fitz.Rect(full_rect.x0, full_rect.y0, full_rect.x1, full_rect.y0+10)
                 page.add_redact_annot(rect_del)
                 page.apply_redactions()
                 page.insert_text(
-                    (rect.x0, rect.y0+11),
+                    (full_rect.x0, full_rect.y0+11),
                     time_new,
-                    fontsize=fs*1.3,
+                    
+                    fontsize=fs*1.1,
                     fill=(0, 0, 0),
                     render_mode=0
                 )
-            
-            # Lưu lại để dùng tính checkin
+                print(time_new)
+                # Lưu lại để dùng tính checkin
            
 
     # ===== LẤY NGÀY BAY ===== dạng "Aug 28, 2025"
@@ -62,7 +88,7 @@ def replace_text_between_phrases(pdf_path, output_path,
         try:
             d = datetime.strptime(date_matches[0], "%b %d, %Y")
             found_date = d.strftime("%d/%m/%Y")
-            print(f"[DEBUG] Ngày bay tìm thấy: {found_date}")
+            #print(f"[DEBUG] Ngày bay tìm thấy: {found_date}")
         except Exception as e:
             print(f"[DEBUG] Không parse được ngày bay: {e}")
 
@@ -73,7 +99,7 @@ def replace_text_between_phrases(pdf_path, output_path,
             checkin_dt = flight_dt - timedelta(hours=3)
             periodt = "(Sang)" if checkin_dt.hour < 12 else "(Chieu)"
             note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc\n len may bay."
-            print(f"[DEBUG] Giờ check-in: {note_str}")
+            #print(f"[DEBUG] Giờ check-in: {note_str}")
         except Exception as e:
             print("[DEBUG] Lỗi parse giờ/ngày:", e)
 
@@ -83,7 +109,7 @@ def replace_text_between_phrases(pdf_path, output_path,
         try:
             d = datetime.strptime(match, "%b %d, %Y")
             new_date = d.strftime("%d/%m/%Y")
-            print(f"[DEBUG] Đổi ngày: '{match}' → '{new_date}'")
+            #print(f"[DEBUG] Đổi ngày: '{match}' → '{new_date}'")
             search_rects = page.search_for(match)
             for rect in search_rects:
                 page.add_redact_annot(rect)
