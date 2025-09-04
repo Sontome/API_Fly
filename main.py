@@ -828,15 +828,16 @@ async def proxy_gas_options():
 @app.api_route("/proxy-gas", methods=["GET", "POST"])
 async def proxy_gas(request: Request):
     method = request.method
-    headers = {
+    cors_headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
+
     try:
         body = await request.json() if method != "GET" else None
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             r = await client.request(
                 method,
                 GAS_URL,
@@ -844,15 +845,32 @@ async def proxy_gas(request: Request):
                 headers={"Content-Type": "application/json"}
             )
 
-        # Kiểm tra kiểu dữ liệu trả về
         content_type = r.headers.get("Content-Type", "")
-        if "application/json" in content_type:
-            data = r.json()
-        else:
-            data = {"raw_text": r.text}
 
-        return JSONResponse(content=data, headers=headers)
+        # Nếu trả về JSON
+        if "application/json" in content_type:
+            return JSONResponse(content=r.json(), headers=cors_headers)
+
+        # Nếu trả về HTML redirect, tìm link googleusercontent.com
+        if "text/html" in content_type:
+            match = re.search(r'href="([^"]+googleusercontent[^"]+)"', r.text)
+            if match:
+                redirect_url = match.group(1).replace("&amp;", "&")
+                async with httpx.AsyncClient(follow_redirects=True) as client:
+                    r2 = await client.request(
+                        method,
+                        redirect_url,
+                        json=body if method != "GET" else None,
+                        headers={"Content-Type": "application/json"}
+                    )
+                if "application/json" in r2.headers.get("Content-Type", ""):
+                    return JSONResponse(content=r2.json(), headers=cors_headers)
+                else:
+                    return JSONResponse(content={"raw_text": r2.text}, headers=cors_headers)
+
+        # Nếu không bắt được gì
+        return JSONResponse(content={"raw_text": r.text}, headers=cors_headers)
 
     except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500, headers=cors_headers)
 
-        return JSONResponse(content={"error": str(e)}, status_code=500, headers=headers)
