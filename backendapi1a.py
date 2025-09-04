@@ -248,8 +248,9 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     ssid, cryp = loadJsession(ssid)
     #print(ssid,cryp["status"])
     if cryp["status"]=="ERROR":
+        print(cryp)
         return ssid, cryp["code"]
-    #print(ssid, cryp)
+    
     jSessionId = cryp["jSessionId"]
     contextId = cryp["dcxid"]
     userId = cryp["officeId"]
@@ -456,3 +457,4 @@ async def checksomatveVNA(code,ssid=None):
 
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("DMSOVU","Check")))
+
