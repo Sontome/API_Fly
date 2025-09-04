@@ -813,7 +813,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxtEcsVDK2nl4FhYLAaIG07xjKYBsElEgWlDqj45v-huOWhu3b-B--nngRthhnLOxTphA/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycby8E2uQ0s1xaQCtQL0ALQQMQ51un7_usOKIZO-V_ZzdiSfykl4ftCBxJDeGmfl1dt3dbA/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -854,4 +854,5 @@ async def proxy_gas(request: Request):
         return JSONResponse(content=data, headers=headers)
 
     except Exception as e:
+
         return JSONResponse(content={"error": str(e)}, status_code=500, headers=headers)
