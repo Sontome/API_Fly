@@ -807,4 +807,43 @@ async def checkdate_VNA_Api(
 
     # Trả file output về cho client
 
+
     return res
+import httpx
+from fastapi.responses import JSONResponse
+
+GAS_URL = "https://script.google.com/macros/s/AKfycbxtEcsVDK2nl4FhYLAaIG07xjKYBsElEgWlDqj45v-huOWhu3b-B--nngRthhnLOxTphA/exec"
+
+@app.options("/proxy-gas")
+async def proxy_gas_options():
+    """Xử lý preflight request để CORS không lỗi"""
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+    return JSONResponse(content={}, headers=headers)
+
+@app.api_route("/proxy-gas", methods=["GET", "POST"])
+async def proxy_gas(request: Request):
+    """Proxy gọi GAS để tránh lỗi CORS"""
+    method = request.method
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
+    try:
+        body = await request.json() if method != "GET" else None
+        async with httpx.AsyncClient() as client:
+            r = await client.request(
+                method,
+                GAS_URL,
+                json=body if method != "GET" else None,
+                headers={"Content-Type": "application/json"}
+            )
+            data = r.json()
+        return JSONResponse(content=data, headers=headers)
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500, headers=headers)
