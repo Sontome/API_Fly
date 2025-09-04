@@ -849,7 +849,7 @@ async def proxy_gas(request: Request):
 
         # Nếu trả về JSON
         if "application/json" in content_type:
-            return JSONResponse(content=r.json(), headers=cors_headers)
+            return JSONResponse(content={"body": r.text}, headers=cors_headers)
 
         # Nếu trả về HTML redirect, tìm link googleusercontent.com
         if "text/html" in content_type:
@@ -873,6 +873,7 @@ async def proxy_gas(request: Request):
 
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500, headers=cors_headers)
+
 
 
 
