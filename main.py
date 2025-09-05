@@ -837,7 +837,7 @@ async def proxy_gas(request: Request):
     try:
         body = await request.json() if method != "GET" else None
 
-        async with httpx.AsyncClient(follow_redirects=True) as client:
+        async with httpx.AsyncClient(follow_redirects=True,timeout=30) as client:
             r = await client.request(
                 method,
                 GAS_URL,
@@ -885,6 +885,7 @@ async def proxy_gas(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
