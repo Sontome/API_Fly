@@ -872,7 +872,20 @@ async def proxy_gas(request: Request):
         return JSONResponse(content={"raw_text": r.text}, headers=cors_headers)
 
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500, headers=cors_headers)
+        # Log thêm thông tin request và stacktrace để debug
+        import traceback
+        return JSONResponse(
+            content={
+                "error": str(e),
+                "trace": traceback.format_exc(),
+                "method": method,
+                "url": GAS_URL,
+                "body_sent": body if method != "GET" else None
+            },
+            status_code=500,
+            headers=cors_headers
+        )
+
 
 
 
