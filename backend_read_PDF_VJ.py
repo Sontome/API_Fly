@@ -159,7 +159,12 @@ def replace_text_between_phrases(pdf_path, output_path,
                                     fontsize=fs, fill=(0,0,0), render_mode=0)
             else:
                 page.insert_text((adj_x, adj_y+i*(fs+2)), line, fontsize=fs, fill=(0,0,0), render_mode=0)
-
+    # ===== Xóa banner Hành trình Du lịch" =====
+    hanhtrinhdulich_text = "Hành trình Du lịch"
+    hanhtrinhdulich_rects = page.search_for(hanhtrinhdulich_text)
+    rect_hanhtrinhdulich_del = fitz.Rect(hanhtrinhdulich_rects[0].x0, hanhtrinhdulich_rects[0].y0, hanhtrinhdulich_rects[0].x1+600, hanhtrinhdulich_rects[0].y1+30)
+    page.add_redact_annot(rect_hanhtrinhdulich_del)
+    page.apply_redactions()
     # ===== GẮN LINK =====
     
     # ===== LƯU FILE =====
