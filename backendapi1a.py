@@ -12,7 +12,7 @@ EMAIL_RE = re.compile(r'([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})', re.I)
 
 # ================== SESSION HANDLER ==================
 SESSIONS = {}
-SESSION_TTL = 900  # 15 phút
+SESSION_TTL = 600  # 15 phút
 # Map sân bay sang UTC offset
 # Map sân bay sang UTC offset
 AIRPORT_TZ = {
@@ -96,23 +96,17 @@ def parse_flights(data):
         })
 
     return flights
-def formatsove(text):
-    # Cắt từng dòng + bỏ dòng trống
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
+def formatsove(text: str):
+    # Lấy nội dung trong dấu ngoặc
+    inside_parentheses = re.findall(r'\(([^)]*)\)', text)
 
-    tickets = []
-    seen = set()
+    # Đếm số lần xuất hiện của ADT, CHD, INF
+    count_ADT = sum(1 for s in inside_parentheses if 'ADT' in s)
+    count_CHD = sum(1 for s in inside_parentheses if 'CHD' in s)
+    count_INF = sum(1 for s in inside_parentheses if 'INF' in s)
 
-    for line in lines:
-        if any(key in line for key in ["FA PAX", "FA INF", "FA CHD"]):
-            parts = line.split()
-            if len(parts) >= 4:
-                ticket_number = parts[3].split("/")[0]
-                if ticket_number not in seen:
-                    seen.add(ticket_number)
-                    tickets.append(ticket_number)
-
-    return tickets
+    return ( count_ADT + count_CHD + count_INF)
+    
 def formatPNR(text):
     # Cắt từng dòng + bỏ dòng trống
     lines = [l.strip() for l in text.split("\n") if l.strip()]
@@ -430,23 +424,12 @@ async def checksomatveVNA(code,ssid=None):
                     "status": "Không phải VNA"
                 }
             #print(segments)
-            loop_count=0
-            while ")>" in segments and loop_count < 3:
-                loop_count += 1
-                ssid, res_md = await send_command(client, "md", ssid)
-                data_md = json.loads(res_md.text)
-                segments_md = data_md["model"]["output"]["crypticResponse"]["response"]
-                segments += segments_md  # gộp thêm
-                
-
-                segments = deduplicate_lines(segments)
-            with open("test.json", "w", encoding="utf-8") as f:
-                 f.write(segments)
+            
+            
             ssid, res = await send_command(client, "IG", ssid)
-            #result = parse_booking(segments)
-            result =len(formatsove(segments))
-        with open("ketqua.json", "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
+            
+            result =(formatsove(segments))
+        
 
             
         print(f"⏱️ Tổng thời gian chạy: {time.time() - start_time:.2f} giây")
@@ -456,5 +439,5 @@ async def checksomatveVNA(code,ssid=None):
         return None
 
 # if __name__ == "__main__":
-#     print(asyncio.run(checksomatveVNA("DMSOVU","Check")))
+#     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
 

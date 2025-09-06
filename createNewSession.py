@@ -157,6 +157,6 @@ def createNewSession(
         return {"status": "ERROR", "message": str(e)}
 
 
-if __name__ == "__main__":
-    result = createNewSession()
-    print(result)
+# if __name__ == "__main__":
+#     result = createNewSession()
+#     print(result)
