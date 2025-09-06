@@ -2,7 +2,7 @@ import fitz
 from datetime import datetime, timedelta
 import re
 import time
-NEW_TEXT = "Noi xuat ve:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\n\nSo dien thoai:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
+NEW_TEXT = "Noi xuat ve:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSo dien thoai:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
  
 START_PHRASE = "Công Ty Cổ Phần Hàng Không VietJet"
 END_PHRASE = "Tax ID: 0-1055-56100-55-1"
@@ -142,29 +142,27 @@ def replace_text_between_phrases(pdf_path, output_path,
             render_mode=0
         )
 
-        # ===== REPLACE TEXT CHÍNH NGAY DƯỚI NOTE =====
-    
-        
-        
-        adj_x = rect.x0
-        adj_y = rect.y0 + 60  # căn từ dưới note_str
-        for i, line in enumerate(new_text.split("\n")):
-            if ":" in line:
-                bold_part, normal_part = line.split(":", 1)
-                bold_part += ":"
-                page.insert_text((adj_x, adj_y + i*(fs+1)), bold_part,
-                                    fontsize=fs, fill=(0/255,61/255,77/255), render_mode=2)
-                text_width = fitz.get_text_length(bold_part, fontsize=fs)
-                page.insert_text((adj_x+text_width+5, adj_y+i*(fs+1)), normal_part.strip(),
-                                    fontsize=fs, fill=(0,0,0), render_mode=0)
-            else:
-                page.insert_text((adj_x, adj_y+i*(fs+2)), line, fontsize=fs, fill=(0,0,0), render_mode=0)
+       
     # ===== Xóa banner Hành trình Du lịch" =====
     hanhtrinhdulich_text = "Hành trình Du lịch"
     hanhtrinhdulich_rects = page.search_for(hanhtrinhdulich_text)
     rect_hanhtrinhdulich_del = fitz.Rect(hanhtrinhdulich_rects[0].x0, hanhtrinhdulich_rects[0].y0, hanhtrinhdulich_rects[0].x1+600, hanhtrinhdulich_rects[0].y1+30)
     page.add_redact_annot(rect_hanhtrinhdulich_del)
     page.apply_redactions()
+    adj_x = hanhtrinhdulich_rects[0].x0
+    adj_y = hanhtrinhdulich_rects[0].y0 +3 # căn từ dưới note_str
+    for i, line in enumerate(new_text.split("\n")):
+        if ":" in line:
+            bold_part, normal_part = line.split(":", 1)
+            bold_part += ":"
+            page.insert_text((adj_x, adj_y + i*(fs*1.4)), bold_part,
+                                fontsize=fs*1.2, fill=(0/255,61/255,77/255), render_mode=2)
+            text_width = fitz.get_text_length(bold_part, fontsize=fs*1.2)
+            page.insert_text((adj_x+text_width+3, adj_y+i*(fs*1.4)), normal_part.strip(),
+                                fontsize=fs*1.2, fill=(0,0,0), render_mode=0)
+        else:
+            page.insert_text((adj_x, adj_y+i*(fs*1.4)), line, fontsize=fs*1.2, fill=(0,0,0), render_mode=0)
+
     # ===== GẮN LINK =====
     
     # ===== LƯU FILE =====
