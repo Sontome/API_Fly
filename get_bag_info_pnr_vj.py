@@ -158,5 +158,6 @@ def get_bag_info_vj(pnr):
         else:
             return None
 
-    print(result)
+    #print(result)
     return result
+
