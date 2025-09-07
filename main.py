@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend_read_PDF_VNA_VN import reformat_VNA_VN
 from backend_read_PDF_VNA_EN import reformat_VNA_EN
 from backend_read_PDF_VNA_KR import reformat_VNA_KR
-from backend_read_PDF_VJ import reformat_VJ
+
 from backend_checkpayment_PDF_VJ import check_payment
 from checkdate_VJ import checkdate_VJ
 from checkdate_VNA import checkdate_VNA
@@ -873,4 +873,5 @@ def getbagvj(
     except Exception as e:
 
         return (str(e))    
+
 
