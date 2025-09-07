@@ -32,7 +32,7 @@ def find_text_coordinates(layout, search_text):
 
 def check_bag_vj(pnr):
     try:
-        result = await get_bag_info_vj(pnr)
+        result = get_bag_info_vj(pnr)
         
         return result
     except Exception as e:
@@ -287,4 +287,5 @@ def reformat_VJ(input_pdf, output_path, new_text=NEW_TEXT):
     if new_text == "":
         new_text = NEW_TEXT
     replace_text_between_phrases(input_pdf, output_path, new_text)
+
 
