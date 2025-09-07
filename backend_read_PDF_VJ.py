@@ -92,8 +92,8 @@ def add_bag_info(bag,layout,page,fs):
         baginfo,
         
         fontsize=fs*1.2,
-        fontfile=FONT_ARIAL_BOLD,
-        fontname = "arialbold",
+        fontfile=FONT_ARIAL_BOLD if os.path.exists(FONT_ARIAL_BOLD) else FONT_ARIAL,
+        fontname="arialbold" if os.path.exists(FONT_ARIAL_BOLD) else "arial",
         fill=(1, 0, 0),
         render_mode=0
     )
@@ -371,4 +371,5 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
