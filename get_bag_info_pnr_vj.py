@@ -125,6 +125,9 @@ def format_vj_data(data):
                 if 'Bag' in charge['chargeDescription']:
                     bag_info = charge['chargeDescription'].split('Bag')[-1].strip()
                     break
+                if 'Deluxe ' in charge['chargeDescription']:
+                    bag_info = charge['chargeDescription'].split('Deluxe')[-1].strip()
+                    break
             passenger_list.append({
                 "tên": ten,
                 "Bag": bag_info
