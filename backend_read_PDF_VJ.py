@@ -5,7 +5,7 @@ import time
 import requests
 import json
 import os
-
+from get_bag_info_pnr_vj import get_bag_info_vj
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_ARIAL = os.path.join(BASE_DIR, "arial.ttf")
 FONT_ARIAL_BOLD = os.path.join(BASE_DIR, "arialbold.ttf")
@@ -92,8 +92,8 @@ def add_bag_info(bag,layout,page,fs):
         baginfo,
         
         fontsize=fs*1.2,
-        fontfile=FONT_ARIAL_BOLD if os.path.exists(FONT_ARIAL_BOLD) else FONT_ARIAL,
-        fontname="arialbold" if os.path.exists(FONT_ARIAL_BOLD) else "arial",
+        # fontfile=FONT_ARIAL_BOLD if os.path.exists(FONT_ARIAL_BOLD) else FONT_ARIAL,
+        # fontname="arialbold" if os.path.exists(FONT_ARIAL_BOLD) else "arial",
         fill=(1, 0, 0),
         render_mode=0
     )
@@ -117,7 +117,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 
                 pnr = line_text.strip()
                 print(pnr)
-                baglist = check_bag_vj(pnr)
+                baglist = get_bag_info_vj(pnr)
                 print(baglist)
                 if isinstance(baglist, str):
                     baglist = json.loads(baglist)
@@ -133,8 +133,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                         page.insert_text(
                             (toadothanhhanhlydi[0]+170, toadothanhhanhlydi[1]+8),
                             tieude,
-                            fontfile=FONT_ARIAL,
-                            fontname = "arial",
+                            # fontfile=FONT_ARIAL,
+                            # fontname = "arial",
                             fontsize=fs*1.2,
                             fill=(1, 1, 1),
                             render_mode=0
@@ -206,8 +206,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                 page.insert_text(
                     (full_rect.x0, full_rect.y0+11),
                     time_new,
-                    fontfile=FONT_ARIAL,
-                    fontname = "arial",
+                    # fontfile=FONT_ARIAL,
+                    # fontname = "arial",
                     fontsize=fs*1.1,
                     fill=(0, 0, 0),
                     render_mode=0
@@ -298,8 +298,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                 (adj_x, adj_y + i * (fs * 1.4)),
                 bold_part,
                 fontsize=fs * 1.2,
-                fontfile=FONT_ARIAL,
-                fontname= "arial",
+                # fontfile=FONT_ARIAL,
+                # fontname= "arial",
                 fill=(0/255, 61/255, 77/255),
                 render_mode=2
             )
@@ -312,8 +312,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                 (adj_x + text_width + 5, adj_y + i * (fs * 1.4)),
                 normal_part.strip(),
                 fontsize=fs * 1.2,
-                fontfile=FONT_ARIAL,
-                fontname= "arial",
+                # fontfile=FONT_ARIAL,
+                # fontname= "arial",
                 fill=(0, 0, 0),
                 render_mode=0
             )
@@ -322,8 +322,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                 (adj_x, adj_y + i * (fs * 1.4)),
                 line,
                 fontsize=fs * 1.2,
-                fontfile=FONT_ARIAL,
-                fontname= "arial",
+                # fontfile=FONT_ARIAL,
+                # fontname= "arial",
                 fill=(0, 0, 0),
                 render_mode=0
             )
