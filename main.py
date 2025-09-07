@@ -8,6 +8,7 @@ from backend_checkpayment_PDF_VJ import check_payment
 from checkdate_VJ import checkdate_VJ
 from checkdate_VNA import checkdate_VNA
 from backend_read_PDF_VNA import check_ngon_ngu
+from get_bag_info_pnr_vj import get_bag_info_vj
 import os
 from fastapi.responses import FileResponse
 from backend_api_vj import api_vj
@@ -901,4 +902,14 @@ async def inputcode1a(
     except Exception as e:
         return (str(e))
        
-    
+@app.get("/get_bag_vj")
+async def getbagvj(
+    pnr: str = Query(..., description="pnr")
+  
+):
+    try:
+        result = await get_bag_info_vj(pnr)
+        
+        return result
+    except Exception as e:
+        return (str(e))    
