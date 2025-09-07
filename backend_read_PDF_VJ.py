@@ -5,7 +5,8 @@ import time
 import requests
 import json
 import os
-
+font_path = "/root/API_Fly/arial.ttf"
+font_bold_path = "/root/API_Fly/arialbold.ttf"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_ARIAL = os.path.join(BASE_DIR, "arial.ttf")
 FONT_ARIAL_BOLD = os.path.join(BASE_DIR, "arialbold.ttf")
@@ -92,8 +93,7 @@ def add_bag_info(bag,layout,page,fs):
         baginfo,
         
         fontsize=fs*1.2,
-        fontfile=FONT_ARIAL_BOLD if os.path.exists(FONT_ARIAL_BOLD) else FONT_ARIAL,
-        fontname="arialbold" if os.path.exists(FONT_ARIAL_BOLD) else "arial",
+        font_path,
         fill=(1, 0, 0),
         render_mode=0
     )
@@ -133,8 +133,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                         page.insert_text(
                             (toadothanhhanhlydi[0]+170, toadothanhhanhlydi[1]+8),
                             tieude,
-                            fontfile=FONT_ARIAL,
-                            fontname = "arial",
+                            font_path
                             fontsize=fs*1.2,
                             fill=(1, 1, 1),
                             render_mode=0
@@ -206,8 +205,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 page.insert_text(
                     (full_rect.x0, full_rect.y0+11),
                     time_new,
-                    fontfile=FONT_ARIAL,
-                    fontname = "arial",
+                    font_path
                     fontsize=fs*1.1,
                     fill=(0, 0, 0),
                     render_mode=0
@@ -286,7 +284,7 @@ def replace_text_between_phrases(pdf_path, output_path,
     page.apply_redactions()
     adj_x = hanhtrinhdulich_rects[0].x0
     adj_y = hanhtrinhdulich_rects[0].y0 +3 # căn từ dưới note_str
-    arial_font = fitz.Font(fontfile=FONT_ARIAL)
+    
 
     for i, line in enumerate(new_text.split("\n")):
         if ":" in line:
@@ -298,22 +296,20 @@ def replace_text_between_phrases(pdf_path, output_path,
                 (adj_x, adj_y + i * (fs * 1.4)),
                 bold_part,
                 fontsize=fs * 1.2,
-                fontfile=FONT_ARIAL,
-                fontname= "arial",
+                font_path
                 fill=(0/255, 61/255, 77/255),
                 render_mode=2
             )
 
             # Tính chiều rộng đúng với font Arial
-            text_width = arial_font.text_length(bold_part, fontsize=fs * 1.2)
+            
 
             # In phần normal, cách ra 5pt
             page.insert_text(
-                (adj_x + text_width + 5, adj_y + i * (fs * 1.4)),
+                (adj_x + 30+ 5, adj_y + i * (fs * 1.4)),
                 normal_part.strip(),
                 fontsize=fs * 1.2,
-                fontfile=FONT_ARIAL,
-                fontname= "arial",
+                font_path
                 fill=(0, 0, 0),
                 render_mode=0
             )
@@ -322,8 +318,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 (adj_x, adj_y + i * (fs * 1.4)),
                 line,
                 fontsize=fs * 1.2,
-                fontfile=FONT_ARIAL,
-                fontname= "arial",
+                font_path
                 fill=(0, 0, 0),
                 render_mode=0
             )
@@ -371,5 +366,6 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
