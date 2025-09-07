@@ -5,7 +5,7 @@ import time
 import requests
 import json
 import os
-
+from get_bag_info_pnr_vj import get_bag_info_vj
 font_path = "/root/API_Fly/arial.ttf"
 font_bold_path = "/root/API_Fly/arialbold.ttf"
 
@@ -32,13 +32,10 @@ def find_text_coordinates(layout, search_text):
 
 def check_bag_vj(pnr):
     try:
-        url = "https://thuhongtour.com/get_bag_vj"
-        params = {"pnr": pnr}
-        headers = {"accept": "application/json"}
-        response = requests.get(url, params=params, headers=headers, timeout=10)  # thêm timeout
-        return response.text
+        result = await get_bag_info_vj(pnr)
+        
+        return result
     except Exception as e:
-        print("[DEBUG] check_bag_vj error:", e)
         return None
 
 def prase_tieude_hanhly(data):
@@ -290,3 +287,4 @@ def reformat_VJ(input_pdf, output_path, new_text=NEW_TEXT):
     if new_text == "":
         new_text = NEW_TEXT
     replace_text_between_phrases(input_pdf, output_path, new_text)
+
