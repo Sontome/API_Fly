@@ -873,47 +873,7 @@ def getbagvj(
     except Exception as e:
 
         return (str(e))    
-@app.post("/process-pdf-vj/")
-async def process_pdf_VJ(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    option: str = Form("")
-):
-    # Tạo đường dẫn file tạm input
-    temp_path = os.path.join(TEMP_DIR, f"{file.filename}")
 
-    # Ghi file upload vào thư mục tạm
-    with open(temp_path, "wb") as f:
-        f.write(await file.read())
 
-    # Tạo đường dẫn file output
-    output_path = os.path.join(TEMP_DIR, f"output_{file.filename}")
-    
-    # Xử lý PDF
-    try:
-        
-        reformat_VJ(temp_path, new_text=option,output_path=output_path)
-        
-    except Exception as e:
-        return {"error": str(e)}
-
-    # Xóa file input ngay nếu không cần giữ
-    try:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-    except Exception as e:
-        print(f"Lỗi xóa file input: {e}")
-
-    # Thêm task xóa file output sau khi gửi xong
-    background_tasks.add_task(
-        lambda: os.path.exists(output_path) and os.remove(output_path)
-    )
-
-    # Trả file output về cho client
-    return FileResponse(
-        path=output_path,
-        filename=file.filename,
-        media_type="application/pdf"
-    )
 
 
