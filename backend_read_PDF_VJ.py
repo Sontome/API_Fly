@@ -143,7 +143,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                             add_bag_info(bag,layout,page,fs)
                         print(tieude)
                         break
-    print("chạy xong hành lý)
+    print("chạy xong hành lý")
 
     
     
@@ -369,6 +369,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
