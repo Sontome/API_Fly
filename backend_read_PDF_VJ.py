@@ -117,32 +117,32 @@ def replace_text_between_phrases(pdf_path, output_path,
                 print(pnr)
                 baglist = get_bag_info_vj(pnr)
                 print(baglist)
-                if isinstance(baglist, str):
-                    baglist = json.loads(baglist)
-                    if baglist:
-                        tieude= prase_tieude_hanhly(baglist)
-                        # ===== khung số cân hành lý =====  
-                            
-                        toadothanhhanhlydi = find_text_coordinates(layout, "Tên hành khách")
-                        print(toadothanhhanhlydi)
-                        toadothanhhanhlydi_khung = fitz.Rect(toadothanhhanhlydi[0], toadothanhhanhlydi[1], toadothanhhanhlydi[0]+30,toadothanhhanhlydi[1]+10)
-                        #page.add_redact_annot(toadothanhhanhly_khung)
-                        page.apply_redactions()
-                        page.insert_text(
-                            (toadothanhhanhlydi[0]+170, toadothanhhanhlydi[1]+8),
-                            tieude,
-                            # fontfile=FONT_ARIAL,
-                            # fontname = "arial",
-                            fontsize=fs*1.2,
-                            fill=(1, 1, 1),
-                            render_mode=0
-                        )
-                        bags= merge_bag_info(baglist)
-                        print(bags)
-                        for bag in bags:
-                            add_bag_info(bag,layout,page,fs)
-                        print(tieude)
-                        break
+                
+                
+                if baglist:
+                    tieude= prase_tieude_hanhly(baglist)
+                    # ===== khung số cân hành lý =====  
+                        
+                    toadothanhhanhlydi = find_text_coordinates(layout, "Tên hành khách")
+                    print(toadothanhhanhlydi)
+                    toadothanhhanhlydi_khung = fitz.Rect(toadothanhhanhlydi[0], toadothanhhanhlydi[1], toadothanhhanhlydi[0]+30,toadothanhhanhlydi[1]+10)
+                    #page.add_redact_annot(toadothanhhanhly_khung)
+                    page.apply_redactions()
+                    page.insert_text(
+                        (toadothanhhanhlydi[0]+170, toadothanhhanhlydi[1]+8),
+                        tieude,
+                        # fontfile=FONT_ARIAL,
+                        # fontname = "arial",
+                        fontsize=fs*1.2,
+                        fill=(1, 1, 1),
+                        render_mode=0
+                    )
+                    bags= merge_bag_info(baglist)
+                    print(bags)
+                    for bag in bags:
+                        add_bag_info(bag,layout,page,fs)
+                    print(tieude)
+                    break
     print("chạy xong hành lý")
 
     
@@ -369,6 +369,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
