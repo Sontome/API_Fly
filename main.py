@@ -903,13 +903,14 @@ async def inputcode1a(
         return (str(e))
        
 @app.get("/get_bag_vj")
-async def getbagvj(
+def getbagvj(
     pnr: str = Query(..., description="pnr")
   
 ):
     try:
-        result = await get_bag_info_vj(pnr)
+        result = get_bag_info_vj(pnr)
         
         return result
     except Exception as e:
+
         return (str(e))    
