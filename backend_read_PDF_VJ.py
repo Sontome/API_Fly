@@ -284,7 +284,7 @@ def replace_text_between_phrases(pdf_path, output_path,
     page.apply_redactions()
     adj_x = hanhtrinhdulich_rects[0].x0
     adj_y = hanhtrinhdulich_rects[0].y0 +3 # căn từ dưới note_str
-    arial_font = fitz.Font(fontfile=FONT_ARIAL)
+    #arial_font = fitz.Font(fontfile=FONT_ARIAL)
 
     for i, line in enumerate(new_text.split("\n")):
         if ":" in line:
@@ -303,11 +303,11 @@ def replace_text_between_phrases(pdf_path, output_path,
             )
 
             # Tính chiều rộng đúng với font Arial
-            text_width = arial_font.text_length(bold_part, fontsize=fs * 1.2)
+            #text_width = arial_font.text_length(bold_part, fontsize=fs * 1.2)
 
             # In phần normal, cách ra 5pt
             page.insert_text(
-                (adj_x + text_width + 5, adj_y + i * (fs * 1.4)),
+                (adj_x + 25+ 5, adj_y + i * (fs * 1.4)),
                 normal_part.strip(),
                 fontsize=fs * 1.2,
                 # fontfile=FONT_ARIAL,
@@ -369,6 +369,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
