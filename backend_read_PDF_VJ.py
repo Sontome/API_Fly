@@ -364,10 +364,11 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 # ===== TEST =====
 
-reformat_VJ("input.pdf","output.pdf")
+#reformat_VJ("input.pdf","output.pdf")
 
 
 
 #extract_first_page("output.pdf")
+
 
 
