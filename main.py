@@ -28,7 +28,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA
+from backendapi1a import checkPNR,checksomatveVNA,code1a
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -889,5 +889,16 @@ async def proxy_gas(request: Request):
 
 
 
-
-
+@app.get("/code1a")
+async def inputcode1a(
+    code: str = Query(..., description="code"),
+    ssid: str = Query(..., description="ssidsession")
+):
+    try:
+        result = await code1a(code,ssid)
+        
+        return result
+    except Exception as e:
+        return (str(e))
+       
+    

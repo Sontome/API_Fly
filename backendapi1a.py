@@ -437,7 +437,31 @@ async def checksomatveVNA(code,ssid=None):
     except Exception as e:
         print (" lỗi :" +str(e))
         return None
+async def code1a(code,ssid):
+    
+    segments=None
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            # chỉ gọi send_command lần đầu ở đây
+            
+            ssid, res = await send_command(client, str(code),ssid)
+            
+            if str(res)=="403":
+                return (str(res))
+            data = json.loads(res.text)
 
+
+            segments = data["model"]["output"]["crypticResponse"]["response"]
+            
+            
+            
+            
+            
+            
+        return segments
+    except Exception as e:
+        print (" lỗi :" +str(e))
+        return None
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
 
