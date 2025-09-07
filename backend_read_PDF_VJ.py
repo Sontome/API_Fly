@@ -5,6 +5,7 @@ import time
 import requests
 import json
 import os
+import asyncio
 from get_bag_info_pnr_vj import get_bag_info_vj
 font_path = "/root/API_Fly/arial.ttf"
 font_bold_path = "/root/API_Fly/arialbold.ttf"
@@ -32,8 +33,7 @@ def find_text_coordinates(layout, search_text):
 
 def check_bag_vj(pnr):
     try:
-        result = get_bag_info_vj(pnr)
-        
+        result = asyncio.run(get_bag_info_vj(pnr))
         return result
     except Exception as e:
         return None
@@ -287,5 +287,6 @@ def reformat_VJ(input_pdf, output_path, new_text=NEW_TEXT):
     if new_text == "":
         new_text = NEW_TEXT
     replace_text_between_phrases(input_pdf, output_path, new_text)
+
 
 
