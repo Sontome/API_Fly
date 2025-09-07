@@ -307,7 +307,7 @@ def replace_text_between_phrases(pdf_path, output_path,
 
             # In phần normal, cách ra 5pt
             page.insert_text(
-                (adj_x + 25+ 5, adj_y + i * (fs * 1.4)),
+                (adj_x + 80, adj_y + i * (fs * 1.4)),
                 normal_part.strip(),
                 fontsize=fs * 1.2,
                 # fontfile=FONT_ARIAL,
@@ -369,6 +369,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
