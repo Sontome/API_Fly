@@ -1,16 +1,19 @@
 import fitz
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 import time
-import requests
 import json
 import os
-import asyncio
 from get_bag_info_pnr_vj import get_bag_info_vj
+
 font_path = "/root/API_Fly/arial.ttf"
 font_bold_path = "/root/API_Fly/arialbold.ttf"
 
-NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại :                   +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
+NEW_TEXT = """Nơi xuất vé:
+B2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489
+BEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL
+Số điện thoại :                   +82-10-3546-3396
+Email:  Hanvietair@gmail.com"""
 
 START_PHRASE = "Công Ty Cổ Phần Hàng Không VietJet"
 END_PHRASE = "Tax ID: 0-1055-56100-55-1"
@@ -31,11 +34,12 @@ def find_text_coordinates(layout, search_text):
     else:
         return None
 
-def check_bag_vj(pnr):
+async def check_bag_vj(pnr):
     try:
-        result = asyncio.run(get_bag_info_vj(pnr))
+        result = await get_bag_info_vj(pnr)
         return result
     except Exception as e:
+        print("[ERROR check_bag_vj]", e)
         return None
 
 def prase_tieude_hanhly(data):
@@ -52,7 +56,6 @@ def merge_bag_info(data):
             bag = p.get("Bag", "     -     ") or "     -     "
             if name not in result:
                 result[name] = ["     -     ", "     -     "]
-            # bảo đảm idx không vượt quá 1
             if idx < 2:
                 result[name][idx] = bag
     return [
@@ -74,9 +77,6 @@ def add_bag_info(bag, layout, page, fs):
     if not toadopassenger:
         print(f"[WARN] Không tìm được tọa độ cho passenger: {passenger}")
         return
-    # optional: tạo khung redact nếu cần
-    # toadothanhhanhlydi_khung = fitz.Rect(toadopassenger[0], toadopassenger[1], toadopassenger[0]+30, toadopassenger[1]+10)
-    # page.add_redact_annot(toadothanhhanhlydi_khung)
     page.apply_redactions()
     use_font = font_bold_path if os.path.exists(font_bold_path) else font_path
     page.insert_text(
@@ -88,10 +88,7 @@ def add_bag_info(bag, layout, page, fs):
         render_mode=0
     )
 
-def replace_text_between_phrases(pdf_path, output_path,
-                                 new_text, start_phrase=START_PHRASE, end_phrase=END_PHRASE,
-                                 font_size=10):
-
+async def replace_text_between_phrases(pdf_path, output_path, new_text, start_phrase=START_PHRASE, end_phrase=END_PHRASE, font_size=10):
     doc = fitz.open(pdf_path)
     page = doc[0]
     fs = font_size * 0.8
@@ -106,7 +103,7 @@ def replace_text_between_phrases(pdf_path, output_path,
             if re.search(pnrformat, line_text) and len(line_text.replace(" ", "")) == 6:
                 pnr = line_text.strip()
                 print("[DEBUG] PNR:", pnr)
-                baglist = check_bag_vj(pnr)
+                baglist = await check_bag_vj(pnr)
                 print("[DEBUG] raw baglist:", baglist)
                 if isinstance(baglist, str):
                     try:
@@ -133,6 +130,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                         add_bag_info(bag, layout, page, fs)
                     break
 
+    # ... phần xử lý giờ bay, ngày bay, text insert giữ nguyên như code cũ ...
     # ===== LẤY GIỜ BAY =====
     found_time = None
     found_date = None
@@ -269,7 +267,6 @@ def replace_text_between_phrases(pdf_path, output_path,
                     render_mode=0
                 )
 
-    # ===== LƯU FILE =====
     doc.save(output_path)
     doc.close()
     time.sleep(0.5)
@@ -283,10 +280,10 @@ def extract_first_page(input_pdf):
     new_doc.save(input_pdf)
     new_doc.close()
 
-def reformat_VJ(input_pdf, output_path, new_text=NEW_TEXT):
-    if new_text == "":
+async def reformat_VJ(input_pdf, output_path, new_text=NEW_TEXT):
+    if not new_text:
         new_text = NEW_TEXT
-    replace_text_between_phrases(input_pdf, output_path, new_text)
+    await replace_text_between_phrases(input_pdf, output_path, new_text)
 
 
-
+  
