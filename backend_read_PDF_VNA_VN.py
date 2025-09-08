@@ -4,7 +4,7 @@ import re
 import time
 import os
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
-NEW_TEXT = "Noi xuat ve:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSo dien thoai:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com\nNgay:  "
+NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSo dien thoai:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com\nNgay:  "
  
 START_PHRASE = "Nơi xuất vé:"
 END_PHRASE = "Ngày:"
@@ -267,6 +267,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
