@@ -37,7 +37,7 @@ def replace_text_between_phrases(pdf_path,output_path,
         new_text_lines = new_text.split("\n")
         for i, line in enumerate(new_text_lines):
             if line.strip().startswith("Ngày:"):
-                new_text_lines[i] = f"Ngay: {date_found}"
+                new_text_lines[i] = f"Ngày: {date_found}"
         new_text = "\n".join(new_text_lines)
 
     # ===== LẤY GIỜ & NGÀY BAY =====
@@ -267,6 +267,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
