@@ -11,7 +11,7 @@ END_PHRASE = "Ngày:"
 def replace_text_between_phrases(pdf_path,output_path,
                                   new_text,start_phrase=START_PHRASE, end_phrase=END_PHRASE,
                                  font_size=10):
-    new_text = new_text + "\nNgay:  "
+    new_text = new_text + "\nNgày:  "
     doc = fitz.open(pdf_path)
     page = doc[0]  # chỉ page đầu
     fs = font_size * 0.8
@@ -36,7 +36,7 @@ def replace_text_between_phrases(pdf_path,output_path,
     if date_found:
         new_text_lines = new_text.split("\n")
         for i, line in enumerate(new_text_lines):
-            if line.strip().startswith("Ngay:"):
+            if line.strip().startswith("Ngày:"):
                 new_text_lines[i] = f"Ngay: {date_found}"
         new_text = "\n".join(new_text_lines)
 
@@ -267,6 +267,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
