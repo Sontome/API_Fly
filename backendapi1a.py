@@ -104,8 +104,8 @@ def formatsove(text: str):
     count_ADT = sum(1 for s in inside_parentheses if 'ADT' in s)
     count_CHD = sum(1 for s in inside_parentheses if 'CHD' in s)
     count_INF = sum(1 for s in inside_parentheses if 'INF' in s)
-
-    return ( count_ADT + count_CHD + count_INF)
+    count_VFR = sum(1 for s in inside_parentheses if 'VFR' in s)
+    return ( count_ADT + count_CHD + count_INF + count_VFR)
     
 def formatPNR(text):
     # Cắt từng dòng + bỏ dòng trống
@@ -464,4 +464,5 @@ async def code1a(code,ssid):
         return None
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
