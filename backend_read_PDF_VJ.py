@@ -7,7 +7,7 @@ import json
 import os
 from get_bag_info_pnr_vj import get_bag_info_vj
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
-NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSo dien thoai :                   +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
+NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại :                   +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
 
 START_PHRASE = "Công Ty Cổ Phần Hàng Không VietJet"
 END_PHRASE = "Tax ID: 0-1055-56100-55-1"
@@ -90,8 +90,8 @@ def add_bag_info(bag,layout,page,fs):
         baginfo,
         
         fontsize=fs*1.2,
-        # fontfile=FONT_ARIAL_BOLD if os.path.exists(FONT_ARIAL_BOLD) else FONT_ARIAL,
-        # fontname="arialbold" if os.path.exists(FONT_ARIAL_BOLD) else "arial",
+        fontfile=FONT_ARIAL,
+        fontname= "arial",
         fill=(1, 0, 0),
         render_mode=0
     )
@@ -131,8 +131,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                     page.insert_text(
                         (toadothanhhanhlydi[0]+170, toadothanhhanhlydi[1]+8),
                         tieude,
-                        # fontfile=FONT_ARIAL,
-                        # fontname = "arial",
+                        fontfile=FONT_ARIAL,
+                        fontname = "arial",
                         fontsize=fs*1.2,
                         fill=(1, 1, 1),
                         render_mode=0
@@ -170,15 +170,15 @@ def replace_text_between_phrases(pdf_path, output_path,
                 t = datetime.strptime(time_part, "%H:%M")
                 hour = t.hour
                 if 0 <= hour <= 6:
-                    period = "(Rang sang)"
+                    period = "(Rạng sáng)"
                 elif 6 < hour <= 11:
-                    period = "(Sang)"
+                    period = "(Sáng)"
                 elif 11 < hour <= 13:
-                    period = "(Trua)"
+                    period = "(Trưa)"
                 elif 13 < hour <= 18:
-                    period = "(Chieu)"
+                    period = "(Chiều)"
                 else:
-                    period = "(Dem)"
+                    period = "(Đêm)"
                 
                 time_new = f"{full_part} {period}"
                 #print(f"[DEBUG] Giờ bay: {full_part} → {time_new}")
@@ -204,8 +204,8 @@ def replace_text_between_phrases(pdf_path, output_path,
                 page.insert_text(
                     (full_rect.x0, full_rect.y0+11),
                     time_new,
-                    # fontfile=FONT_ARIAL,
-                    # fontname = "arial",
+                    fontfile=FONT_ARIAL,
+                    fontname = "arial",
                     fontsize=fs*1.1,
                     fill=(0, 0, 0),
                     render_mode=0
@@ -312,7 +312,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 normal_part.strip(),
                 fontsize=fs * 1.2,
                 fontfile=FONT_ARIAL,
-                # fontname= "arial",
+                fontname= "arial",
                 fill=(0, 0, 0),
                 render_mode=0
             )
@@ -322,7 +322,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 line,
                 fontsize=fs * 1.2,
                 fontfile=FONT_ARIAL,
-                # fontname= "arial",
+                fontname= "arial",
                 fill=(0, 0, 0),
                 render_mode=0
             )
@@ -370,6 +370,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
