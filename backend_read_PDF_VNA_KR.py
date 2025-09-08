@@ -2,14 +2,14 @@ import fitz
 from datetime import datetime, timedelta
 import re
 import time
-NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com\nDate:"
+NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
  
 START_PHRASE = "발행점소:"
 END_PHRASE = "출발일자:"
 def replace_text_between_phrases(pdf_path,output_path,
                                   new_text,start_phrase=START_PHRASE, end_phrase=END_PHRASE,
                                  font_size=10):
-    
+    new_text = new_text + "\nDate:  "
     doc = fitz.open(pdf_path)
     page = doc[0]  # chỉ page đầu
     fs = font_size * 0.8
@@ -246,5 +246,6 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
