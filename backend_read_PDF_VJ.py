@@ -298,7 +298,7 @@ def replace_text_between_phrases(pdf_path, output_path,
                 fontsize=fs * 1.2,
                 fontfile=FONT_ARIAL,
                 
-                # fontname= "arial",
+                fontname= "arial",
                 fill=(0/255, 61/255, 77/255),
                 render_mode=2
             )
@@ -370,6 +370,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
