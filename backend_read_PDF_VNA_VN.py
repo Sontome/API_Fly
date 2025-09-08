@@ -4,7 +4,7 @@ import re
 import time
 import os
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
-NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSo dien thoai:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com\nNgay:  "
+NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com\nNgay:  "
  
 START_PHRASE = "Nơi xuất vé:"
 END_PHRASE = "Ngày:"
@@ -68,15 +68,15 @@ def replace_text_between_phrases(pdf_path,output_path,
             hour = checkin_dt.hour
 
             if 0 <= hour <= 6:
-                periodt = "(Rang sang)"
+                periodt = "(Rạng sáng)"
             elif 6 < hour <= 11:
-                periodt = "(Sang)"
+                periodt = "(Sáng)"
             elif 11 < hour <= 13:
-                periodt = "(Trua)"
+                periodt = "(Trưa)"
             elif 13 < hour <= 18:
-                periodt = "(Chieu)"
+                periodt = "(Chiều)"
             else:
-                periodt = "(Dem)"
+                periodt = "(Đêm)"
             note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc len may bay."
             #print(f"[DEBUG] Giờ check-in: {note_str}")
         except Exception as e:
@@ -91,15 +91,15 @@ def replace_text_between_phrases(pdf_path,output_path,
                 hour = t.hour
 
                 if 0 <= hour <= 6:
-                    periodt = "(Rang sang)"
+                    periodt = "(Rạng sáng)"
                 elif 6 < hour <= 11:
-                    periodt = "(Sang)"
+                    periodt = "(Sáng)"
                 elif 11 < hour <= 13:
-                    periodt = "(Trua)"
+                    periodt = "(Trưa)"
                 elif 13 < hour <= 18:
-                    periodt = "(Chieu)"
+                    periodt = "(Chiều)"
                 else:
-                    periodt = "(Dem)"
+                    periodt = "(Đêm)"
                 time_part_new = f"{time_part} {periodt}"
                 #print(f"[DEBUG] Đổi giờ: '{time_part}' → '{time_part_new}'")
             except:
@@ -267,6 +267,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
