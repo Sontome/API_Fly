@@ -170,15 +170,15 @@ def replace_text_between_phrases(pdf_path, output_path,
                 t = datetime.strptime(time_part, "%H:%M")
                 hour = t.hour
                 if 0 <= hour <= 6:
-                    period = "(Rạng sáng)"
+                    period = "(Rang sang)"
                 elif 6 < hour <= 11:
-                    period = "(Sáng)"
+                    period = "(Sang)"
                 elif 11 < hour <= 13:
-                    period = "(Trưa)"
+                    period = "(Trua)"
                 elif 13 < hour <= 18:
-                    period = "(Chiều)"
+                    period = "(Chieu)"
                 else:
-                    period = "(Đêm)"
+                    period = "(Dem)"
                 
                 time_new = f"{full_part} {period}"
                 #print(f"[DEBUG] Giờ bay: {full_part} → {time_new}")
@@ -369,6 +369,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
