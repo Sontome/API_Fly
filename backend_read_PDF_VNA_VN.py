@@ -4,14 +4,14 @@ import re
 import time
 import os
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
-NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com\nNgay:  "
+NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
  
 START_PHRASE = "Nơi xuất vé:"
 END_PHRASE = "Ngày:"
 def replace_text_between_phrases(pdf_path,output_path,
                                   new_text,start_phrase=START_PHRASE, end_phrase=END_PHRASE,
                                  font_size=10):
-    
+    new_text = new_text + "\nNgay:  "
     doc = fitz.open(pdf_path)
     page = doc[0]  # chỉ page đầu
     fs = font_size * 0.8
@@ -267,6 +267,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
