@@ -773,7 +773,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxMHeCL6LJFDEeDoep3gSEGL7P3g3sreNJHGyjITFYerzD_1GJFEmN8W8xPxGGcpt4Iig/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbxyaLLBmlKCWxYq4VZBrczWjf3UZWvfKGj5UK1n1YPb2LxrKzY0y_4se0e4zfT7dgkEaQ/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -917,5 +917,6 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
+
 
 
