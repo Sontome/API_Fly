@@ -774,7 +774,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxyaLLBmlKCWxYq4VZBrczWjf3UZWvfKGj5UK1n1YPb2LxrKzY0y_4se0e4zfT7dgkEaQ/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbzCe42learQ8g9eo2W9A6eEqRzbJvU34IvvAThJAJXNVsP9IDXNWS0d1J2J8C-kes31QQ/exec"
 GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzEtwjYuORc75SWA7lj8qu-om_I0dDxJP43FpmyaLtaPg_ltbzcZUREbS5QAmKPf1xA/exec"
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -985,6 +985,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
