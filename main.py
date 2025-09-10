@@ -928,19 +928,19 @@ async def proxy_gas_bot(request: Request):
 
     try:
         # Lấy query param todo
-        todo = request.query_params.get("todo", "").lower()
+        todo = "check"
 
-        # Body chỉ có nếu POST, còn GET thì None
-        body = await request.json() if method == "POST" else None
+        
+        
 
         # Gửi sang GAS kèm todo param
-        target_url = f"{GAS_BOT_URL}?todo={todo}" if todo else GAS_BOT_URL
+        target_url = f"{GAS_BOT_URL}?todo=check"
 
         async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
             r = await client.request(
-                method,
+                "GET",
                 target_url,
-                json=body if method == "POST" else None,
+                json= None,
                 headers={"Content-Type": "application/json"}
             )
 
@@ -957,9 +957,9 @@ async def proxy_gas_bot(request: Request):
                 redirect_url = match.group(1).replace("&amp;", "&")
                 async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
                     r2 = await client.request(
-                        method,
+                        "GET",
                         redirect_url,
-                        json=body if method == "POST" else None,
+                        json= None,
                         headers={"Content-Type": "application/json"}
                     )
                 if "application/json" in r2.headers.get("Content-Type", ""):
@@ -976,14 +976,15 @@ async def proxy_gas_bot(request: Request):
             content={
                 "error": str(e),
                 "trace": traceback.format_exc(),
-                "method": method,
-                "todo": request.query_params.get("todo"),
+                "method": "GET",
+                "todo": "check",
                 "url": GAS_BOT_URL,
-                "body_sent": body if method == "POST" else None
+                "body_sent":  None
             },
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
