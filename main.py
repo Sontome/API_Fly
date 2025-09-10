@@ -10,6 +10,7 @@ from checkdate_VNA import checkdate_VNA
 from backend_read_PDF_VNA import check_ngon_ngu
 from get_bag_info_pnr_vj import get_bag_info_vj
 import os
+import re
 from fastapi.responses import FileResponse
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
@@ -984,6 +985,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
