@@ -774,7 +774,7 @@ import httpx
 from fastapi.responses import JSONResponse
 
 GAS_URL = "https://script.google.com/macros/s/AKfycbxyaLLBmlKCWxYq4VZBrczWjf3UZWvfKGj5UK1n1YPb2LxrKzY0y_4se0e4zfT7dgkEaQ/exec"
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbw11YF9_GDPIzsJ3MZs78d99n4RXJyFUv5gIai96F1-bJmIO-U68HqsBwY9eqwDiPFw/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzEtwjYuORc75SWA7lj8qu-om_I0dDxJP43FpmyaLtaPg_ltbzcZUREbS5QAmKPf1xA/exec"
 @app.options("/proxy-gas")
 async def proxy_gas_options():
     """Xử lý preflight request để CORS không lỗi"""
@@ -984,6 +984,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
