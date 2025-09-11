@@ -12,6 +12,8 @@ from get_bag_info_pnr_vj import get_bag_info_vj
 from get_gmail_service import get_gmail_service
 import os
 import re
+import json
+import base64
 import time
 from fastapi.responses import FileResponse
 from backend_api_vj import api_vj
@@ -986,5 +988,6 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
