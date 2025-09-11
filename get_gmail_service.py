@@ -37,3 +37,4 @@ def get_gmail_service():
     return service
 
 
+get_gmail_service()
