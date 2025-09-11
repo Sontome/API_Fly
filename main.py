@@ -826,7 +826,7 @@ async def proxy_gas(request: Request, background_tasks: BackgroundTasks):
 
     # Trả về luôn
     return JSONResponse(
-        content={"status": "queued", "method": method},
+        content={"status": "success", "method": method},
         headers=cors_headers
     )
 
@@ -976,6 +976,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
