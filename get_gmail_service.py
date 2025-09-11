@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 
 # Scope chỉ đọc Gmail
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-
+TOPIC = 'projects/crawemail-469504/topics/notification'
 # Lấy đường dẫn tuyệt đối cho file token & client_secret
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN_PATH = os.path.join(BASE_DIR, 'token.json')
@@ -35,11 +35,19 @@ def get_gmail_service():
     # Tạo service Gmail API
     service = build('gmail', 'v1', credentials=creds)
     return service
-
-
-if __name__ == "__main__":
+def watch_gmail():
     service = get_gmail_service()
     profile = service.users().getProfile(userId='me').execute()
     print("Email đang dùng:", profile.get("emailAddress"))
+    request = {
+        'labelIds': ['INBOX'],
+        'topicName': TOPIC
+    }
+    response = service.users().watch(userId='me', body=request).execute()
+    print("Watch response:", response)
+
+if __name__ == "__main__":
+    watch_gmail()
+
 
 
