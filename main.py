@@ -960,9 +960,10 @@ async def proxy_gas_bot(request: Request):
                     if "messagesAdded" in h:
                         for m in h["messagesAdded"]:
                             messages.append(m["message"]["id"])
-                
+                print("lấy được history_resp")
                 # Nếu có mail mới thì gọi GAS_BOT_URL sau 10s
                 if messages:
+                    print("Có mail mới")
                     await asyncio.sleep(10)
                     import httpx
                     async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
@@ -988,6 +989,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
