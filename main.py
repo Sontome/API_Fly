@@ -11,6 +11,7 @@ from backend_read_PDF_VNA import check_ngon_ngu
 from get_bag_info_pnr_vj import get_bag_info_vj
 import os
 import re
+import time
 from fastapi.responses import FileResponse
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
@@ -775,7 +776,7 @@ import httpx
 from fastapi.responses import JSONResponse
 
 GAS_URL = "https://script.google.com/macros/s/AKfycbzCe42learQ8g9eo2W9A6eEqRzbJvU34IvvAThJAJXNVsP9IDXNWS0d1J2J8C-kes31QQ/exec"
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzEtwjYuORc75SWA7lj8qu-om_I0dDxJP43FpmyaLtaPg_ltbzcZUREbS5QAmKPf1xA/exec"
+
 @app.options("/proxy-gas")
 async def proxy_gas_options():
     """Xử lý preflight request để CORS không lỗi"""
@@ -918,58 +919,32 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-@app.api_route("/proxy-gas-bot", methods=["GET", "POST"])
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwPYGlE-ZbfPRD00DQKBI7eTeNknQa2bhUsIq4OMrbIoMtaQmHhScsxBNIIZjCMAo1m/exec"
+@app.api_route("/proxy-gas-bot", methods=["POST"],operation_id="proxy_gas_bot")
 async def proxy_gas_bot(request: Request):
-    method = request.method
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
-
+    
     try:
-        # Lấy query param todo
-        todo = "check"
+        # Luôn target về GAS với GET ?todo=check
+        async def delayed_request():
+            import httpx, asyncio
+            await asyncio.sleep(10)  # ⏳ chờ 10s
+            async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+                await client.get(f"{GAS_BOT_URL}?todo=check")
 
-        
-        
+        # Fire & forget: chạy task riêng
+        import asyncio
+        asyncio.create_task(delayed_request())
 
-        # Gửi sang GAS kèm todo param
-        target_url = f"{GAS_BOT_URL}?todo=check"
-
-        async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
-            r = await client.request(
-                "GET",
-                target_url,
-                json= None,
-                headers={"Content-Type": "application/json"}
-            )
-
-        content_type = r.headers.get("Content-Type", "")
-
-        # Nếu trả về JSON
-        if "application/json" in content_type:
-            return JSONResponse(content={"body": r.json()}, headers=cors_headers)
-
-        # Nếu trả về HTML redirect, tìm link googleusercontent.com
-        if "text/html" in content_type:
-            match = re.search(r'href="([^"]+googleusercontent[^"]+)"', r.text)
-            if match:
-                redirect_url = match.group(1).replace("&amp;", "&")
-                async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
-                    r2 = await client.request(
-                        "GET",
-                        redirect_url,
-                        json= None,
-                        headers={"Content-Type": "application/json"}
-                    )
-                if "application/json" in r2.headers.get("Content-Type", ""):
-                    return JSONResponse(content=r2.json(), headers=cors_headers)
-                else:
-                    return JSONResponse(content={"raw_text": r2.text}, headers=cors_headers)
-
-        # Nếu không bắt được gì
-        return JSONResponse(content={"raw_text": r.text}, headers=cors_headers)
+        # Trả kết quả ngay, không chờ GAS trả về
+        return JSONResponse(
+            content={"status": "ok", "message": "Đã gửi request đến GAS 🚀"},
+            headers=cors_headers
+        )
 
     except Exception as e:
         import traceback
@@ -977,15 +952,11 @@ async def proxy_gas_bot(request: Request):
             content={
                 "error": str(e),
                 "trace": traceback.format_exc(),
-                "method": "GET",
-                "todo": "check",
-                "url": GAS_BOT_URL,
-                "body_sent":  None
+                "url": f"{GAS_BOT_URL}?todo=check"
             },
             status_code=500,
             headers=cors_headers
         )
-
 
 
 
