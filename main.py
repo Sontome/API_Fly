@@ -922,7 +922,7 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwPYGlE-ZbfPRD00DQKBI7eTeNknQa2bhUsIq4OMrbIoMtaQmHhScsxBNIIZjCMAo1m/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbxBhuxp7wc1lniEEqRFmHsP8BXwcuyaKko4Pg-_BHAxBf8p2tctWiKt1INfL1P_mLWO/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
@@ -997,6 +997,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
