@@ -37,5 +37,8 @@ def get_gmail_service():
     return service
 
 
-print (get_gmail_service())
+if __name__ == "__main__":
+    service = get_gmail_service()
+    profile = service.users().getProfile(userId='me').execute()
+    print("Email đang dùng:", profile.get("emailAddress"))
 
