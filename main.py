@@ -9,6 +9,7 @@ from checkdate_VJ import checkdate_VJ
 from checkdate_VNA import checkdate_VNA
 from backend_read_PDF_VNA import check_ngon_ngu
 from get_bag_info_pnr_vj import get_bag_info_vj
+from get_gmail_service import get_gmail_service
 import os
 import re
 import time
@@ -920,7 +921,7 @@ async def process_pdf_VJ(
         media_type="application/pdf"
     )
 GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwPYGlE-ZbfPRD00DQKBI7eTeNknQa2bhUsIq4OMrbIoMtaQmHhScsxBNIIZjCMAo1m/exec"
-@app.api_route("/proxy-gas-bot", methods=["POST"],operation_id="proxy_gas_bot")
+@app.api_route("/proxy-gas-bot", methods=["POST"], operation_id="proxy_gas_bot")
 async def proxy_gas_bot(request: Request):
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
@@ -929,20 +930,48 @@ async def proxy_gas_bot(request: Request):
     }
     
     try:
-        # Luôn target về GAS với GET ?todo=check
-        async def delayed_request():
-            import httpx, asyncio
-            await asyncio.sleep(10)  # ⏳ chờ 10s
-            async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
-                await client.get(f"{GAS_BOT_URL}?todo=check")
+        body = await request.json()
+        msg = body.get("message", {})
+        data_b64 = msg.get("data")
+        if not data_b64:
+            return JSONResponse({"status":"error","message":"No data"}, headers=cors_headers)
 
-        # Fire & forget: chạy task riêng
-        import asyncio
+        # Decode base64
+        data_json = json.loads(base64.b64decode(data_b64).decode())
+        history_id = data_json.get("historyId")
+        if not history_id:
+            return JSONResponse({"status":"error","message":"No historyId"}, headers=cors_headers)
+
+        # Fire & forget task
+        async def delayed_request():
+            try:
+                service = get_gmail_service()
+                # Lấy các messageAdded kể từ historyId
+                history_resp = service.users().history().list(
+                    userId="me",
+                    startHistoryId=history_id,
+                    historyTypes=["messageAdded"]
+                ).execute()
+                
+                messages = []
+                for h in history_resp.get("history", []):
+                    if "messagesAdded" in h:
+                        for m in h["messagesAdded"]:
+                            messages.append(m["message"]["id"])
+                
+                # Nếu có mail mới thì gọi GAS_BOT_URL sau 10s
+                if messages:
+                    await asyncio.sleep(10)
+                    import httpx
+                    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+                        await client.get(f"{GAS_BOT_URL}?todo=check")
+            except Exception as e:
+                print("🔥 Error in delayed_request:", e)
+
         asyncio.create_task(delayed_request())
 
-        # Trả kết quả ngay, không chờ GAS trả về
         return JSONResponse(
-            content={"status": "ok", "message": "Đã gửi request đến GAS 🚀"},
+            content={"status": "ok", "message": "Received Pub/Sub, checking mail in background 🚀"},
             headers=cors_headers
         )
 
@@ -951,15 +980,9 @@ async def proxy_gas_bot(request: Request):
         return JSONResponse(
             content={
                 "error": str(e),
-                "trace": traceback.format_exc(),
-                "url": f"{GAS_BOT_URL}?todo=check"
+                "trace": traceback.format_exc()
             },
             status_code=500,
             headers=cors_headers
         )
-
-
-
-
-
 
