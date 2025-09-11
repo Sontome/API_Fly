@@ -27,7 +27,7 @@ def get_gmail_service():
         else:
             # Mở trình duyệt để login lần đầu
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_PATH, SCOPES)
-            creds = creds = flow.run_local_server(port=0)
+            creds = creds = flow.run_local_server(port=0, open_browser=False)
         # Lưu token để lần sau dùng luôn
         with open(TOKEN_PATH, 'w') as token_file:
             token_file.write(creds.to_json())
@@ -41,4 +41,5 @@ if __name__ == "__main__":
     service = get_gmail_service()
     profile = service.users().getProfile(userId='me').execute()
     print("Email đang dùng:", profile.get("emailAddress"))
+
 
