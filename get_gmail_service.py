@@ -27,7 +27,7 @@ def get_gmail_service():
         else:
             # Mở trình duyệt để login lần đầu
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_PATH, SCOPES)
-            creds = flow.run_console()
+            creds = creds = flow.run_local_server(port=0)
         # Lưu token để lần sau dùng luôn
         with open(TOKEN_PATH, 'w') as token_file:
             token_file.write(creds.to_json())
@@ -35,4 +35,5 @@ def get_gmail_service():
     # Tạo service Gmail API
     service = build('gmail', 'v1', credentials=creds)
     return service
+
 
