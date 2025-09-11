@@ -923,6 +923,20 @@ async def process_pdf_VJ(
         media_type="application/pdf"
     )
 GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwPYGlE-ZbfPRD00DQKBI7eTeNknQa2bhUsIq4OMrbIoMtaQmHhScsxBNIIZjCMAo1m/exec"
+LAST_HISTORY_ID_FILE = "last_history_id.txt"
+
+def read_last_history_id():
+    try:
+        with open(LAST_HISTORY_ID_FILE, "r") as f:
+            return int(f.read().strip())
+    except:
+        return None
+
+def save_last_history_id(history_id):
+    with open(LAST_HISTORY_ID_FILE, "w") as f:
+        f.write(str(history_id))
+
+
 @app.api_route("/proxy-gas-bot", methods=["POST"], operation_id="proxy_gas_bot")
 async def proxy_gas_bot(request: Request):
     cors_headers = {
@@ -930,42 +944,36 @@ async def proxy_gas_bot(request: Request):
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
-    
+
     try:
         body = await request.json()
-        msg = body.get("message", {})
-        data_b64 = msg.get("data")
-        if not data_b64:
-            return JSONResponse({"status":"error","message":"No data"}, headers=cors_headers)
-
-        # Decode base64
-        data_json = json.loads(base64.b64decode(data_b64).decode())
-        history_id = data_json.get("historyId")
+        history_id = body.get("historyId")
         if not history_id:
             return JSONResponse({"status":"error","message":"No historyId"}, headers=cors_headers)
 
-        # Fire & forget task
+        last_history_id = read_last_history_id() or history_id
+
         async def delayed_request():
             try:
                 service = get_gmail_service()
-                # Lấy các messageAdded kể từ historyId
+                # Lấy các messageAdded kể từ last_history_id
                 history_resp = service.users().history().list(
                     userId="me",
-                    startHistoryId=history_id,
+                    startHistoryId=last_history_id,
                     historyTypes=["messageAdded"]
                 ).execute()
-                
+
                 messages = []
                 for h in history_resp.get("history", []):
                     if "messagesAdded" in h:
                         for m in h["messagesAdded"]:
                             messages.append(m["message"]["id"])
-                print("lấy được history_resp")
-                # Nếu có mail mới thì gọi GAS_BOT_URL sau 10s
+
+                # Lưu historyId mới nhất để lần sau check
+                save_last_history_id(history_id)
+
                 if messages:
-                    print("Có mail mới")
                     await asyncio.sleep(10)
-                    import httpx
                     async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
                         await client.get(f"{GAS_BOT_URL}?todo=check")
             except Exception as e:
