@@ -977,6 +977,7 @@ async def proxy_gas_bot(request: Request):
 
     except Exception as e:
         import traceback
+        print(str(e))
         return JSONResponse(
             content={
                 "error": str(e),
@@ -985,4 +986,5 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
