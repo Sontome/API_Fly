@@ -791,7 +791,7 @@ async def proxy_gas_options():
     return JSONResponse(content={}, headers=headers)
 
 @app.api_route("/proxy-gas", methods=["GET", "POST"])
-async def proxy_gas(request: Request):
+async def proxy_gas(request: Request, background_tasks: BackgroundTasks):
     method = request.method
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
@@ -799,57 +799,36 @@ async def proxy_gas(request: Request):
         "Access-Control-Allow-Headers": "Content-Type"
     }
 
-    try:
-        body = await request.json() if method != "GET" else None
+    # Lấy body nếu có
+    body = None
+    if method != "GET":
+        try:
+            body = await request.json()
+        except:
+            body = None
 
-        async with httpx.AsyncClient(follow_redirects=True,timeout=30) as client:
-            r = await client.request(
-                method,
-                GAS_URL,
-                json=body if method != "GET" else None,
-                headers={"Content-Type": "application/json"}
-            )
+    async def forward_request():
+        try:
+            async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+                await client.request(
+                    method,
+                    GAS_URL,
+                    json=body if method != "GET" else None,
+                    headers={"Content-Type": "application/json"}
+                )
+        except Exception as e:
+            # log lỗi thôi, ko ảnh hưởng response
+            import traceback
+            print("Forward request error:", str(e), traceback.format_exc())
 
-        content_type = r.headers.get("Content-Type", "")
+    # Cho chạy background không chờ
+    background_tasks.add_task(forward_request)
 
-        # Nếu trả về JSON
-        if "application/json" in content_type:
-            return JSONResponse(content={"body": r.text}, headers=cors_headers)
-
-        # Nếu trả về HTML redirect, tìm link googleusercontent.com
-        if "text/html" in content_type:
-            match = re.search(r'href="([^"]+googleusercontent[^"]+)"', r.text)
-            if match:
-                redirect_url = match.group(1).replace("&amp;", "&")
-                async with httpx.AsyncClient(follow_redirects=True) as client:
-                    r2 = await client.request(
-                        method,
-                        redirect_url,
-                        json=body if method != "GET" else None,
-                        headers={"Content-Type": "application/json"}
-                    )
-                if "application/json" in r2.headers.get("Content-Type", ""):
-                    return JSONResponse(content=r2.json(), headers=cors_headers)
-                else:
-                    return JSONResponse(content={"raw_text": r2.text}, headers=cors_headers)
-
-        # Nếu không bắt được gì
-        return JSONResponse(content={"raw_text": r.text}, headers=cors_headers)
-
-    except Exception as e:
-        # Log thêm thông tin request và stacktrace để debug
-        import traceback
-        return JSONResponse(
-            content={
-                "error": str(e),
-                "trace": traceback.format_exc(),
-                "method": method,
-                "url": GAS_URL,
-                "body_sent": body if method != "GET" else None
-            },
-            status_code=500,
-            headers=cors_headers
-        )
+    # Trả về luôn
+    return JSONResponse(
+        content={"status": "queued", "method": method},
+        headers=cors_headers
+    )
 
 
 
@@ -997,6 +976,7 @@ async def proxy_gas_bot(request: Request):
             status_code=500,
             headers=cors_headers
         )
+
 
 
 
