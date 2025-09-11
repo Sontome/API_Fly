@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 
 # Scope chỉ đọc Gmail
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-TOPIC = 'projects/crawemail-469504/topics/notification'
+TOPIC = 'projects/hvabot-83839/topics/HVA'
 # Lấy đường dẫn tuyệt đối cho file token & client_secret
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN_PATH = os.path.join(BASE_DIR, 'token.json')
@@ -48,6 +48,7 @@ def watch_gmail():
 
 if __name__ == "__main__":
     watch_gmail()
+
 
 
 
