@@ -139,34 +139,36 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             giá_hành_lý_eco_chiều_về = hành_lý_ECO_chiều_về.get("totalAmount",0)
             
             result["chiều_về"]["HANH_LY_ECO"]= giá_hành_lý_eco_chiều_về
+        print (" lấy hành lý eco xong")
         defaultWithFare_item = next((item for item in data if item.get("code") == "DefaultWithFare"), None)  
         if defaultWithFare_item:
             default_ancillaries_departure = defaultWithFare_item.get("ancillariesDeparture", [])
             default_ancillaries_return = defaultWithFare_item.get("ancillariesReturn", [])
-        if default_ancillaries_departure:
-            print(default_ancillaries_departure)
-            hành_lý_deluxe_chiều_đi = next(
-                (
-                    item for item in default_ancillaries_departure
-                    if item.get("originalName") in ["Deluxe 20kgs", "Bag Free 30kgs"]
-                ),
-                {}
-            )
-            giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("totalAmount",0)
-            
-            result["chiều_đi"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_đi
-        if default_ancillaries_return:
-            hành_lý_deluxe_chiều_về = next(
-                (
-                    item for item in default_ancillaries_departure
-                    if item.get("originalName") in ["Deluxe 20kgs", "Bag Free 30kgs"]
-                ),
-                {}
-            )
-            giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
-            result["chiều_về"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_về
+            if default_ancillaries_departure:
+                print(default_ancillaries_departure)
+                hành_lý_deluxe_chiều_đi = next(
+                    (
+                        item for item in default_ancillaries_departure
+                        if item.get("originalName") in ["Deluxe 20kgs", "Bag Free 30kgs"]
+                    ),
+                    {}
+                )
+                giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("totalAmount",0)
+                
+                result["chiều_đi"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_đi
+            if default_ancillaries_return:
+                hành_lý_deluxe_chiều_về = next(
+                    (
+                        item for item in default_ancillaries_departure
+                        if item.get("originalName") in ["Deluxe 20kgs", "Bag Free 30kgs"]
+                    ),
+                    {}
+                )
+                giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
+                result["chiều_về"]["HANH_LY_DELUXE"]= giá_hành_lý_deluxe_chiều_về
         return result
     except Exception as e:
+        print ("lỗi lấy hành lý")
         return {}
 def get_company(bear,retry=False):
     global token
@@ -841,4 +843,5 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
 
 
     return result
+
 
