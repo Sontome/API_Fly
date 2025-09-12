@@ -241,7 +241,7 @@ async def send_close(client: httpx.AsyncClient, ssid=None):
     return ssid, resp
 async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     ssid, cryp = loadJsession(ssid)
-    #print(ssid,cryp["status"])
+    print(ssid,cryp["status"])
     if cryp["status"]=="ERROR":
         print(cryp)
         return ssid, cryp
@@ -465,6 +465,7 @@ async def code1a(code,ssid):
         return (e)
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
