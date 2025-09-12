@@ -104,7 +104,7 @@ def createNewSession(
         resp_login = session.post(url_login, headers=headers, data=payload)
         if resp_login.status_code != 200:
             #print(resp_login.text)
-            return {"status": "ERROR", "message": "Login new session thất bại", "code": resp_login.status_code,"info":{resp_login}}
+            return {"status": "ERROR", "message": "Login new session thất bại", "code": resp_login.status_code}
             
         # ===== Tìm cryptic session data =====
         pattern = re.compile(
@@ -161,5 +161,6 @@ def createNewSession(
 #     result = createNewSession()
 
 #     print(result)
+
 
 
