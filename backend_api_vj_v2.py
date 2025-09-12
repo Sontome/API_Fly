@@ -556,10 +556,10 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
 
                         for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
                             fare_option = list_departure[i].get("fareOption", [])
-                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Deluxe":
+                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Eco":
                                 BookingKeyDeluxe = fare_option[1].get("BookingKey")
                                 break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Deluxe":
+                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Eco":
                                 BookingKeyDeluxe = fare_option[2].get("BookingKey")
                                 break # Gặp Deluxe đầu tiên là lấy luôn, dừng
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe)
@@ -692,10 +692,10 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
 
                         for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
                             fare_option = list_departure[i].get("fareOption", [])
-                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Deluxe":
+                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Eco":
                                 BookingKeyDeluxe = fare_option[1].get("BookingKey")
                                 break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Deluxe":
+                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Eco":
                                 BookingKeyDeluxe = fare_option[2].get("BookingKey")
                                 break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
                         
@@ -838,5 +838,6 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
         "session_key": "",
         "body": ket_qua
     }
+
 
     return result
