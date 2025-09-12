@@ -244,7 +244,7 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     #print(ssid,cryp["status"])
     if cryp["status"]=="ERROR":
         print(cryp)
-        return ssid, cryp["code"]
+        return ssid, cryp
     
     jSessionId = cryp["jSessionId"]
     contextId = cryp["dcxid"]
@@ -370,7 +370,7 @@ async def checkPNR(code,ssid=None):
             ssid, res = await send_command(client, "IG", ssid)
             ssid, res = await send_command(client, "RT"+str(code),ssid)
             
-            if str(res)=="403":
+            if str(res["code"])=="403":
                 return (str(res))
             data = json.loads(res.text)
 
@@ -414,7 +414,7 @@ async def checksomatveVNA(code,ssid=None):
             ssid, res = await send_command(client, "IG", ssid)
             ssid, res = await send_command(client, "RT"+str(code),ssid)
             
-            if str(res)=="403":
+            if str(res["code"])=="403":
                 return (str(res))
             data = json.loads(res.text)
 
@@ -447,7 +447,7 @@ async def code1a(code,ssid):
             
             ssid, res = await send_command(client, str(code),ssid)
             
-            if str(res)=="403":
+            if str(res["code"])=="403":
                 return (str(res))
             data = json.loads(res.text)
 
@@ -465,6 +465,7 @@ async def code1a(code,ssid):
         return None
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
