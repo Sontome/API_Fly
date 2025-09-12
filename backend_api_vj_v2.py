@@ -556,11 +556,11 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
 
                         for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
                             fare_option = list_departure[i].get("fareOption", [])
+                            if len(fare_option) > 1 and fare_option[0].get("Description") == "Eco":
+                                BookingKeyDeluxe = fare_option[0].get("BookingKey")
+                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
                             if len(fare_option) > 1 and fare_option[1].get("Description") == "Eco":
                                 BookingKeyDeluxe = fare_option[1].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Eco":
-                                BookingKeyDeluxe = fare_option[2].get("BookingKey")
                                 break # Gặp Deluxe đầu tiên là lấy luôn, dừng
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe)
                         if giá_hành_lý:
@@ -692,11 +692,11 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
 
                         for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
                             fare_option = list_departure[i].get("fareOption", [])
+                            if len(fare_option) > 1 and fare_option[0].get("Description") == "Eco":
+                                BookingKeyDeluxe = fare_option[0].get("BookingKey")
+                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
                             if len(fare_option) > 1 and fare_option[1].get("Description") == "Eco":
                                 BookingKeyDeluxe = fare_option[1].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Eco":
-                                BookingKeyDeluxe = fare_option[2].get("BookingKey")
                                 break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
                         
                     except:
@@ -841,3 +841,4 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
 
 
     return result
+
