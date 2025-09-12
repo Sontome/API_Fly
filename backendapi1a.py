@@ -448,7 +448,7 @@ async def code1a(code,ssid):
             ssid, res = await send_command(client, str(code),ssid)
             
             if str(res["code"])=="403":
-                return (str(res))
+                return ((res))
             data = json.loads(res.text)
 
 
@@ -465,6 +465,7 @@ async def code1a(code,ssid):
         return (" lỗi :" +str(e))
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
