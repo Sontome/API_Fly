@@ -462,9 +462,10 @@ async def code1a(code,ssid):
         return segments
     except Exception as e:
        
-        return (res)
+        return (e)
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
