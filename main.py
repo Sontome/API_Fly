@@ -10,6 +10,7 @@ from checkdate_VNA import checkdate_VNA
 from backend_read_PDF_VNA import check_ngon_ngu
 from get_bag_info_pnr_vj import get_bag_info_vj
 from get_gmail_service import get_gmail_service
+from sendmail_vj import sendmail_vj
 import os
 import re
 import json
@@ -991,5 +992,16 @@ async def sendemail_1a(
         return (str(e))
 
 
+@app.get("/sendmail_vj")
+def sendmailvj(
+    pnr: str = Query(..., description="pnr")
+  
+):
+    try:
+        result = sendmail_vj(pnr)
+        
+        return result
+    except Exception as e:
 
+        return (str(e))   
 
