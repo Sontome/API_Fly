@@ -105,7 +105,7 @@ def createNewSession(
         if resp_login.status_code != 200:
             #print(resp_login.text)
             return {"status": "ERROR", "message": "Login new session thất bại", "code": resp_login.status_code}
-         print(resp_login.text) 
+        print(resp_login.text) 
         # ===== Tìm cryptic session data =====
         pattern = re.compile(
             r'<templates-init[^>]*moduleId="cryptic"[^>]*><!\[CDATA\[(.*?)\]\]></templates-init>',
@@ -161,6 +161,7 @@ def createNewSession(
 #     result = createNewSession()
 
 #     print(result)
+
 
 
 
