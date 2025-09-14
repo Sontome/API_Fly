@@ -279,6 +279,7 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
 
     data = {"data": json.dumps(payload, separators=(",", ":"))}
     resp = await client.post(url, headers=headers, cookies=COOKIES, data=data, timeout=30)
+    #print(resp.json())
     return ssid, resp
 
 
@@ -446,27 +447,56 @@ async def code1a(code,ssid):
             # chỉ gọi send_command lần đầu ở đây
             
             ssid, res = await send_command(client, str(code),ssid)
-            print [ssid, res]
-            if str(res["code"])=="403":
-                return [res,ssid]
-            data = json.loads(res.text)
-
-
-            segments = data["model"]["output"]["crypticResponse"]["response"]
+            #print(res.json())
+            respone = res.json()
+            #print (ssid, res)
+            if str(respone["code"])=="403":
+                return respone
             
             
             
             
             
             
-        return [res,ssid]
+        return respone
     except Exception as e:
        
         return (e)
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
 
+async def sendemail1a(code, ssid):
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            print("⚡ Gọi send_command lần 1...")
+            ssid, res = await send_command(client, "RT" + str(code), ssid)
 
+            # check text "NO MATCH FOR RECORD LOCATOR"
+            if "NO MATCH FOR RECORD LOCATOR" in res.text:
+                print("⛔ Không tìm thấy PNR:", code)
+                return "None"
+
+            print("✅ Response lần 1:", res.text)
+            respone = res.json()
+            if str(respone.get("code")) == "403":
+                print("⛔ Dừng ở lần 1 vì code 403")
+                return respone
+
+            print("⚡ Gọi send_command lần 2...")
+            ssid, res = await send_command(client, "ITR-EML-devilrauxanhk17@GMAIL.COM", ssid)
+            print("✅ Response lần 2:", res.text)
+            respone = res.json()
+            if str(respone.get("code")) == "403":
+                print("⛔ Dừng ở lần 2 vì code 403")
+                return respone
+
+        return respone
+
+    except Exception as e:
+        print("🚨 Lỗi khi chạy:", e)
+        return {"error": str(e)}
+# if __name__ == "__main__":
+#     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
 
 
 
