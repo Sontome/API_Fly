@@ -34,7 +34,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA,code1a
+from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -978,8 +978,17 @@ async def proxy_gas_bot(request: Request):
         )
 
 
-
-
+@app.get("/sendmailvna")
+async def sendemail_1a(
+    code: str = Query(..., description="code"),
+    ssid: str = Query(..., description="ssidsession")
+):
+    try:
+        result = await sendemail1a(code,ssid)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
