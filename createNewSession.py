@@ -54,7 +54,7 @@ def createNewSession(
         if resp.status_code != 200:
             #print(resp.status_code)
             return {"status": "ERROR", "message": "Tạo session key thất bại", "code": resp.status_code}
-        #print(resp.text)
+        print(resp.text)
         
         # ===== Lấy ENC mới =====
         match = re.search(r'<!\[CDATA\[(.*?)\]\]>', resp.text, re.S)
@@ -161,6 +161,7 @@ def createNewSession(
 #     result = createNewSession()
 
 #     print(result)
+
 
 
 
