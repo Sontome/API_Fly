@@ -36,6 +36,7 @@ After=network.target
 User=root
 WorkingDirectory=/root/API_Fly
 ExecStart=/usr/bin/python3 /root/API_Fly/login1A.py
+ExecStop=/usr/bin/python3 /root/API_Fly/logout1A.py
 Restart=always
 RestartSec=3
 Environment=PYTHONUNBUFFERED=1
