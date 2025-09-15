@@ -779,7 +779,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbyLhg7YsLDfgTNJdvYwLrEQyJ6eW4gg5QagYoNNKcwbbkk4winkrhTYJmQ-K4_LUDFe2g/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbwjVOSXk7K6NxpwF7AV4gh30SBaaMvBOT5d4Kbz7nWBZBxyHa2RW_1LEMgeW9s8Hp2wgg/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -1004,5 +1004,6 @@ def sendmailvj(
     except Exception as e:
 
         return (str(e))   
+
 
 
