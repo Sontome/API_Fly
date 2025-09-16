@@ -953,7 +953,7 @@ async def proxy_gas_bot(request: Request):
                 save_last_history_id(history_id)
 
                 if messages:
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(30)
                     async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
                         await client.get(f"{GAS_BOT_URL}?todo=check")
             except Exception as e:
@@ -1004,6 +1004,7 @@ def sendmailvj(
     except Exception as e:
 
         return (str(e))   
+
 
 
 
