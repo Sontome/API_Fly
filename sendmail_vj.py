@@ -90,7 +90,7 @@ def sendmail(token, reservationKey):
     base_url = "https://agentapi.vietjetair.com/api/v13/EditBooking/sendmailitinerary"
     payload  = {
         "reservationKey": reservationKey,
-        "additionalMail": "ITR-EML-HANVIETAIR.SERVICE@GMAIL.COM",
+        "additionalMail": "HANVIETAIR.SERVICE@GMAIL.COM",
         "languagecode" : "vi"
 
     
@@ -155,4 +155,5 @@ def sendmail_vj(pnr):
 
     #print(result)
     return ("VJ")
+
 
