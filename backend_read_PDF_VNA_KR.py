@@ -2,6 +2,7 @@ import fitz
 from datetime import datetime, timedelta
 import re
 import time
+FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
  
 START_PHRASE = "발행점소:"
@@ -182,6 +183,8 @@ def replace_text_between_phrases(pdf_path,output_path,
                         (adj_x, adj_y + i * (fs + 2)),
                         bold_part,
                         fontsize=fs,
+                        fontfile=FONT_ARIAL,
+                        fontname= "arial",
                         fill=(0/255, 61/255, 77/255),
                         render_mode=0.5
                     )
@@ -190,6 +193,8 @@ def replace_text_between_phrases(pdf_path,output_path,
                         (adj_x + text_width + 3, adj_y + i * (fs + 2)),
                         normal_part.strip(),
                         fontsize=fs,
+                        fontfile=FONT_ARIAL,
+                        fontname= "arial",
                         fill=(0, 0, 0),
                         render_mode=0
                     )
@@ -198,6 +203,8 @@ def replace_text_between_phrases(pdf_path,output_path,
                         (adj_x, adj_y + i * (fs + 2)),
                         line,
                         fontsize=fs,
+                        fontfile=FONT_ARIAL,
+                        fontname= "arial",
                         fill=(0, 0, 0),
                         render_mode=0
                     )
@@ -246,6 +253,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
