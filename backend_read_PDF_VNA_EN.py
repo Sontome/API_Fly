@@ -190,7 +190,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                     )
                     text_width = fitz.get_text_length(bold_part, fontsize=fs)
                     page.insert_text(
-                        (adj_x + text_width + 3, adj_y + i * (fs + 2)),
+                        (adj_x + 45 + 3, adj_y + i * (fs + 2)),
                         normal_part.strip(),
                         fontsize=fs,
                         fontfile=FONT_ARIAL,
@@ -254,6 +254,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
