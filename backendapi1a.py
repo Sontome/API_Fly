@@ -483,7 +483,7 @@ async def sendemail1a(code, ssid):
                 return respone
 
             print("⚡ Gọi send_command lần 2...")
-            ssid, res = await send_command(client, "ITR-EML-HANVIETAIR.SERVICE@GMAIL.COM", ssid)
+            ssid, res = await send_command(client, "ITR-EML-HANVIETAIR.SERVICE@GMAIL.COM/LP VI", ssid)
             print("✅ Response lần 2:", res.text)
             respone = res.json()
             if str(respone.get("code")) == "403":
@@ -497,6 +497,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
