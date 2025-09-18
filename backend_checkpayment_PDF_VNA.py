@@ -135,10 +135,11 @@ def check_payment_vna(pdf_path):
 
     doc.close()
     return {
-        
+        "paymentstatus": "True",
         
         "result": result
     }
 
 # ví dụ chạy
 #print(check_payment_vna("input.pdf"))
+
