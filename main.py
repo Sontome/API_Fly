@@ -903,7 +903,7 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwUBrkWsWa2q6BJYB4vLZUIIMN5Qg91I85EvuLdyIvaZtM2ZVq-BrbyOdAbJPe9tvit/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwWWhZSqBGg7M_x6sM-E_GQ5H5XiCzDZWxALADop0n6IiZ0rzC_HQ0aCop9WooUoaCk/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
@@ -1043,6 +1043,7 @@ async def checkpaymentVNA(
 
     # Trả file output về cho client
     return res
+
 
 
 
