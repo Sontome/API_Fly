@@ -10,7 +10,7 @@ def check_payment_vna(pdf_path):
         "DAEGU INTL": "TAE",
         "HANOI NOI BAI INTL": "HAN",
         "HO CHI MINH CITY TAN SON NHAT": "SGN",
-        "DA NANG INTL": "DAD",
+        "DA NANG INTERNATIONAL": "DAD",
         "HAI PHONG CAT BI INTL": "HPH",
         "CAN THO INTL": "VCA",
         "NHA TRANG CAM RANH": "CXR",
@@ -142,4 +142,5 @@ def check_payment_vna(pdf_path):
 
 # ví dụ chạy
 #print(check_payment_vna("input.pdf"))
+
 
