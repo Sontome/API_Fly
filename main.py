@@ -780,7 +780,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxl4kCig0N9QUg1DtkNBCSa5vxXuanuXpNB719XKpl1BIaXTjHsrhFAOrlx6hodYip8pQ/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbywC6FbRjEWbONs2cwUGMj963fxi4A21bFXkLx0ERatQKipaQhRDjcTEPgucUMYtiJzQg/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -1043,6 +1043,7 @@ async def checkpaymentVNA(
 
     # Trả file output về cho client
     return res
+
 
 
 
