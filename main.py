@@ -955,7 +955,7 @@ async def proxy_gas_bot(request: Request):
 
                 if messages:
                     await asyncio.sleep(5)
-                    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+                    async with httpx.AsyncClient(follow_redirects=True, timeout=60) as client:
                         await client.get(f"{GAS_BOT_URL}?todo=check")
             except Exception as e:
                 print("🔥 Error in delayed_request:", e)
@@ -1043,6 +1043,7 @@ async def checkpaymentVNA(
 
     # Trả file output về cho client
     return res
+
 
 
 
