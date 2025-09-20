@@ -12,6 +12,7 @@ from backend_read_PDF_VNA import check_ngon_ngu
 from get_bag_info_pnr_vj import get_bag_info_vj
 from get_gmail_service import get_gmail_service
 from sendmail_vj import sendmail_vj
+import fitz 
 import os
 import re
 import json
@@ -1046,17 +1047,22 @@ async def checkpaymentVNA(
     # Trả file output về cho client
     return res
 @app.get("/get-pnr/{pnr}")
-def get_pnr_file(pnr: str):
-    """Lấy đúng 1 file PDF theo tên đầy đủ PNR"""
+def get_pnr_file_png(pnr: str):
+    """Trả về ảnh PNG của page 1 PDF"""
     file_path = os.path.join(FILES_DIR, f"{pnr}.pdf")
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Không tìm thấy file PNR này")
 
-    return FileResponse(
-        path=file_path,
-        filename=f"{pnr}.pdf",
-        media_type="application/pdf"
-    )
+    try:
+        doc = fitz.open(file_path)
+        page = doc[0]  # chỉ page đầu
+        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # scale 2x để nét hơn
+        img_bytes = pix.tobytes("png")
+        doc.close()
+        
+        return Response(content=img_bytes, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi chuyển PDF → PNG: {e}")
 
 @app.get("/list-pnr/{pnr_key}")
 def list_pnr_files(pnr_key: str):
@@ -1073,6 +1079,7 @@ def list_pnr_files(pnr_key: str):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
