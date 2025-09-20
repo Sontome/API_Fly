@@ -168,12 +168,12 @@ def replace_text_between_phrases(pdf_path,output_path,
     blocks = page.get_text("blocks")
     for block in blocks:
         block_text = block[4]
-        if "Mã đặt chỗ" in block_text:
+        if "예약번호" in block_text:
             # In ra để debug
             print("[DEBUG] Found block:", block_text)
             
             # Regex bắt Mã đặt chỗ và Số vé
-            match = re.search(r"Mã đặt chỗ:\s*([A-Z0-9]+).*?Sốvé:\s*([0-9 ]+)", block_text, re.S)
+            match = re.search(r"예약번호:\s*([A-Z0-9]+).*?항공권번호:\s*([0-9 ]+)", block_text, re.S)
             if match:
                 ma_pnr = match.group(1).strip()
                 so_ve = match.group(2).strip()
@@ -278,6 +278,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
