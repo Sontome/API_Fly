@@ -135,16 +135,16 @@ def replace_text_between_phrases(pdf_path,output_path,
     for match in matches:
         #print(f"[DEBUG] Đổi màu đỏ: '{match}'")
         search_rects = page.search_for(match)
-        for rect in search_rects:
-            page.add_redact_annot(rect)
-            page.apply_redactions()
-            page.insert_text(
-                (rect.x0, rect.y0 + 8.7),
-                match,
-                fontsize=fs,
-                fill=(0, 0, 0),
-                render_mode=0
-            )
+        # for rect in search_rects:
+        #     page.add_redact_annot(rect)
+        #     page.apply_redactions()
+        #     page.insert_text(
+        #         (rect.x0, rect.y0 + 8.7),
+        #         match,
+        #         fontsize=fs,
+        #         fill=(0, 0, 0),
+        #         render_mode=0
+        #     )
 
     # ===== THÊM NOTE KHI THẤY DÒNG OK/RQ =====
     note_text = "(1) OK ="
@@ -278,6 +278,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
