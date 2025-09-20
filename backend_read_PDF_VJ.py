@@ -348,14 +348,15 @@ def extract_first_page(input_pdf):
     new_doc.save(input_pdf)
     
     new_doc.close()
-    
-    #print(f"✅ Đã xuất page 1 ra: {input_pdf}")
-    # Copy thêm bản vào FILES_DIR
-    os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
-    filename = os.path.basename(input_pdf)  # lấy tên file, vd: ABCD12.pdf
-    dest_path = os.path.join(FILES_DIR, filename)
-
+    print(f"✅ Đã xuất page 1 ra: {input_pdf}")
     try:
+        
+        # Copy thêm bản vào FILES_DIR
+        os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
+        filename = os.path.basename(input_pdf)  # lấy tên file, vd: ABCD12.pdf
+        dest_path = os.path.join(FILES_DIR, filename)
+
+    
         shutil.copy2(input_pdf, dest_path)
         print(f"✅ Đã copy {input_pdf} sang {dest_path}")
     except Exception as e:
@@ -381,6 +382,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
