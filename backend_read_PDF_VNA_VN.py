@@ -181,11 +181,11 @@ def replace_text_between_phrases(pdf_path,output_path,
     # ===== REPLACE TEXT CHÍNH =====
     blocks = page.get_text("blocks")
     for block in blocks:
-        print(block)
+        #print(block)
         block_text = block[4]
         if "Mã đặt chỗ" in block_text:
             # In ra để debug
-            #print("[DEBUG] Found block:", block_text)
+            print("[DEBUG] Found block:", block_text)
             
             # Regex bắt Mã đặt chỗ và Số vé
             match = re.search(r"Mã đặt chỗ:\s*([A-Z0-9]+).*?Sốvé:\s*([0-9 ]+)", block_text, re.S)
