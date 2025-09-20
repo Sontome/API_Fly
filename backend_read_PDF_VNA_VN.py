@@ -192,8 +192,8 @@ def replace_text_between_phrases(pdf_path,output_path,
             if match:
                 ma_pnr = match.group(1).strip()
                 so_ve = match.group(2).strip()
-                pnr = f"{ma_pnr}-{so_ve}"
-                print(f"✅ PNR = {pnr}")
+                pnrpax = f"{ma_pnr}-{so_ve}"
+                print(f"✅ PNR = {pnrpax}")
         if start_phrase in block_text and end_phrase in block_text:
             #print("[DEBUG] Thay block chính")
             x0, y0, x1, y1 = block[:4]
@@ -293,6 +293,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #reformat_VNA_VN("input.pdf","output.pdf")
+
 
 
 
