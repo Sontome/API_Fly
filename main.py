@@ -37,6 +37,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
 from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a
+FILES_DIR = "/var/www/files
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1044,6 +1045,21 @@ async def checkpaymentVNA(
     # Trả file output về cho client
     return res
 
+@app.get("/list-pnr/{pnr_key}")
+def list_pnr_files(pnr_key: str):
+    """Trả về danh sách link các file PDF có chứa chuỗi pnr_key"""
+    if not os.path.exists(FILES_DIR):
+        raise HTTPException(status_code=500, detail="Thư mục files chưa tồn tại")
+
+    # lọc file có chứa pnr_key ở bất kỳ vị trí nào
+    files = [f for f in os.listdir(FILES_DIR) if pnr_key in f and f.endswith(".pdf")]
+
+    if not files:
+        raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
+
+    # Trả về list link đầy đủ để user tải
+    links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
+    return {"search": pnr_key, "files": links}
 
 
 
