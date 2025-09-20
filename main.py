@@ -18,7 +18,7 @@ import re
 import json
 import base64
 import time
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from backend_api_vj import api_vj
 from backend_api_vj_v2 import api_vj_v2
 from backend_api_vj_lowest_v2 import lay_danh_sach_ve_re_nhat
@@ -1079,6 +1079,7 @@ def list_pnr_files(pnr_key: str):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
