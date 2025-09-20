@@ -265,8 +265,8 @@ def extract_first_page(input_pdf,prnpax):
         
         # Copy thêm bản vào FILES_DIR
         os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
-        filename = os.path.basename(pnr)  # lấy tên file, vd: ABCD12.pdf
-        dest_path = os.path.join(FILES_DIR, filename)
+          # lấy tên file, vd: ABCD12.pdf
+        dest_path = os.path.join(FILES_DIR, prnpax+".pdf")
 
     
         shutil.copy2(input_pdf, dest_path)
