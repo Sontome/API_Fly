@@ -6,6 +6,7 @@ import requests
 import json
 import os
 import shutil
+FILES_DIR = "/var/www/files"
 from get_bag_info_pnr_vj import get_bag_info_vj
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại :                   +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
@@ -382,6 +383,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
