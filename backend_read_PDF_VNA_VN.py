@@ -261,6 +261,7 @@ def extract_first_page(input_pdf,prnpax):
     new_doc.close()
     
     #print(f"✅ Đã xuất page 1 ra: {input_pdf}")
+    print(f"{prnpax}.pdf")
     try:
         
         # Copy thêm bản vào FILES_DIR
@@ -292,6 +293,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #reformat_VNA_VN("input.pdf","output.pdf")
+
 
 
 
