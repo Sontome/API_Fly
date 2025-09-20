@@ -38,6 +38,7 @@ from typing import Optional
 from holdbookingkeyVJ import booking
 from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a
 FILES_DIR = "/var/www/files
+DOMAIN = "https://thuhongtour.com"
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1060,6 +1061,7 @@ def list_pnr_files(pnr_key: str):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
