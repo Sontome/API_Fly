@@ -1046,33 +1046,7 @@ async def checkpaymentVNA(
     # Trả file output về cho client
     return res
 
-@app.get("/get-pnr/{pnr}")
-def get_pnr_file(pnr: str):
-    """Lấy đúng 1 file PDF theo tên đầy đủ PNR"""
-    file_path = os.path.join(FILES_DIR, f"{pnr}.pdf")
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Không tìm thấy file PNR này")
 
-    return FileResponse(
-        path=file_path,
-        filename=f"{pnr}.pdf",
-        media_type="application/pdf"
-    )
-@app.get("/list-pnr/{pnr_key}")
-def list_pnr_files(pnr_key: str):
-    """Trả về danh sách link các file PDF có chứa chuỗi pnr_key"""
-    if not os.path.exists(FILES_DIR):
-        raise HTTPException(status_code=500, detail="Thư mục files chưa tồn tại")
-
-    # lọc file có chứa pnr_key ở bất kỳ vị trí nào
-    files = [f for f in os.listdir(FILES_DIR) if pnr_key in f and f.endswith(".pdf")]
-
-    if not files:
-        raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
-
-    # Trả về list link đầy đủ để user tải
-    links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
-    return {"search": pnr_key, "files": links}
 
 
 
