@@ -2,6 +2,8 @@ import fitz
 from datetime import datetime, timedelta
 import re
 import time
+import shutil
+FILES_DIR = "/var/www/files"
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
  
@@ -166,6 +168,17 @@ def replace_text_between_phrases(pdf_path,output_path,
     blocks = page.get_text("blocks")
     for block in blocks:
         block_text = block[4]
+        if "Mã đặt chỗ" in block_text:
+            # In ra để debug
+            print("[DEBUG] Found block:", block_text)
+            
+            # Regex bắt Mã đặt chỗ và Số vé
+            match = re.search(r"Mã đặt chỗ:\s*([A-Z0-9]+).*?Sốvé:\s*([0-9 ]+)", block_text, re.S)
+            if match:
+                ma_pnr = match.group(1).strip()
+                so_ve = match.group(2).strip()
+                pnrpax = f"{ma_pnr}-{so_ve}"
+                print(f"✅ PNR = {pnrpax}")
         if start_phrase in block_text and end_phrase in block_text:
             #print("[DEBUG] Thay block chính")
             x0, y0, x1, y1 = block[:4]
@@ -217,10 +230,10 @@ def replace_text_between_phrases(pdf_path,output_path,
     #print(f"[DEBUG] Đã lưu file ra: {outputpath}")
     doc.close()
     time.sleep(0.5)
-    extract_first_page(output_path)
+    extract_first_page(output_path,pnrpax)
     
 
-def extract_first_page(input_pdf):
+def extract_first_page(input_pdf,prnpax):
     """Lấy page 1 của PDF và lưu ra file mới, giữ nguyên hyperlink."""
     doc = fitz.open(input_pdf)
     new_doc = fitz.open()
@@ -233,6 +246,18 @@ def extract_first_page(input_pdf):
     new_doc.close()
     
     #print(f"✅ Đã xuất page 1 ra: {input_pdf}")
+    try:
+        
+        # Copy thêm bản vào FILES_DIR
+        os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
+        dest_filename = f"{prnpax}.pdf" # lấy tên file, vd: ABCD12.pdf
+        dest_path = os.path.join(FILES_DIR, dest_filename)
+
+    
+        shutil.copy2(input_pdf, dest_path)
+        print(f"✅ Đã copy {input_pdf} sang {dest_path}")
+    except Exception as e:
+        print(f"❌ Lỗi khi copy file: {e}")
 
 
 
@@ -253,6 +278,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
