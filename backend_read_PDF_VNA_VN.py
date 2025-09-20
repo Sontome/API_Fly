@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 import re
 import time
 import os
+import shutil
+FILES_DIR = "/var/www/files"
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
  
@@ -247,7 +249,18 @@ def extract_first_page(input_pdf):
     new_doc.close()
     
     #print(f"✅ Đã xuất page 1 ra: {input_pdf}")
+    try:
+        
+        # Copy thêm bản vào FILES_DIR
+        os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
+        filename = os.path.basename(input_pdf)  # lấy tên file, vd: ABCD12.pdf
+        dest_path = os.path.join(FILES_DIR, filename)
 
+    
+        shutil.copy2(input_pdf, dest_path)
+        print(f"✅ Đã copy {input_pdf} sang {dest_path}")
+    except Exception as e:
+        print(f"❌ Lỗi khi copy file: {e}")
 
 
  
@@ -267,6 +280,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
