@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
 from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a
-FILES_DIR = "/var/www/files
+FILES_DIR = "/var/www/files"
 DOMAIN = "https://thuhongtour.com"
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -1045,6 +1045,7 @@ async def checkpaymentVNA(
 
     # Trả file output về cho client
     return res
+
 
 
 
