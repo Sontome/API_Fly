@@ -181,7 +181,19 @@ def replace_text_between_phrases(pdf_path,output_path,
     # ===== REPLACE TEXT CHÍNH =====
     blocks = page.get_text("blocks")
     for block in blocks:
+        print(block)
         block_text = block[4]
+        if "Mã đặt chỗ" in block_text:
+            # In ra để debug
+            #print("[DEBUG] Found block:", block_text)
+            
+            # Regex bắt Mã đặt chỗ và Số vé
+            match = re.search(r"Mã đặt chỗ:\s*([A-Z0-9]+).*?Sốvé:\s*([0-9 ]+)", block_text, re.S)
+            if match:
+                ma_pnr = match.group(1).strip()
+                so_ve = match.group(2).strip()
+                pnr = f"{ma_pnr}-{so_ve}"
+                print(f"✅ PNR = {pnr}")
         if start_phrase in block_text and end_phrase in block_text:
             #print("[DEBUG] Thay block chính")
             x0, y0, x1, y1 = block[:4]
@@ -233,10 +245,10 @@ def replace_text_between_phrases(pdf_path,output_path,
     #print(f"[DEBUG] Đã lưu file ra: {outputpath}")
     doc.close()
     time.sleep(0.5)
-    extract_first_page(output_path)
+    extract_first_page(output_path,pnrpax)
     
 
-def extract_first_page(input_pdf):
+def extract_first_page(input_pdf,prnpax):
     """Lấy page 1 của PDF và lưu ra file mới, giữ nguyên hyperlink."""
     doc = fitz.open(input_pdf)
     new_doc = fitz.open()
@@ -253,7 +265,7 @@ def extract_first_page(input_pdf):
         
         # Copy thêm bản vào FILES_DIR
         os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
-        filename = os.path.basename(input_pdf)  # lấy tên file, vd: ABCD12.pdf
+        filename = os.path.basename(pnr)  # lấy tên file, vd: ABCD12.pdf
         dest_path = os.path.join(FILES_DIR, filename)
 
     
@@ -279,8 +291,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 
-#extract_first_page("output.pdf")
-
+#reformat_VNA_VN("input.pdf","output.pdf")
 
 
 
