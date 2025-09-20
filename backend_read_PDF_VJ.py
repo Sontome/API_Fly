@@ -5,6 +5,7 @@ import time
 import requests
 import json
 import os
+import shutil
 from get_bag_info_pnr_vj import get_bag_info_vj
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại :                   +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
@@ -349,6 +350,12 @@ def extract_first_page(input_pdf):
     new_doc.close()
     
     #print(f"✅ Đã xuất page 1 ra: {input_pdf}")
+    # Copy thêm bản vào FILES_DIR
+    os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
+    filename = os.path.basename(input_pdf)  # lấy tên file, vd: ABCD12.pdf
+    dest_path = os.path.join(FILES_DIR, filename)
+
+    shutil.copy2(input_pdf, dest_path)
 
 
 
@@ -370,6 +377,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
