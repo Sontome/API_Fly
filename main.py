@@ -783,7 +783,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbyQ0ZWLmTCJ9LOIUNw--RbywMiSeAm2LR8_68s-fVs-9KbdQusY_u7-9cwftGHG1LTiow/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbx7cGbldd0TYV93yiMh1dm1jQHbHMWKnLRswkSRtA0HlabFDqUxIZzU02pIYUxuRIDBZg/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -906,7 +906,7 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzOU1pCsNBGTg3KZiMLx2DVNGcdREpQglNWG_9y0sdatiJMdQcA_U92y057tmACGf8b/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwtDWmUJuAPDSpvSwY2dWvHCt7rbwRoREvpWg8sgGjgGTndRCNrVjrHKtpjCEFfu18U/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
@@ -1079,6 +1079,7 @@ def list_pnr_files(pnr_key: str):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
