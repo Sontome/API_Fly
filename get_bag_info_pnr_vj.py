@@ -122,7 +122,7 @@ def format_vj_data(data):
                 if 'Bag' in desc:
                     bag_list.append(desc.split('Bag')[-1].strip())
                 elif 'Deluxe' in desc:
-                    bag_list.append(desc.split('Deluxe')[-1].strip())
+                    bag_list.append(desc.split('Deluxe ')[-1].strip())
             bag_info = "+".join(bag_list) if bag_list else None
             passenger_list.append({
                 "tên": ten,
@@ -160,5 +160,6 @@ def get_bag_info_vj(pnr):
 
     #print(result)
     return result
+
 
 
