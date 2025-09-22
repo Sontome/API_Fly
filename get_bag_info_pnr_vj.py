@@ -116,14 +116,14 @@ def format_vj_data(data):
         passenger_list = []
         for p in item['passengers']:
             ten = f"{p['passengerLastName']}, {p['passengerFirstName']}"
-            bag_info = None
+            bag_list = []
             for charge in p.get('charges', []):
-                if 'Bag' in charge['chargeDescription']:
-                    bag_info = charge['chargeDescription'].split('Bag')[-1].strip()
-                    break
-                if 'Deluxe ' in charge['chargeDescription']:
-                    bag_info = charge['chargeDescription'].split('Deluxe')[-1].strip()
-                    break
+                desc = charge['chargeDescription']
+                if 'Bag' in desc:
+                    bag_list.append(desc.split('Bag')[-1].strip())
+                elif 'Deluxe' in desc:
+                    bag_list.append(desc.split('Deluxe')[-1].strip())
+            bag_info = "+".join(bag_list) if bag_list else None
             passenger_list.append({
                 "tên": ten,
                 "Bag": bag_info
@@ -160,4 +160,5 @@ def get_bag_info_vj(pnr):
 
     #print(result)
     return result
+
 
