@@ -252,7 +252,7 @@ def extract_first_page(input_pdf,pnrpax):
         
         # Copy thêm bản vào FILES_DIR
         os.makedirs(FILES_DIR, exist_ok=True)  # tạo folder nếu chưa có
-        dest_filename = f"{prnpax}.pdf" # lấy tên file, vd: ABCD12.pdf
+        dest_filename = f"{pnrpax}.pdf" # lấy tên file, vd: ABCD12.pdf
         dest_path = os.path.join(FILES_DIR, dest_filename)
 
     
@@ -280,6 +280,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
