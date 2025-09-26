@@ -5,6 +5,7 @@ import string
 import json
 import httpx
 import re
+from utils_telegram import send_mess
 from datetime import datetime,timedelta
 from createNewSession import createNewSession
 from itertools import zip_longest
@@ -494,9 +495,11 @@ async def sendemail1a(code, ssid):
 
     except Exception as e:
         print("🚨 Lỗi khi chạy:", e)
+        send_mess("lỗi api 1A")
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
