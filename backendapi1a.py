@@ -495,10 +495,11 @@ async def sendemail1a(code, ssid):
 
     except Exception as e:
         print("🚨 Lỗi khi chạy:", e)
-        send_mess("lỗi api 1A")
+        await send_mess("lỗi api 1A")
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
