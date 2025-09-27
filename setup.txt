@@ -128,6 +128,36 @@ sudo nginx -t && sudo systemctl reload nginx
 python3 -m playwright install-deps
 
 
+sudo nano /etc/systemd/system/login1A.service
+-------------------------------------------------
+[Unit]
+Description=Login 1A Playwright Script
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/API_Fly
+ExecStart=/root/API_Fly/run_login1A.sh
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
+---------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 nano ~/fix.sh
 ------------------------------------------------
 #!/bin/bash
@@ -136,7 +166,7 @@ cd ~/API_Fly/ || exit 1
 python3 getcokivj.py
 ----------------------------------------------------
 chmod +x ~/fix.sh
-
+chmod +x /root/API_Fly/run_login1A.sh
 
 #  updategithub
 
