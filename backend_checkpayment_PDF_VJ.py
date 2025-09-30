@@ -2,6 +2,49 @@ import fitz
 import re
 from datetime import datetime
 
+# ===== Airport map =====
+airport_map = {
+    # Vietnam
+    "Ha Noi": "HAN", "Noi Bai": "HAN", "Hanoi": "HAN",
+    "Ho Chi Minh": "SGN", "Sai Gon": "SGN", "Tan Son Nhat": "SGN", "TP HCM": "SGN",
+    "Da Nang": "DAD", "Danang": "DAD",
+    "Nha Trang": "CXR", "Cam Ranh": "CXR",
+    "Can Tho": "VCA",
+    "Vinh": "VII",
+    "Hue": "HUI", "Phu Bai": "HUI",
+    "Buon Ma Thuot": "BMV",
+    "Pleiku": "PXU",
+    "Tuy Hoa": "TBB",
+    "Thanh Hoa": "THD", "Tho Xuan": "THD",
+    "Dong Hoi": "VDH",
+    "Chu Lai": "VCL",
+    "Dien Bien": "DIN",
+    "Phu Quoc": "PQC",
+    "Ca Mau": "CAH",
+    "Con Dao": "VCS",
+    "Quy Nhon": "UIH", "Phu Cat": "UIH",
+    "Da Lat": "DLI", "Lien Khuong": "DLI",
+    "Son La": "SQH",
+
+    # Korea
+    "Seoul": "ICN", "Incheon": "ICN",
+    "Gimpo": "GMP",
+    "Busan": "PUS", "Gimhae": "PUS",
+    "Jeju": "CJU",
+    "Daegu": "TAE",
+    "Gwangju": "KWJ",
+    "Yeosu": "RSU",
+    "Ulsan": "USN",
+    "Muan": "MWX",
+}
+
+def normalize_airport(name):
+    name = name.strip()
+    # bỏ dấu , Terminal ...
+    name = re.sub(r"Terminal.*", "", name).strip()
+    # map sang IATA
+    return airport_map.get(name, name)  # nếu không map được thì giữ nguyên
+
 def check_payment(pdf_path):
     doc = fitz.open(pdf_path)
     page = doc[0]
@@ -19,13 +62,11 @@ def check_payment(pdf_path):
     search_rects = page.search_for(note_text)
     paymentstatus = "False" if search_rects else "True"
 
-    # Nếu chưa thanh toán → return luôn, trips rỗng
     if paymentstatus == "False":
         doc.close()
         return {
             "paymentstatus": paymentstatus,
             "name": name,
-            
             "result": {f"{k}{i}": "" for i in range(1,5) for k in ["trip","day","time"]}
         }
 
@@ -37,11 +78,9 @@ def check_payment(pdf_path):
 
     for b in blocks:
         text_in_block = b[4]
-
         matches_date = date_pattern.findall(text_in_block)
         if matches_date:
             days.extend(matches_date)
-
         matches_trip = trip_pattern.findall(text_in_block)
         if matches_trip:
             tripinfo.extend([m.strip() for m in matches_trip])
@@ -61,7 +100,7 @@ def check_payment(pdf_path):
         try:
             time_part, place_part = t.split("-", 1)
             time_part = time_part.strip()
-            place_part = place_part.replace("Terminal", "").strip()
+            place_part = place_part.strip()
             trips.append({"time": time_part, "place": place_part})
         except Exception:
             continue
@@ -70,8 +109,8 @@ def check_payment(pdf_path):
     result = {}
     trip_count = min(len(trips) // 2, len(converted_days))
     for i in range(trip_count):
-        from_place = trips[2*i]["place"]
-        to_place = trips[2*i+1]["place"]
+        from_place = normalize_airport(trips[2*i]["place"])
+        to_place = normalize_airport(trips[2*i+1]["place"])
         date = converted_days[i] if i < len(converted_days) else ""
         time = trips[2*i]["time"]
 
@@ -90,9 +129,8 @@ def check_payment(pdf_path):
     return {
         "paymentstatus": paymentstatus,
         "name": name,
-        
         "result": result
     }
 
 # Test
-#print(check_payment("input1.pdf"))
+#print(check_payment("input.pdf"))
