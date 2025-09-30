@@ -25,6 +25,7 @@ airport_map = {
     "Quy Nhon": "UIH", "Phu Cat": "UIH",
     "Da Lat": "DLI", "Lien Khuong": "DLI",
     "Son La": "SQH",
+    "Hai Phong": "HPH",
 
     # Korea
     "Seoul": "ICN", "Incheon": "ICN",
@@ -134,3 +135,4 @@ def check_payment(pdf_path):
 
 # Test
 #print(check_payment("input.pdf"))
+
