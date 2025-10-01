@@ -147,18 +147,26 @@ def replace_text_between_phrases(pdf_path,output_path,
     hl_pattern = re.compile(r"Hành lý: [12]PC")
     matches = set(hl_pattern.findall(text))
     for match in matches:
-        #print(f"[DEBUG] Đổi màu đỏ: '{match}'")
         search_rects = page.search_for(match)
-        # for rect in search_rects:
-        #     page.add_redact_annot(rect)
-        #     page.apply_redactions()
-        #     page.insert_text(
-        #         (rect.x0, rect.y0 + 5),
-        #         match,
-        #         fontsize=fs,
-        #         fill=(0, 0, 0),
-        #         render_mode=0
-        #     )
+        for rect in search_rects:
+            if "1PC" in match:
+                addon = " (23kg)"
+            elif "2PC" in match:
+                addon = " (23kg+23kg)"
+            else:
+                addon = ""
+
+            # Tính vị trí x để dịch sang phải
+            addon_x = rect.x1 + 0  # dịch sang phải 10pt
+            addon_y = rect.y0 + 9   # cùng line
+
+            page.insert_text(
+                (addon_x, addon_y),
+                addon,
+                fontsize=fs*1.2,
+                fill=(1, 0, 0),
+                render_mode=0
+            )
 
     # ===== THÊM NOTE KHI THẤY DÒNG OK/RQ =====
     note_text = "(1) OK = Đã xác nhận , RQ/SA = Chưa xác nhận chỗ"
@@ -293,6 +301,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #reformat_VNA_VN("input.pdf","output.pdf")
+
 
 
 
