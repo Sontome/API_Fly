@@ -131,7 +131,7 @@ def replace_text_between_phrases(pdf_path,output_path,
 
     # ===== ĐỔI MÀU HÀNH LÝ =====
     is_infant = "(INF)" in text
-    hl_pattern = re.compile(r"Hành lý: [12]PC")
+    hl_pattern = re.compile(r"수하물: [12]PC")
     matches = set(hl_pattern.findall(text))
     for match in matches:
         search_rects = page.search_for(match)
@@ -287,6 +287,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
