@@ -130,15 +130,16 @@ def replace_text_between_phrases(pdf_path,output_path,
             continue
 
     # ===== ĐỔI MÀU HÀNH LÝ =====
-    hl_pattern = re.compile(r": [12]PC")
+    is_infant = "(INF)" in text
+    hl_pattern = re.compile(r"Hành lý: [12]PC")
     matches = set(hl_pattern.findall(text))
     for match in matches:
         search_rects = page.search_for(match)
         for rect in search_rects:
             if "1PC" in match:
-                addon = " (23kg)"
+                addon = " (10kg)" if is_infant else " (23kg)"
             elif "2PC" in match:
-                addon = " (23kg+23kg)"
+                addon = " (10kg+10kg)" if is_infant else " (23kg+23kg)"
             else:
                 addon = ""
 
@@ -286,6 +287,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
