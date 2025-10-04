@@ -373,8 +373,8 @@ async def checkPNR(code,ssid=None):
             print("clearcode")
             ssid, res = await send_command(client, "RT"+str(code),ssid)
             
-            if str(res["code"])=="403":
-                return (str(res))
+            # if str(res["code"])=="403":
+            #     return (str(res))
             
             data = res
             
@@ -502,6 +502,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
