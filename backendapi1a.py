@@ -376,7 +376,7 @@ async def checkPNR(code,ssid=None):
             # if str(res["code"])=="403":
             #     return (str(res))
             
-            data = res
+            data = res.json()
             
             # print(data)
 
@@ -502,6 +502,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
