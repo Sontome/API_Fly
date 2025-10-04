@@ -242,9 +242,9 @@ async def send_close(client: httpx.AsyncClient, ssid=None):
     return ssid, resp
 async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     ssid, cryp = loadJsession(ssid)
-    print(ssid,cryp["status"])
+    # print(ssid,cryp["status"])
     if cryp["status"]=="ERROR":
-        print(cryp)
+        # print(cryp)
         return ssid, cryp
     
     jSessionId = cryp["jSessionId"]
@@ -290,7 +290,7 @@ async def process_row(client: httpx.AsyncClient, row, ssid):
     results = []
 
     for seg in row:
-        print(f"👉 [Task] Đang check {seg}")
+        # print(f"👉 [Task] Đang check {seg}")
         ssid, res = await send_command(client, seg, ssid)
         #print("KQ seg:", res.text[:50])
 
@@ -379,11 +379,11 @@ async def checkPNR(code,ssid=None):
             data = json.loads(res.text)
             print(data)
 
-            segments = data["model"]["output"]["crypticResponse"]["response"]
-            if segments =="INVALID RECORD LOCATOR\n>":
-                return {
-                    "status": "Không phải VNA"
-                }
+            # segments = data["model"]["output"]["crypticResponse"]["response"]
+            # if segments =="INVALID RECORD LOCATOR\n>":
+            #     return {
+            #         "status": "Không phải VNA"
+            #     }
             # print(segments)
             # loop_count=0
             # while ")>" in segments and loop_count < 3:
@@ -501,6 +501,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
