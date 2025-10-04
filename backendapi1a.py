@@ -378,7 +378,7 @@ async def checkPNR(code,ssid=None):
             
             data = res
             
-            print(data)
+            # print(data)
 
             # segments = data["model"]["output"]["crypticResponse"]["response"]
             # if segments =="INVALID RECORD LOCATOR\n>":
@@ -502,6 +502,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
