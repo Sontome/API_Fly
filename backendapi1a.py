@@ -384,22 +384,22 @@ async def checkPNR(code,ssid=None):
                 return {
                     "status": "Không phải VNA"
                 }
-            print(segments)
-            loop_count=0
-            while ")>" in segments and loop_count < 3:
-                loop_count += 1
-                ssid, res_md = await send_command(client, "md", ssid)
-                data_md = json.loads(res_md.text)
-                segments_md = data_md["model"]["output"]["crypticResponse"]["response"]
-                segments += segments_md  # gộp thêm
+            # print(segments)
+            # loop_count=0
+            # while ")>" in segments and loop_count < 3:
+            #     loop_count += 1
+            #     ssid, res_md = await send_command(client, "md", ssid)
+            #     data_md = json.loads(res_md.text)
+            #     segments_md = data_md["model"]["output"]["crypticResponse"]["response"]
+            #     segments += segments_md  # gộp thêm
                 
 
-                segments = deduplicate_lines(segments)
-            with open("test.json", "w", encoding="utf-8") as f:
-                 f.write(segments)
+            #     segments = deduplicate_lines(segments)
+            # with open("test.json", "w", encoding="utf-8") as f:
+            #      f.write(segments)
             ssid, res = await send_command(client, "IG", ssid)
             #result = parse_booking(segments)
-            result =formatPNR(segments)
+            result = data
         with open("ketqua.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
@@ -501,6 +501,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
