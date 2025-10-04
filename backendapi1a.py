@@ -280,7 +280,7 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
 
     data = {"data": json.dumps(payload, separators=(",", ":"))}
     resp = await client.post(url, headers=headers, cookies=COOKIES, data=data, timeout=30)
-    #print(resp.json())
+    print(resp.json())
     return ssid, resp
 
 
@@ -501,6 +501,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
