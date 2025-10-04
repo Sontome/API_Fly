@@ -401,8 +401,8 @@ async def checkPNR(code,ssid=None):
             ssid, res = await send_command(client, "IG", ssid)
             #result = parse_booking(segments)
             result = data
-        with open("ketqua.json", "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
+        # with open("ketqua.json", "w", encoding="utf-8") as f:
+        #     json.dump(result, f, ensure_ascii=False, indent=2)
 
             
         print(f"⏱️ Tổng thời gian chạy: {time.time() - start_time:.2f} giây")
@@ -502,6 +502,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
