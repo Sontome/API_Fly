@@ -177,6 +177,7 @@ nano ~/update_api.sh
 cd /root/API_Fly || exit
 git pull origin main
 systemctl restart uvicorn
+systemctl restart login1A
 -------------------------------
 chmod +x ~/update_api.sh
 
