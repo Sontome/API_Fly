@@ -370,12 +370,14 @@ async def checkPNR(code,ssid=None):
         async with httpx.AsyncClient(http2=False) as client:
             # chỉ gọi send_command lần đầu ở đây
             ssid, res = await send_command(client, "IG", ssid)
+            print("clearcode")
             ssid, res = await send_command(client, "RT"+str(code),ssid)
             
             if str(res["code"])=="403":
                 return (str(res))
+            
             data = json.loads(res.text)
-
+            print(data)
 
             segments = data["model"]["output"]["crypticResponse"]["response"]
             if segments =="INVALID RECORD LOCATOR\n>":
@@ -499,6 +501,7 @@ async def sendemail1a(code, ssid):
         return {"error": str(e)}
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+
 
 
 
