@@ -72,9 +72,9 @@ async def get_vietjet_pnr(token, PNR ):
 
     if response.status_code == 200:
         result = response.json()
-        
+        print(result)
         if result["resultcode"] == 1 :
-
+            print(result["data"])
             return result["data"]
         else :
             return None
@@ -177,6 +177,7 @@ async def checkpnr_vj(pnr):
             return None
     print(result)
     return result
+
 
 
 
