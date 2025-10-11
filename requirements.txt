@@ -7,3 +7,6 @@ uvicorn
 aiohttp
 PyMuPDF
 python-multipart
+opencv-python
+pytesseract
+easyocr
