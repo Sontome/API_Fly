@@ -115,4 +115,4 @@ def ocr_then_parse(image_path: str, lang: str = "vie+eng"):
 
     raw_text = ocr_image_to_text(image_path, lang=lang)
     parsed = parse_text_with_gemini(raw_text)
-    return {"ocr_text": raw_text, "parsed": parsed}
+    return { "parsed": parsed}
