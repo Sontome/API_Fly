@@ -38,6 +38,11 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
 from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a
+import shutil
+from fastapi.concurrency import run_in_threadpool
+from typing import List
+from ocr_gemini import ocr_then_parse
+
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://thuhongtour.com"
 TEMP_DIR = "/root/API_Fly/tmp_files"
@@ -1080,6 +1085,30 @@ def list_pnr_files(pnr_key: str):
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
 
+@app.post("/ocr")
+async def upload_image(files: List[UploadFile] = File(...)):
+    results = []
+    temp_files = []
+    try:
+        for file in files:
+            temp_path = f"temp_{file.filename}"
+            with open(temp_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            temp_files.append(temp_path)
+
+        # xử lý từng file trong threadpool (ko block event loop)
+        for p in temp_files:
+            result = await run_in_threadpool(ocr_then_parse, p)
+            results.append({"filename": os.path.basename(p), "result": result})
+
+        return {"count": len(results), "data": results}
+    finally:
+        # xóa file tạm
+        for p in temp_files:
+            try:
+                os.remove(p)
+            except Exception:
+                pass
 
 
 
