@@ -37,7 +37,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a
+from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR
 import shutil
 from fastapi.concurrency import run_in_threadpool
 from typing import List
@@ -1111,8 +1111,17 @@ async def upload_image(files: List[UploadFile] = File(...)):
                 pass
 
 
-
-
+@app.get("/reprice")
+async def repricee(
+    pnr: str = Query(..., description="pnr"),
+    doituong: str = Query(..., description="doituong")
+):
+    try:
+        result = await repricePNR(pnr,doituong)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
