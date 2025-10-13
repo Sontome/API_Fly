@@ -533,7 +533,7 @@ async def repricePNR(pnr, doituong):
             ssid, res = await send_command(client, "IG", "reprice")
 
             
-            respone = res.json()
+            respone = res.text()
             
         return respone
 
@@ -541,6 +541,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
