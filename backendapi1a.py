@@ -505,10 +505,42 @@ async def sendemail1a(code, ssid):
 
 
 
+async def repricePNR(pnr, doituong):
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            ssid, res = await send_command(client, "IG", "reprice")
+            print("clear code")
+            ssid, res = await send_command(client, "RT" + str(pnr), "reprice")
 
+            print("✅ Response RT ... ")
+            # Build lệnh FXA
+            if doituong.upper() == "ADT":
+                cmd = "FXA"
+            else:
+                cmd = f"FXA/R{doituong.upper()},U"
+            ssid, res = await send_command(client, cmd, "reprice")
 
+            print("✅ Response FXA ... ")
+            ssid, res = await send_command(client, "FXU 1", "reprice")
 
+            print("✅ Response fxu ... ")
+            ssid, res = await send_command(client, "rfson hva", "reprice")
 
+            print("✅ Response rfson ... ")
+            ssid, res = await send_command(client, "ET", "reprice")
+
+            print("✅ Response ET ... ")
+            ssid, res = await send_command(client, "IG", "reprice")
+
+            
+            respone = res.json()
+            
+        return respone
+
+    except Exception as e:
+        print("🚨 Lỗi khi chạy:", e)
+        await send_mess("lỗi api 1A")
+        return {"error": str(e)}
 
 
 
