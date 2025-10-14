@@ -552,20 +552,27 @@ async def repricePNR(pnr, doituong):
                 # Build phần /PAX/Pn/RVFR-xxx,U
                 
                 pax_cmd = f"/PAX/P{pax_num}/R{pax_doituong}{pax_type_suffix},U"
+                
                 pax_cmd_parts.append(pax_cmd)
 
             # Nếu có trẻ sơ sinh → gọi lệnh riêng trước
             ssid, res = await send_command(client, "tte/all", "reprice")
             
             print("✅ Xóa TST all... ")
-            if has_infant:
-                pax_cmd_inf = f"FXP/INF/R{doituong.upper()}-INF,U"
+            if has_infant and doituong.upper() != "ADT":
+                pax_doituong_inf = doituong.upper()
+                if pax_doituong_inf== "STU":
+                    pax_doituong_inf = "VFR"
+                pax_cmd_inf = f"FXP/INF/R{pax_doituong_inf}-INF,U"
                 print("👶 Có trẻ sơ sinh → gọi FXP/INF trước")
                 print(pax_cmd_inf)
                 ssid, res = await send_command(client, pax_cmd_inf, "reprice")
 
             # Gộp các phần thành lệnh hoàn chỉnh
-            final_cmd = "FXB" + "/".join(pax_cmd_parts)
+            if doituong.upper() != "ADT":
+                final_cmd = "FXB" + "/".join(pax_cmd_parts)
+            else:
+                final_cmd = "FXB"
             print(f"⚙️ Lệnh final: {final_cmd}")
 
             ssid, res = await send_command(client, final_cmd, "reprice")
@@ -597,6 +604,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
