@@ -280,7 +280,7 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
 
     data = {"data": json.dumps(payload, separators=(",", ":"))}
     resp = await client.post(url, headers=headers, cookies=COOKIES, data=data, timeout=30)
-    print(resp.json())
+    #print(resp.json())
     return ssid, resp
 
 
@@ -513,17 +513,63 @@ async def repricePNR(pnr, doituong):
             ssid, res = await send_command(client, "RT" + str(pnr), "reprice")
 
             print("✅ Response RT ... ")
-            # Build lệnh FXA
-            if doituong.upper() == "ADT":
-                cmd = "FXA"
-            else:
-                cmd = f"FXA/R{doituong.upper()},U"
-            ssid, res = await send_command(client, cmd, "reprice")
+            ssid, namelist = await send_command(client, "RTN", "reprice")
 
-            print("✅ Response FXA ... ")
-            ssid, res = await send_command(client, "FXU 1", "reprice")
+            print("✅ Response RTN ... ")
+            ssid, pricegocres = await send_command(client, "TQT", "reprice")
+            
+            print("✅ Response gia goc ... ")
+            pricegoc_data = pricegocres.json()
+            pricegoc = pricegoc_data["model"]["output"]["crypticResponse"]["response"]
+            # Build lệnh 
+            namelist_data = namelist.json()
+            resp_text = namelist_data["model"]["output"]["crypticResponse"]["response"]
+            lines = [x.strip() for x in resp_text.split("\n") if re.match(r"^\d+\.", x.strip())]
 
-            print("✅ Response fxu ... ")
+            has_infant = False
+            pax_cmd_parts = []
+
+            for line in lines:
+                match = re.match(r"^(\d+)\.(.+)$", line.strip())
+                if not match:
+                    continue
+                pax_num = match.group(1)
+                pax_info = match.group(2)
+
+                if "(INF/" in pax_info:
+                    has_infant = True
+
+                # Mặc định là người lớn
+                pax_type_suffix = ""
+                if "(CHD/" in pax_info:
+                    pax_type_suffix = "-CH"
+                elif "(ADT)" in pax_info:
+                    pax_type_suffix = ""
+
+                # Build phần /PAX/Pn/RVFR-xxx,U
+                pax_cmd = f"/PAX/P{pax_num}/R{doituong.upper()}{pax_type_suffix},U"
+                pax_cmd_parts.append(pax_cmd)
+
+            # Nếu có trẻ sơ sinh → gọi lệnh riêng trước
+            if has_infant:
+                pax_cmd_inf = f"FXP/INF/R{doituong.upper()}-INF,U"
+                print("👶 Có trẻ sơ sinh → gọi FXP/INF trước")
+                print(pax_cmd_inf)
+                ssid, res = await send_command(client, pax_cmd_inf, "reprice")
+
+            # Gộp các phần thành lệnh hoàn chỉnh
+            final_cmd = "FXB" + "/".join(pax_cmd_parts)
+            print(f"⚙️ Lệnh final: {final_cmd}")
+
+            ssid, res = await send_command(client, final_cmd, "reprice")
+            print("✅ Response lenh reprice ... ")
+
+            ssid, pricemoires = await send_command(client, "TQT", "reprice")
+
+            print("✅ Response gia moi ... ")
+            pricemoi_data = pricemoires.json()
+            pricemoi = pricemoi_data["model"]["output"]["crypticResponse"]["response"]
+            
             ssid, res = await send_command(client, "rfson hva", "reprice")
 
             print("✅ Response rfson ... ")
@@ -531,9 +577,11 @@ async def repricePNR(pnr, doituong):
 
             print("✅ Response ET ... ")
             respone = res.json()
+            respone["pricegoc"] = pricegoc
+            respone["pricemoi"] = pricemoi
             ssid, res = await send_command(client, "IG", "reprice")
 
-            
+            print (respone)
             
             
         return respone
@@ -542,7 +590,6 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
-
 
 
 
