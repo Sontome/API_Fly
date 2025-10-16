@@ -593,7 +593,8 @@ async def repricePNR(pnr, doituong):
                 pax_cmd_inf = f"FXP/INF/R{pax_doituong_inf}-INF,U"
                 print("👶 Có trẻ sơ sinh → gọi FXP/INF trước")
                 
-                ssid, list_inf = await send_command(client, pax_cmd_inf, "reprice")
+                ssid, list_inf_raw = await send_command(client, pax_cmd_inf, "reprice")
+                list_inf = list_inf_raw.json()
                 print(pax_cmd_inf)
                 try:
 
@@ -641,6 +642,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
