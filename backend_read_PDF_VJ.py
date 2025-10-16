@@ -63,9 +63,9 @@ def merge_bag_info(data):
     for idx, chieu in enumerate(data):
         for p in chieu["passengers"]:
             name = p["tên"]
-            bag = p.get("Bag", "     -     ") or "     -     "  # nếu None hoặc "" thì để --
+            bag = p.get("Bag", "    0kg    ") or "    0kg    "  # nếu None hoặc "" thì để --
             if name not in result:
-                result[name] = ["     -     ", "     -     "]  # mặc định 2 chiều đều rỗng
+                result[name] = ["    0kg    ", "    0kg    "]  # mặc định 2 chiều đều rỗng
             result[name][idx] = bag  # gán theo thứ tự chiều đi / chiều về
 
     return [
@@ -383,6 +383,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
