@@ -584,7 +584,7 @@ async def repricePNR(pnr, doituong):
 
             # Nếu có trẻ sơ sinh → gọi lệnh riêng trước
             ssid, res = await send_command(client, "tte/all", "reprice")
-            
+            list_inf = ""
             print("✅ Xóa TST all... ")
             if has_infant and doituong.upper() != "ADT":
                 pax_doituong_inf = doituong.upper()
@@ -643,6 +643,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
