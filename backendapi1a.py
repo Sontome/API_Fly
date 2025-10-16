@@ -599,6 +599,7 @@ async def repricePNR(pnr, doituong):
                 try:
 
                     cmd_inf = get_cheapest_fxt_command(list_inf)
+                    print(cmd_inf)
                     ssid, res = await send_command(client, cmd_inf, "reprice")
                     print("Xử lý yêu cầu chọn chuyến của inf")
                 except:
@@ -642,6 +643,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
