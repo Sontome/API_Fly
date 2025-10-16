@@ -31,6 +31,33 @@ MONTH_MAP = {
     "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
     "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"
 }
+def get_cheapest_fxt_command(data):
+    """
+    Hàm nhận vào object JSON (output từ 1A),
+    tìm dòng giá vé thấp nhất và trả về lệnh FXT tương ứng.
+    """
+    try:
+        text = data["model"]["output"]["crypticResponse"]["response"]
+    except KeyError:
+        return None  # data không đúng format
+
+    # Regex bắt dòng kiểu:
+    # 01 TKAP4KRE+* * IN       * P1,4       *     40300  *      *Y
+    pattern = r"(\d{2})\s+\S+\*.*?\*\s+IN\s+\*\s+(P[\d,]+)\s+\*\s+(\d+)"
+    matches = re.findall(pattern, text)
+
+    fares = []
+    for stt, pax, price in matches:
+        fares.append((int(price), stt, pax))
+
+    if not fares:
+        return None
+
+    # Sắp xếp giá tăng dần, lấy dòng rẻ nhất
+    fares.sort(key=lambda x: x[0])
+    _, stt, pax = fares[0]
+
+    return f"FXT{stt}/{pax}"
 def deduplicate_lines(raw_text):
     # Cắt thành từng dòng, loại bỏ khoảng trắng dư
     lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
@@ -565,8 +592,17 @@ async def repricePNR(pnr, doituong):
                     pax_doituong_inf = "VFR"
                 pax_cmd_inf = f"FXP/INF/R{pax_doituong_inf}-INF,U"
                 print("👶 Có trẻ sơ sinh → gọi FXP/INF trước")
+                
+                ssid, list_inf = await send_command(client, pax_cmd_inf, "reprice")
                 print(pax_cmd_inf)
-                ssid, res = await send_command(client, pax_cmd_inf, "reprice")
+                try:
+
+                    cmd_inf = get_cheapest_fxt_command(list_inf)
+                    ssid, res = await send_command(client, cmd_inf, "reprice")
+                    print("Xử lý yêu cầu chọn chuyến của inf")
+                except:
+                    print("Không có yêu cầu chọn chuyến của inf")
+            
 
             # Gộp các phần thành lệnh hoàn chỉnh
             if doituong.upper() != "ADT":
@@ -593,6 +629,7 @@ async def repricePNR(pnr, doituong):
             respone = res.json()
             respone["pricegoc"] = pricegoc
             respone["pricemoi"] = pricemoi
+            respone["list_inf"] = list_inf
             ssid, res = await send_command(client, "IG", "reprice")
 
             #print (respone)
@@ -604,6 +641,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
