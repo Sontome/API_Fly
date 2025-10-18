@@ -581,7 +581,8 @@ async def repricePNR(pnr, doituong):
                 pax_cmd = f"/PAX/P{pax_num}/R{pax_doituong}{pax_type_suffix},U"
                 
                 pax_cmd_parts.append(pax_cmd)
-
+                if pax_doituong == "STU":
+                    pax_cmd_parts="/PAX/RSTU,U"
             # Nếu có trẻ sơ sinh → gọi lệnh riêng trước
             ssid, res = await send_command(client, "tte/all", "reprice")
             list_inf = ""
@@ -643,6 +644,7 @@ async def repricePNR(pnr, doituong):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
