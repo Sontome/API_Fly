@@ -1128,11 +1128,12 @@ async def beginRepricee(
     
 ):
     try:
-        result = await beginReprice(pnr)
+        result = await beginRepricePNR(pnr)
         
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
