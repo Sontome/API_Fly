@@ -37,7 +37,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR
+from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR
 import shutil
 from fastapi.concurrency import run_in_threadpool
 from typing import List
@@ -1122,6 +1122,18 @@ async def repricee(
         return result
     except Exception as e:
         return (str(e))
+@app.get("/beginReprice")
+async def beginRepricee(
+    pnr: str = Query(..., description="pnr")
+    
+):
+    try:
+        result = await beginReprice(pnr)
+        
+        return result
+    except Exception as e:
+        return (str(e))
+
 
 
 
