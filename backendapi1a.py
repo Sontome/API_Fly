@@ -648,6 +648,39 @@ async def repricePNR(pnr, doituong):
         return {"error": str(e)}
 
 
+async def beginRepricePNR(pnr):
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            ssid, res = await send_command(client, "IG", "beginreprice")
+            print("clear code")
+            ssid, res = await send_command(client, "RT" + str(pnr), "beginreprice")
+
+            print("✅ Response RT ... ")
+           
+            ssid, pricegocres = await send_command(client, "TQT", "beginreprice")
+            
+            print("✅ Response gia goc ... ")
+            pricegoc_data = pricegocres.json()
+            pricegoc = pricegoc_data["model"]["output"]["crypticResponse"]["response"]
+            
+            ssid, res = await send_command(client, "IG", "beginreprice")
+
+            print("✅ Response IG ... ")
+            respone = res.json()
+            respone["pricegoc"] = pricegoc
+            
+            
+
+            #print (respone)
+            
+            
+        return respone
+
+    except Exception as e:
+        print("🚨 Lỗi khi chạy:", e)
+        await send_mess("lỗi api 1A")
+        return {"error": str(e)}
+
 
 
 
