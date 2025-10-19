@@ -242,8 +242,8 @@ def build_passenger_embe(embe_list, passengers):
                 "index": embe_index + 1,
                 "passengerSuffix": f" {embe_index + 1}",
                 "reservationProfile": {
-                    "lastName": embe["Tên"].upper(),
-                    "firstName": embe["Họ"].upper(),
+                    "lastName": embe["Họ"].upper(),
+                    "firstName": embe["Tên"].upper(),
                     "gender": gender,
                     "passport": {
                         "number": embe["Hộ_chiếu"]
@@ -283,8 +283,8 @@ def build_passenger_data(passenger_list,soluong,start_index=1, is_child=False, i
                 "adult": not is_child and not is_infant
             },
             "reservationProfile": {
-                "lastName": p["Tên"],
-                "firstName": p["Họ"],
+                "lastName": p["Họ"],
+                "firstName": p["Tên"],
                 "title": title,
                 "gender": gender,
                 "address": {
@@ -476,4 +476,5 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
