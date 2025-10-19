@@ -552,34 +552,28 @@ async def repricePNR(pnr, doituong):
             namelist_data = namelist.json()
             resp_text = namelist_data["model"]["output"]["crypticResponse"]["response"]
             lines = [x.strip() for x in resp_text.split("\n") if re.match(r"^\d+\.", x.strip())]
-
+            # ✅ Regex bắt tất cả dạng: "1.TEN/...(...)" kể cả dính nhau
+            pattern = r"(\d+)\.([A-Z/\s]+(?:MR|MS|MISS|MSTR)\(.*?\))"
+            matches = re.findall(pattern, resp_text, flags=re.DOTALL)
             has_infant = False
             pax_cmd_parts = []
 
-            for line in lines:
-                match = re.match(r"^(\d+)\.(.+)$", line.strip())
-                if not match:
-                    continue
-                pax_num = match.group(1)
-                pax_info = match.group(2)
+            for pax_num, pax_info in matches:
+                pax_info = pax_info.strip()
                 pax_doituong = doituong.upper()
+            
                 if "(INF/" in pax_info:
                     has_infant = True
-
-                # Mặc định là người lớn
+            
                 pax_type_suffix = ""
                 if "(CHD/" in pax_info:
-                    
                     pax_type_suffix = "-CH"
                     if pax_doituong == "STU":
                         pax_doituong = "VFR"
                 elif "(ADT)" in pax_info:
                     pax_type_suffix = ""
-
-                # Build phần /PAX/Pn/RVFR-xxx,U
-                
+            
                 pax_cmd = f"/PAX/P{pax_num}/R{pax_doituong}{pax_type_suffix},U"
-                
                 pax_cmd_parts.append(pax_cmd)
                 
             # Nếu có trẻ sơ sinh → gọi lệnh riêng trước
@@ -680,6 +674,7 @@ async def beginRepricePNR(pnr):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
