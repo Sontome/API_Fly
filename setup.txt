@@ -188,3 +188,4 @@ chmod +x ~/update_api.sh
 #fix lỗi vj ko ra vé 
 
 ~/fix.sh
+~/fix1a.sh
