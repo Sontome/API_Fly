@@ -555,15 +555,14 @@ async def repricePNR(pnr, doituong):
             # ✅ Regex bắt tất cả dạng: "1.TEN/...(...)" kể cả dính nhau
             pattern = r"(\d+)\.([A-Z/\s]+(?:MR|MS|MISS|MSTR)\(.*?\))"
             matches = re.findall(pattern, resp_text, flags=re.DOTALL)
-            has_infant = False
+            has_infant = "(INF/" in text
             pax_cmd_parts = []
-
+            
             for pax_num, pax_info in matches:
                 pax_info = pax_info.strip()
                 pax_doituong = doituong.upper()
             
-                if "(INF/" in pax_info:
-                    has_infant = True
+               
             
                 pax_type_suffix = ""
                 if "(CHD/" in pax_info:
@@ -584,7 +583,7 @@ async def repricePNR(pnr, doituong):
                 pax_doituong_inf = doituong.upper()
                 if pax_doituong_inf== "STU":
                     pax_doituong_inf = "VFR"
-                pax_cmd_inf = f"FXP/INF/R{pax_doituong_inf}-INF,U"
+                pax_cmd_inf = f"FXP/INF/RVFR-INF,U"
                 print("👶 Có trẻ sơ sinh → gọi FXP/INF trước")
                 
                 ssid, list_inf_raw = await send_command(client, pax_cmd_inf, "reprice")
@@ -674,6 +673,7 @@ async def beginRepricePNR(pnr):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
