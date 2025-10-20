@@ -268,8 +268,9 @@ async def send_close(client: httpx.AsyncClient, ssid=None):
     resp = await client.get(url, headers=headers, cookies=COOKIES,  timeout=30)
     return ssid, resp
 async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
+    
     ssid, cryp = loadJsession(ssid)
-    # print(ssid,cryp["status"])
+    print(cryp)
     if cryp["status"]=="ERROR":
         # print(cryp)
         return ssid, cryp
@@ -307,7 +308,23 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
 
     data = {"data": json.dumps(payload, separators=(",", ":"))}
     resp = await client.post(url, headers=headers, cookies=COOKIES, data=data, timeout=30)
-    #print(resp.json())
+    print("send command")
+     # với httpx async client phải await
+    res= resp
+    try:
+        js = res.json()    # nếu resp là sync object
+        # check nếu là lỗi từ API 1A
+        if (
+            isinstance(js, dict)
+            and "model" in js
+            and "output" in js["model"]
+            and "crypticError" in js["model"]["output"]
+        ):
+            err = js["model"]["output"]["crypticError"]
+            if "errorNumber" in err and err["errorNumber"] == 99000:
+                await send_mess("lỗi api 1A")
+    except Exception:
+        print("Không parse được JSON:", await res.text())
     return ssid, resp
 
 
@@ -478,11 +495,10 @@ async def code1a(code,ssid):
             # chỉ gọi send_command lần đầu ở đây
             
             ssid, res = await send_command(client, str(code),ssid)
-            #print(res.json())
+            print(res.json())
             respone = res.json()
-            #print (ssid, res)
-            if str(respone["code"])=="403":
-                return respone
+            
+            
             
             
             
@@ -491,10 +507,10 @@ async def code1a(code,ssid):
             
         return respone
     except Exception as e:
-       
-        return (e)
-# if __name__ == "__main__":
-#     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
+        await send_mess("lỗi api 1A")
+        return {"error": str(e)}
+if __name__ == "__main__":
+    print(asyncio.run(code1a("EN4IGQ","code")))
 
 async def sendemail1a(code, ssid):
     try:
@@ -509,17 +525,13 @@ async def sendemail1a(code, ssid):
 
             print("✅ Response lần 1:", res.text)
             respone = res.json()
-            if str(respone.get("code")) == "403":
-                print("⛔ Dừng ở lần 1 vì code 403")
-                return respone
+            
 
             print("⚡ Gọi send_command lần 2...")
             ssid, res = await send_command(client, "ITR-EML-HANVIETAIR.SERVICE@GMAIL.COM/LP VI", ssid)
             print("✅ Response lần 2:", res.text)
             respone = res.json()
-            if str(respone.get("code")) == "403":
-                print("⛔ Dừng ở lần 2 vì code 403")
-                return respone
+            
 
         return respone
 
