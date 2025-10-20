@@ -54,7 +54,7 @@ def createNewSession(
         if resp.status_code != 200:
             #print(resp.status_code)
             return {"status": "ERROR", "message": "Tạo session key thất bại", "code": resp.status_code}
-        print(resp.text)
+        print(resp.text[:1])
         
         # ===== Lấy ENC mới =====
         match = re.search(r'<!\[CDATA\[(.*?)\]\]>', resp.text, re.S)
@@ -67,7 +67,7 @@ def createNewSession(
             return {"status": "ERROR", "message": "Không tìm thấy ENC trong CDATA"}
         ENC = enc_match.group(1) # cắt 9 ký tự cuối như code cũ
         
-        #print(ENC)
+        print("lay enc tong")
         # ===== Login new session =====
         url_login = "https://tc345.resdesktop.altea.amadeus.com/app_ard/apf/do/loginNewSession.UM/login"
         headers = {
@@ -105,7 +105,7 @@ def createNewSession(
         if resp_login.status_code != 200:
             #print(resp_login.text)
             return {"status": "ERROR", "message": "Login new session thất bại", "code": resp_login.status_code}
-        print(resp_login.text) 
+        print("tạo ss con ") 
         # ===== Tìm cryptic session data =====
         pattern = re.compile(
             r'<templates-init[^>]*moduleId="cryptic"[^>]*><!\[CDATA\[(.*?)\]\]></templates-init>',
@@ -113,7 +113,7 @@ def createNewSession(
         )
         match_cryptic = pattern.search(resp_login.text)
         if match_cryptic==None:
-            #print("🔐 Token hết hạn.  cần chạy lại `login1A.py` để làm mới token.")
+            print("🔐 Token hết hạn.  cần chạy lại `login1A.py` để làm mới token.")
             
             return None
 
@@ -157,10 +157,10 @@ def createNewSession(
         return {"status": "ERROR", "message": str(e)}
 
 
-# if __name__ == "__main__":
-#     result = createNewSession()
+if __name__ == "__main__":
+     result = createNewSession()
 
-#     print(result)
+     #print(result)
 
 
 
