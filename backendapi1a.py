@@ -565,7 +565,7 @@ async def repricePNR(pnr, doituong):
             resp_text = namelist_data["model"]["output"]["crypticResponse"]["response"]
             lines = [x.strip() for x in resp_text.split("\n") if re.match(r"^\d+\.", x.strip())]
             # ✅ Regex bắt tất cả dạng: "1.TEN/...(...)" kể cả dính nhau
-            pattern = r"(\d+)\.([A-Z/\s]+(?:MR|MS|MISS|MSTR)\(.*?\))"
+            pattern = r"(\d+)\.([A-Z/\s]+(?:MR|MS|MISS|MSTR)?\([^)]*\))"
             matches = re.findall(pattern, resp_text, flags=re.DOTALL)
             has_infant = "(INF/" in resp_text
             pax_cmd_parts = []
@@ -685,6 +685,7 @@ async def beginRepricePNR(pnr):
         print("🚨 Lỗi khi chạy:", e)
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
+
 
 
 
