@@ -85,7 +85,8 @@ def replace_text_between_phrases(pdf_path,output_path,
             print("[DEBUG] Lỗi parse giờ/ngày:", e)
 
     # ===== XỬ LÝ GIỜ (thêm sáng/chiều) =====
-    for idx, line in enumerate(text.splitlines()):
+    idxmatch = 0  # đếm số time_part hợp lệ đã xử lý
+    for line in text.splitlines():
         if ":" in line:
             time_part = line.strip()
             try:
@@ -103,9 +104,10 @@ def replace_text_between_phrases(pdf_path,output_path,
                 else:
                     periodt = "(Đêm)"
                 time_part_new = f"{time_part} {periodt}"
-                #print(f"[DEBUG] Đổi giờ: '{time_part}' → '{time_part_new}'")
             except:
                 continue
+
+            # tìm và sửa text trên PDF
             search_rects = page.search_for(time_part)
             for rect in search_rects:
                 page.add_redact_annot(rect)
@@ -113,13 +115,37 @@ def replace_text_between_phrases(pdf_path,output_path,
                 page.insert_text(
                     (rect.x0, rect.y0 + 5),
                     time_part_new,
-                    
                     fontsize=fs,
                     fontfile=FONT_ARIAL,
-                    fontname= "arial",
+                    fontname="arial",
                     fill=(0, 0, 0),
                     render_mode=0
                 )
+
+                # chỉ xử lý thêm dòng "ra sân bay đêm hôm trước" nếu là line chẵn (2,4,6,...)
+                # và có ngày tương ứng trong date_matches
+                if idxmatch % 2 == 0 and periodt == "(Rạng sáng)" and date_matches:
+                    try:
+                        print(idxmatch)
+                        d_str = date_matches[idxmatch+1]
+
+                        flight_date = datetime.strptime(d_str, "%d%b%Y")
+                        pre_night = flight_date - timedelta(days=1)
+                        ddmm = pre_night.strftime("%d/%m")
+
+                        page.insert_text(
+                            (rect.x0-20, rect.y0 + 30),
+                            f"(Ra sân bay đêm ngày {ddmm})",
+                            fontsize=fs,
+                            fontfile=FONT_ARIAL,
+                            fontname="arial",
+                            fill=(1, 0, 0),
+                            render_mode=0
+                        )
+                    except Exception as e:
+                        print(f"[DEBUG] Lỗi khi thêm dòng ra sân bay: {e}")
+
+            idxmatch += 1  # tăng sau khi xử lý 1 time_part
 
     # ===== AUTO ĐỔI DẠNG NGÀY =====
     matches = set(date_pattern.findall(text))
@@ -302,6 +328,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #reformat_VNA_VN("input.pdf","output.pdf")
+
 
 
 
