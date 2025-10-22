@@ -251,10 +251,19 @@ def replace_text_between_phrases(pdf_path, output_path,
         if period == "(Rạng sáng)" and idx % 2 == 0:
             ddmm = None
             if idx < len(found_dates):
-                ddmm = "/".join(found_dates[idx].split("/")[:2])
+                raw_date = found_dates[idx]
             elif found_dates:
-                ddmm = "/".join(found_dates[-1].split("/")[:2])
+                raw_date = found_dates[-1]
+            else:
+                raw_date = None
 
+            if raw_date:
+                try:
+                    d = datetime.strptime(raw_date, "%d/%m/%Y") - timedelta(days=1)
+                    ddmm = d.strftime("%d/%m")
+                except:
+                    ddmm = raw_date.split("/")[:2]
+                    ddmm = "/".join(ddmm)
             if ddmm:
                 page.insert_text(
                     (full_rect.x0, full_rect.y0 + 27),
@@ -426,6 +435,7 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
