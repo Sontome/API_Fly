@@ -9,6 +9,7 @@ import shutil
 FILES_DIR = "/var/www/files"
 from get_bag_info_pnr_vj import get_bag_info_vj
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+#FONT_ARIAL = r"C:\Windows\Fonts\Arial.ttf"
 NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại :                   +82-10-3546-3396\nEmail:  Hanvietair@gmail.com  "
 
 START_PHRASE = "Công Ty Cổ Phần Hàng Không VietJet"
@@ -97,6 +98,7 @@ def add_bag_info(bag,layout,page,fs):
         fill=(1, 0, 0),
         render_mode=0
     )
+
 def replace_text_between_phrases(pdf_path, output_path,
                                   new_text, start_phrase=START_PHRASE, end_phrase=END_PHRASE,
                                   font_size=10):
@@ -110,6 +112,29 @@ def replace_text_between_phrases(pdf_path, output_path,
 
     layout = page.get_text("dict")
     baglist = None
+    search_keyword = "Terminal"
+    for block in layout["blocks"]:
+        for line in block.get("lines", []):
+            for span in line["spans"]:
+                if search_keyword.lower() in span["text"].lower():
+                    #print(block)
+                    # Toạ độ block chứa chữ "Terminal"
+                    x0, y0, x1, y1 = span["bbox"]
+                    print(f"🧱 Found '{search_keyword}' at {x0, y0, x1, y1}")
+
+                    # Xoá vùng text cũ
+                    page.add_redact_annot(fitz.Rect(x0, y0+10, x1, y1), fill=(1, 1, 1))
+                    page.apply_redactions()
+
+                    # Viết lại text với font nhỏ hơn (ví dụ 8pt)
+                    page.insert_text(
+                        (x0, y1 - 6),  # Toạ độ đặt text
+                        span["text"],
+                        fontsize=8,  # Nhỏ hơn so với cũ
+                        fontfile=FONT_ARIAL,
+                        color=(0, 0, 0),
+                    )
+                    print(f"✅ Replaced '{span['text']}' with smaller text")
     for block in layout["blocks"]:
         for line in block.get("lines", []):
             line_text = " ".join(span["text"] for span in line["spans"]).strip()
@@ -150,71 +175,97 @@ def replace_text_between_phrases(pdf_path, output_path,
     
     
 
+    # ===== LẤY NGÀY BAY ===== dạng "Aug 28, 2025"
+    date_pattern = re.compile(r"\b[A-Za-z]{3}\s\d{1,2},\s\d{4}\b")
+    date_matches = date_pattern.findall(text)
+    found_dates = []
+
+    for match in date_matches:
+        try:
+            d = datetime.strptime(match, "%b %d, %Y")
+            found_dates.append(d.strftime("%d/%m/%Y"))
+        except Exception as e:
+            print(f"[DEBUG] Không parse được ngày bay '{match}': {e}")
+
     # ===== LẤY GIỜ BAY =====
-    found_time = None
-    found_date = None
+    time_lines = []
     for line in text.splitlines():
         match = re.match(r"(\d{2}:\d{2})\s*-\s*.*", line.strip())
-        #print(match)
         if match:
-            time_part = match.group(1)
-            found_time = time_part
-            break
-    for line in text.splitlines():
-        match = re.match(r"(\d{2}:\d{2})\s*-\s*.*", line.strip())
-        
-        if match:
-            #print(match)
-            time_part = match.group(1)
-            full_part = match.group(0)
-            #print(full_part)
-            try:
-                t = datetime.strptime(time_part, "%H:%M")
-                hour = t.hour
-                if 0 <= hour <= 6:
-                    period = "(Rạng sáng)"
-                elif 6 < hour <= 11:
-                    period = "(Sáng)"
-                elif 11 < hour <= 13:
-                    period = "(Trưa)"
-                elif 13 < hour <= 18:
-                    period = "(Chiều)"
-                else:
-                    period = "(Đêm)"
-                
-                time_new = f"{full_part} {period}"
-                #print(f"[DEBUG] Giờ bay: {full_part} → {time_new}")
-            except:
-                time_new = time_part
-                period = ""
-            
-            # Chèn text trực tiếp vào PDF
-            search_rects = page.search_for(full_part)
-            #print(search_rects)
-            if search_rects:
-                # Gộp tất cả rect lại thành 1 bounding box bao phủ hết
-                x0 = min(r.x0 for r in search_rects)
-                y0 = min(r.y0 for r in search_rects)
-                x1 = max(r.x1 for r in search_rects)
-                y1 = max(r.y1 for r in search_rects)
-                full_rect = fitz.Rect(x0, y0, x1, y1)
-                #print("Full rect:", full_rect)
-            
-                rect_del = fitz.Rect(full_rect.x0, full_rect.y0, full_rect.x1, full_rect.y0+10)
-                page.add_redact_annot(rect_del)
-                page.apply_redactions()
+            time_lines.append(line.strip())
+
+    # ✅ Duyệt toàn bộ time_lines
+    for idx, full_part in enumerate(time_lines):
+        match = re.match(r"(\d{2}:\d{2})\s*-\s*.*", full_part)
+        if not match:
+            continue
+        time_part = match.group(1)
+
+        # Phân loại giờ
+        try:
+            t = datetime.strptime(time_part, "%H:%M")
+            hour = t.hour
+            if 0 <= hour <= 6:
+                period = "(Rạng sáng)"
+            elif 6 < hour <= 11:
+                period = "(Sáng)"
+            elif 11 < hour <= 13:
+                period = "(Trưa)"
+            elif 13 < hour <= 18:
+                period = "(Chiều)"
+            else:
+                period = "(Đêm)"
+            time_new = f"{full_part} {period}"
+        except:
+            period = ""
+            time_new = full_part
+
+        # Tìm text trong PDF
+        search_rects = page.search_for(full_part)
+        if not search_rects:
+            continue
+
+        x0 = min(r.x0 for r in search_rects)
+        y0 = min(r.y0 for r in search_rects)
+        x1 = max(r.x1 for r in search_rects)
+        y1 = max(r.y1 for r in search_rects)
+        full_rect = fitz.Rect(x0, y0, x1, y1)
+
+        # Xóa text cũ
+        rect_del = fitz.Rect(full_rect.x0, full_rect.y0 + 5, full_rect.x1, full_rect.y0 + 10)
+        page.add_redact_annot(rect_del)
+        page.apply_redactions()
+
+        # Ghi lại giờ mới + period
+        page.insert_text(
+            (full_rect.x0, full_rect.y0 + 11),
+            time_new,
+            fontfile=FONT_ARIAL,
+            fontname="arial",
+            fontsize=fs * 1.1,
+            fill=(0, 0, 0),
+            render_mode=0
+        )
+
+        # 💤 Nếu là "Rạng sáng" và là line 1 hoặc 3 (index 0 hoặc 2)
+        if period == "(Rạng sáng)" and idx % 2 == 0:
+            ddmm = None
+            if idx < len(found_dates):
+                ddmm = "/".join(found_dates[idx].split("/")[:2])
+            elif found_dates:
+                ddmm = "/".join(found_dates[-1].split("/")[:2])
+
+            if ddmm:
                 page.insert_text(
-                    (full_rect.x0, full_rect.y0+11),
-                    time_new,
+                    (full_rect.x0, full_rect.y0 + 27),
+                    f"(Ra sân bay đêm ngày {ddmm})",
                     fontfile=FONT_ARIAL,
-                    fontname = "arial",
-                    fontsize=fs*1.1,
-                    fill=(0, 0, 0),
+                    fontname="arial",
+                    fontsize=fs * 0.9,
+                    fill=(1, 0, 0),
                     render_mode=0
                 )
-                #print(time_new)
-                # Lưu lại để dùng tính checkin
-           
+
 
     # ===== LẤY NGÀY BAY ===== dạng "Aug 28, 2025"
     date_pattern = re.compile(r"\b[A-Za-z]{3}\s\d{1,2},\s\d{4}\b")
@@ -228,15 +279,7 @@ def replace_text_between_phrases(pdf_path, output_path,
             print(f"[DEBUG] Không parse được ngày bay: {e}")
 
     # ===== TÍNH GIỜ CHECKIN =====
-    if found_time and found_date:
-        try:
-            flight_dt = datetime.strptime(f"{found_date} {found_time}", "%d/%m/%Y %H:%M")
-            checkin_dt = flight_dt - timedelta(hours=3)
-            periodt = "(Sang)" if checkin_dt.hour < 12 else "(Chieu)"
-            note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc\n len may bay."
-            #print(f"[DEBUG] Giờ check-in: {note_str}")
-        except Exception as e:
-            print("[DEBUG] Lỗi parse giờ/ngày:", e)
+    
 
     # ===== AUTO ĐỔI DẠNG NGÀY TRONG PDF =====
     matches = set(date_pattern.findall(text))
@@ -383,7 +426,6 @@ def reformat_VJ(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
-
 
 
 
