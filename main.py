@@ -1134,6 +1134,32 @@ async def beginRepricee(
     except Exception as e:
         return (str(e))
 
+@app.get("/giuveVNAlive")
+async def giuveVNAlive(
+    hanhkhach: List[str] = Query(..., description="Danh sách hành khách, ví dụ ?hanhkhach=A&hanhkhach=B"),
+    dep: str = Query(..., description="Điểm đi, ví dụ: ICN"),
+    arr: str = Query(..., description="Điểm đến, ví dụ: HAN"),
+    depdate: str = Query(..., description="Ngày đi, ví dụ: 20FEB"),
+    deptime: str = Query(..., description="Giờ đi, ví dụ: 1035"),
+    arrdate: Optional[str] = Query(None, description="Ngày đến (nếu có)"),
+    arrtime: Optional[str] = Query(None, description="Giờ đến (nếu có)"),
+    doituong: str = Query("VFR", description="Đối tượng giá, ví dụ: ADT/STU/VFR")
+    
+    
+):
+    try:
+        result = await giu_ve_live_cmd(hanhkhach=hanhkhach,
+            dep=dep,
+            arr=arr,
+            depdate=depdate,
+            deptime=deptime,
+            arrdate=arrdate,
+            arrtime=arrtime,
+            doituong=doituong)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
