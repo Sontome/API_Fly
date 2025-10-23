@@ -26,6 +26,262 @@ AIRPORT_TZ = {
     "PQC": 7,
     # nếu cần thì bổ sung thêm
 }
+def build_an_command(dep, arr, depdate, deptime, arrdate=None, arrtime=None):
+    """
+    Build lệnh AN cho Vietnam Airlines (1A format)
+    Ví dụ:
+    build_an_command("ICN", "HAN", "20FEB", "1035", "21FEB", "1040")
+    => ANVN20FEBICNHAN1035*21FEB1040
+    """
+    cmd = f"ANVN{depdate}{dep}{arr}{deptime}"
+    if arrdate and arrtime:
+        cmd += f"*{arrdate}{arrtime}"
+    return cmd
+def parse_vn_flights(text):
+    lines = text.splitlines()
+    data = {"chiều_đi": {}, "chiều_về": {}}
+    pattern_main = re.compile(r'^\s*(\d{1,2})\s+VN\s+(\d+)')
+    pattern_hang = re.compile(r'\b([A-Z])\d\b')
+    pattern_hang_cho = re.compile(r'\b([A-Z])L\b')
+
+    # Thứ tự ưu tiên thực tế
+    hang_order = ['Y', 'B', 'M', 'S', 'H', 'K', 'L', 'Q', 'N', 'R', 'T']
+
+    buffer = {}
+
+    # Gộp các dòng phụ
+    for i, line in enumerate(lines):
+        m = pattern_main.match(line)
+        if m:
+            num = int(m.group(1))
+            flight_no = m.group(2)
+            buffer[num] = line.strip()
+            if i + 1 < len(lines):
+                nxt = lines[i + 1]
+                if re.match(r'^\s{2,}\S+', nxt):
+                    buffer[num] += " " + nxt.strip()
+
+    # Parse flight 1 và 11
+    for num, key in [(1, "chiều_đi"), (11, "chiều_về")]:
+        if num in buffer:
+            line = buffer[num]
+            match = pattern_main.match(line)
+            if not match:
+                continue
+            so_may_bay = match.group(2)
+            list_hang = list(set(pattern_hang.findall(line)))
+            list_hang_cho = list(set(pattern_hang_cho.findall(line)))
+
+            # Sort theo thứ tự ưu tiên
+            list_hang = [h for h in hang_order if h in list_hang]
+            list_hang_cho = [h for h in hang_order if h in list_hang_cho]
+
+            data[key] = {
+                "số_máy_bay": so_may_bay,
+                "list_hạng": list_hang,
+                "list_hạng_chờ": list_hang_cho
+            }
+
+    return data
+def build_ss_command(flights,list_cmd, dep, arr, depdate, so_nguoi, arrdate=None):
+    # Lấy chiều đi
+    chieu_di = flights.get("chiều_đi", {})
+    so_may_bay_di = chieu_di.get("số_máy_bay", "")
+    list_hang_di = chieu_di.get("list_hạng", [])
+    hang_di = list_hang_di[-1] if list_hang_di else ""  # hạng cuối cùng
+
+    # Build lệnh đi
+    cmd = f"SSVN{so_may_bay_di}{hang_di}{depdate}{dep}{arr}PE{so_nguoi}"
+
+    # Nếu có chiều về + arrdate thì nối thêm
+    chieu_ve = flights.get("chiều_về", {})
+    if arrdate and chieu_ve:
+        so_may_bay_ve = chieu_ve.get("số_máy_bay", "")
+        list_hang_ve = chieu_ve.get("list_hạng", [])
+        hang_ve = list_hang_ve[-1] if list_hang_ve else ""
+        cmd += f"*SSVN{so_may_bay_ve}{hang_ve}{arrdate}{arr}{dep}PE{so_nguoi}"
+    list_cmd.append(cmd)
+    return list_cmd
+
+
+
+def build_nm_command(hanhkhach, list_cmd):
+    """
+    Thêm các dòng lệnh hành khách vào list_cmd chính.
+    - hanhkhach: list các dòng dạng 'NM1PHAM/THI NGA MS(ADT)'
+    - list_cmd: list chứa các lệnh chính
+    """
+    if not isinstance(hanhkhach, list):
+        raise ValueError("hanhkhach phải là list")
+    if not isinstance(list_cmd, list):
+        raise ValueError("list_cmd phải là list")
+
+    for line in hanhkhach:
+        line = line.strip()
+        if line:  # tránh append dòng trống
+            list_cmd.append("NM1"+line.upper())  # chuẩn hóa in hoa cho đúng format 1A
+    list_cmd.append("AP HCMC 01035463396")
+    
+    return list_cmd
+def build_pricing_command(hanhkhach, list_cmd, doituong):
+    """
+    Build lệnh pricing theo đối tượng hành khách.
+    - hanhkhach: list chứa tên hoặc dòng hành khách
+    - list_cmd: list chứa các lệnh chính
+    - doituong: ADT | STU | VFR
+    """
+    has_infant = 0
+    cmd = ""
+
+    # Đảm bảo kiểu dữ liệu
+    if not isinstance(hanhkhach, list):
+        raise ValueError("hanhkhach phải là list")
+    if not isinstance(list_cmd, list):
+        raise ValueError("list_cmd phải là list")
+
+    # Xử lý từng đối tượng
+    doituong = doituong.upper().strip()
+
+    if doituong == "ADT":
+        cmd = "FXB"
+
+    elif doituong == "STU":
+        cmd = "FXB/RSTU,U"
+
+    elif doituong == "VFR":
+        parts = []
+        has_chd = False
+        has_infant = 0
+
+        for idx, pax in enumerate(hanhkhach, start=1):
+            pax_upper = pax.upper()
+
+            # Check INF
+            if "INF" in pax_upper:
+                has_infant = 1
+                
+
+            # Check CHD
+            if "CHD" in pax_upper:
+                has_chd = True
+                parts.append(f"PAX/P{idx}/RVFR-CH,U")
+            else:
+                parts.append(f"PAX/P{idx}/RVFR,U")
+
+        if parts:
+            cmd = "FXB/" + "//".join(parts)
+        else:
+            # không có pax nào => fallback chung
+            cmd = "FXB/PAX/RVFR,U"
+
+        
+
+    # Thêm dòng chính FXB vào list
+    if cmd:
+        list_cmd.append(cmd)
+    # Nếu có INF thì thêm dòng FXP riêng
+    if has_infant and doituong=="VFR":
+        list_cmd.append("FXP/INF/RVFR-INF,U")
+    return list_cmd, has_infant
+async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR"):
+    cmd_AN = build_an_command(dep, arr, depdate, deptime, arrdate, arrtime)
+    print("Lệnh AN:", cmd_AN)
+
+    try:
+        async with httpx.AsyncClient(http2=False, timeout=60) as client:
+            # Lấy session trước
+            ssid, res = await send_command(client, "IG", "giuvelive")
+            print(res)
+
+            # Gửi lệnh AN
+            ssid, resAN = await send_command(client, cmd_AN, "giuvelive")
+            print(res)
+
+            text = resAN.json()["model"]["output"]["crypticResponse"]["response"]
+            print("Text AN:", text)
+
+            result = parse_vn_flights(text)
+            list_cmd = []
+            so_nguoi = len(hanhkhach)
+
+            # Build các command kế tiếp
+            list_cmd = build_ss_command(result, list_cmd, dep, arr, depdate, so_nguoi, arrdate)
+            print("Build SS done ✅")
+
+            list_cmd = build_nm_command(hanhkhach, list_cmd)
+            print("Build NM done ✅")
+
+            list_cmd, has_infant = build_pricing_command(hanhkhach, list_cmd, doituong)
+            print("Build pricing done ✅")
+
+            # --- Gửi từng command trong list_cmd ---
+            responses = []
+            for idx, cmd in enumerate(list_cmd):
+                print(f"👉 Gửi lệnh {idx+1}/{len(list_cmd)}: {cmd}")
+                try:
+                    ssid, res = await send_command(client, cmd, "giuvelive")
+                    responses.append({
+                        "cmd": cmd,
+                        "response": res.json()["model"]["output"]["crypticResponse"]["response"]
+                    })
+                except Exception as e:
+                    print(f"⚠️ Lỗi khi gửi {cmd}: {e}")
+                    responses.append({"cmd": cmd, "response": "error"})
+
+            # --- Nếu có INFANT ---
+            if has_infant:
+                print("Check list giá vé INF")
+                try:
+                    cmd_inf = get_cheapest_fxt_command(list_inf)
+                    print(cmd_inf)
+                    ssid, res = await send_command(client, cmd_inf, "giuvelive")
+                    responses.append({
+                        "cmd": cmd_inf,
+                        "response": res.json()["model"]["output"]["crypticResponse"]["response"]
+                    })
+                    print("Xử lý yêu cầu chọn chuyến của INF ✅")
+                except Exception as e:
+                    print("Không có yêu cầu chọn chuyến của INF:", e)
+
+            # --- Gửi chuỗi lệnh chốt vé ---
+            for cmd in ["TK OK", "RF HVA", "ER", "IG"]:
+                print(f"✈️ Gửi {cmd}")
+                ssid, res = await send_command(client, cmd, "giuvelive")
+                responses.append({
+                    "cmd": cmd,
+                    "response": res.json()["model"]["output"]["crypticResponse"]["response"]
+                })
+
+            # --- Kiểm tra phản hồi IG cuối ---
+            resend_text = responses[-1]["response"]
+            print("📩 Kết quả IG cuối:", resend_text)
+
+            # Regex tìm chuỗi dạng IGNORED - FMMOQR
+            match = re.search(r"IGNORED\s*-\s*([A-Z0-9]{6})", resend_text)
+            if match:
+                pnr = match.group(1)
+                print(f"✅ Giữ vé thành công! PNR: {pnr}")
+                await send_mess(f"✅ Giữ vé VNA thành công! PNR: {pnr}")
+                return {
+                    "status": "OK",
+                    "pnr": pnr,
+                    "responses": responses
+                }
+            else:
+                print("❌ Không tìm thấy PNR trong phản hồi IG.")
+                return {
+                    "status": "Error",
+                    "responses": responses
+                }
+
+    except Exception as e:
+        print("💥 Lỗi trong giu_ve_live_cmd:", e)
+        await send_mess("lỗi api 1A")
+        
+        return {
+            "status": "Error",
+            "responses": str(e)
+        }
 MONTH_MAP = {
     "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
     "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
@@ -270,7 +526,7 @@ async def send_close(client: httpx.AsyncClient, ssid=None):
 async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     
     ssid, cryp = loadJsession(ssid)
-    print(cryp)
+    print("cryp")
     if cryp["status"]=="ERROR":
         # print(cryp)
         return ssid, cryp
@@ -509,8 +765,7 @@ async def code1a(code,ssid):
     except Exception as e:
         await send_mess("lỗi api 1A")
         return {"error": str(e)}
-if __name__ == "__main__":
-    print(asyncio.run(code1a("EN4IGQ","code")))
+
 
 async def sendemail1a(code, ssid):
     try:
@@ -687,9 +942,30 @@ async def beginRepricePNR(pnr):
         return {"error": str(e)}
 
 
+# if __name__ == "__main__":
+#     hanhkhach = ["PHAM/THI NGANG MS(ADT)", "PHAM/THI HOA MS(ADT)"]
+#     dep = "ICN"
+#     arr = "HAN"
+#     depdate = "20FEB"
+#     deptime = "1035"
+#     arrdate = "21FEB"
+#     arrtime = "1035"
+#     doituong = "ADT"
 
+#     async def main():
+#         a = await giu_ve_live_cmd(
+#             hanhkhach=hanhkhach,
+#             dep=dep,
+#             arr=arr,
+#             depdate=depdate,
+#             deptime=deptime,
+#             arrdate=arrdate,
+#             arrtime=arrtime,
+#             doituong=doituong
+#         )
+#         print(a)
 
-
+#     asyncio.run(main())
 
 
 
