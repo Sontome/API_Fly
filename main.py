@@ -1134,7 +1134,7 @@ async def beginRepricee(
     except Exception as e:
         return (str(e))
 
-@app.get("/giuveVNAlive")
+@app.post("/giuveVNAlive")
 async def giuveVNAlive(
     hanhkhach: List[str] = Query(..., description="Danh sách hành khách, ví dụ ?hanhkhach=A&hanhkhach=B"),
     dep: str = Query(..., description="Điểm đi, ví dụ: ICN"),
@@ -1160,6 +1160,7 @@ async def giuveVNAlive(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
