@@ -144,8 +144,8 @@ def format_flight_data(data):
             "loaive": loaive,
             "giocatcanh": giocatcanh,
             "ngaycatcanh": ngaycatcanh,
+            "giohacanh": giohacanh,
             "ngayhacanh": ngayhacanh,
-            "ngaycatcanh": ngaycatcanh,
             "thoigianbay": segments[0].get("Duration", ""),
             "sohieumaybay": segments[0].get("Number", "")
         }
@@ -203,6 +203,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
