@@ -83,7 +83,7 @@ async def get_vietjet_pnr(token, PNR ):
         print(response.text)
         return None
 def format_flight_data(data):
-    pas = data.get("passengers", [])
+    passengers = data.get("passengers", [])
     
     hanthanhtoan = data.get("datePayLater", "")
     paymentstatus = data.get("paymentstatus", "")
@@ -91,13 +91,18 @@ def format_flight_data(data):
     currency = data.get("currency", "").get("code", "")
     pnr = data.get("locator", "")
     listthongtinchuyenbay = data.get("journeys", [])
-    lastName = pas[0].get("lastName","")
-    firstName = pas[0].get("firstName","")
-    email = pas[0].get("email","")
-    phonenumber = pas[0].get("phonenumber","")
+   
+    
     result = {}
     i = 1  # đặt ngoài vòng for
-
+    passenger_list = []
+    for p in passengers:
+        passenger_list.append({
+            "lastName": p.get("lastName", ""),
+            "firstName": p.get("firstName", ""),
+            "phonenumber": p.get("phonenumber", ""),
+            "email": p.get("email", "")
+        })
     for a in listthongtinchuyenbay:
         raw_loaive = a.get("fareClassDes", "")
         if raw_loaive == "Deluxe1":
@@ -143,13 +148,7 @@ def format_flight_data(data):
         "hanthanhtoan": hanthanhtoan,
         "chieudi": result.get("1"),
         "chieuve": result.get("2",{}),
-        "passengers": [
-        {
-            "lastName": lastName,
-            "firstName": firstName,
-            "phonenumber":phonenumber,
-            "email": email
-        }]
+        "passengers": passenger_list
     }
 
     return res
@@ -180,6 +179,16 @@ async def checkpnr_vj(pnr):
 
 
 
+if __name__ == "__main__":
+
+
+    async def main():
+        a = await checkpnr_vj(
+            "4FM22V"
+        )
+        print(a)
+
+    asyncio.run(main())
 
 
 
