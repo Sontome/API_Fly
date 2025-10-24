@@ -140,7 +140,9 @@ def format_flight_data(data):
             ngayhacanh = ""
         result[str(i)] = {
             "departure": segments[0].get("departureAirport", {}).get("Code", ""),
+            "departurename": segments[0].get("departureAirport", {}).get("Name", ""),
             "arrival": segments[0].get("arrivalAirport", {}).get("Code", ""),
+            "arrivalname": segments[0].get("arrivalAirport", {}).get("Name", ""),
             "loaive": loaive,
             "giocatcanh": giocatcanh,
             "ngaycatcanh": ngaycatcanh,
@@ -203,6 +205,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
