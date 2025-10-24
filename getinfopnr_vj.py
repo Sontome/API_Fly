@@ -113,6 +113,7 @@ def format_flight_data(data):
             loaive = raw_loaive
         segments = a.get("segments", [{}])
         etd_full = segments[0].get("ETDLocal", "")
+        eta_full = segments[0].get("ETALocal", "")
         try:
             etd_parts = etd_full.strip().split(" ")
             ngaycatcanh_raw = etd_parts[0] if len(etd_parts) > 0 else ""
@@ -123,14 +124,27 @@ def format_flight_data(data):
             if ngaycatcanh_raw:
                 dt = datetime.strptime(ngaycatcanh_raw, "%Y-%m-%d")
                 ngaycatcanh = dt.strftime("%d/%m/%Y")
+            eta_parts = eta_full.strip().split(" ")
+            ngayhacanh_raw = eta_parts[0] if len(eta_parts) > 0 else ""
+            giohacanh = eta_parts[1] if len(eta_parts) > 1 else ""
+
+            # 👉 Convert "2025-08-20" => "20/08/2025"
+            ngayhacanh = ""
+            if ngayhacanh_raw:
+                dt = datetime.strptime(ngayhacanh_raw, "%Y-%m-%d")
+                ngayhacanh = dt.strftime("%d/%m/%Y")
         except:
             giocatcanh = ""
             ngaycatcanh = ""
+            giohacanh = ""
+            ngayhacanh = ""
         result[str(i)] = {
             "departure": segments[0].get("departureAirport", {}).get("Code", ""),
             "arrival": segments[0].get("arrivalAirport", {}).get("Code", ""),
             "loaive": loaive,
             "giocatcanh": giocatcanh,
+            "ngaycatcanh": ngaycatcanh,
+            "ngayhacanh": ngayhacanh,
             "ngaycatcanh": ngaycatcanh,
             "thoigianbay": segments[0].get("Duration", ""),
             "sohieumaybay": segments[0].get("Number", "")
@@ -189,6 +203,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
