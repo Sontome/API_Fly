@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 import os
 import math
-from utils_telegram import send_mess
+
 import subprocess
 import urllib.parse
 global token
@@ -448,11 +448,11 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,bookingkeychieuve=None):
         hạn_thanh_toán = result["data"]["datePayLater"]
         print(mã_giữ_vé)
         print(hạn_thanh_toán)
-        try:
-            mess =  "Giữ vé VJ thành công PNR: "+str(mã_giữ_vé)+" , Hạn thanh toán :"+str(hạn_thanh_toán)
-            await send_mess(mess)
-        except :
-            pass
+        # try:
+        #     mess =  "Giữ vé VJ thành công PNR: "+str(mã_giữ_vé)+" , Hạn thanh toán :"+str(hạn_thanh_toán)
+        #     await send_mess(mess)
+        # except :
+        #     pass
         return {
             "mã_giữ_vé" : mã_giữ_vé,
             "hạn_thanh_toán" : hạn_thanh_toán,
@@ -481,6 +481,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
