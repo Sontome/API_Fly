@@ -1,10 +1,10 @@
 import requests
 import json
-
+from utils_telegram import send_mess
 from datetime import datetime
 import os
 import math
-
+import asyncio
 import subprocess
 import urllib.parse
 global token
@@ -448,11 +448,10 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,bookingkeychieuve=None):
         hạn_thanh_toán = result["data"]["datePayLater"]
         print(mã_giữ_vé)
         print(hạn_thanh_toán)
-        # try:
-        #     mess =  "Giữ vé VJ thành công PNR: "+str(mã_giữ_vé)+" , Hạn thanh toán :"+str(hạn_thanh_toán)
-        #     await send_mess(mess)
-        # except :
-        #     pass
+        try:
+            asyncio.run(send_mess(mess))
+        except :
+            pass
         return {
             "mã_giữ_vé" : mã_giữ_vé,
             "hạn_thanh_toán" : hạn_thanh_toán,
