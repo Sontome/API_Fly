@@ -942,30 +942,261 @@ async def beginRepricePNR(pnr):
         return {"error": str(e)}
 
 
-# if __name__ == "__main__":
-#     hanhkhach = ["PHAM/THI NGANG MS(ADT)", "PHAM/THI HOA MS(ADT)"]
-#     dep = "ICN"
-#     arr = "HAN"
-#     depdate = "20FEB"
-#     deptime = "1035"
-#     arrdate = "21FEB"
-#     arrtime = "1035"
-#     doituong = "ADT"
+def parse_pnr(text,pnr):
+    data = {"pnr": pnr,"chang": [], "passengers": [], "paymentstatus": False,"tongbillgiagoc":0,"doituong":"ADT"}
 
-#     async def main():
-#         a = await giu_ve_live_cmd(
-#             hanhkhach=hanhkhach,
-#             dep=dep,
-#             arr=arr,
-#             depdate=depdate,
-#             deptime=deptime,
-#             arrdate=arrdate,
-#             arrtime=arrtime,
-#             doituong=doituong
-#         )
-#         print(a)
+    # ======== CHECK THANH TOÁN ========
+    data["status"] = "OK"
+    data["paymentstatus"] = "FA PAX" in text
 
-#     asyncio.run(main())
+    # ======== BẮT HÀNH KHÁCH ========
+    passenger_pattern = re.compile(r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\((\w+)\))?(?=\s+\d+\.|\n|$)")
+    for match in passenger_pattern.finditer(text):
+        last, first, type_ = match.group(2), match.group(3).strip(), match.group(4) or ""
+        data["passengers"].append({
+            "lastName": last,
+            "firstName": first,
+            "loaikhach": type_
+        })
+
+    # ======== BẮT CHẶNG BAY ========
+    flight_pattern = re.compile(
+        r"VN\s*(\d+)\s+([A-Z])\s+(\d{2}[A-Z]{3})\s+\d+\s+([A-Z]{3})([A-Z]{3})\s+([A-Z]{2}\d+)\s+(\d{4})\s+(\d{4})\s+(\d{2}[A-Z]{3})"
+    )
+    chang_so = 1
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+
+    def convert_date(datestr):
+        """Chuyển '03DEC' → datetime object"""
+        day = int(datestr[:2])
+        month_str = datestr[2:].upper()
+        month_map = {
+            "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4,
+            "MAY": 5, "JUN": 6, "JUL": 7, "AUG": 8,
+            "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12
+        }
+        month = month_map.get(month_str, 1)
+        year = current_year if month >= current_month else current_year + 1
+        return datetime(year, month, day)
+
+    # ======== MAP MÚI GIỜ ========
+    timezone_offset = {
+        # 🇻🇳 Việt Nam (UTC+7)
+        "SGN": 7, "HAN": 7, "DAD": 7, "CXR": 7, "PQC": 7, "VII": 7,
+        "VCA": 7, "HPH": 7, "THD": 7, "UIH": 7, "HUI": 7, "VCL": 7,
+        "BMV": 7, "DIN": 7, "DLI": 7, "PXU": 7, "VCS": 7, "CAH": 7,
+        "TBB": 7, "VDH": 7, "VKG": 7,
+
+        # 🇰🇷 Hàn Quốc (UTC+9)
+        "ICN": 9, "GMP": 9, "PUS": 9, "CJU": 9, "TAE": 9, "KWJ": 9,
+        "USN": 9, "RSU": 9, "KPO": 9, "WJU": 9, "YNY": 9, "CHF": 9, "HIN": 9,
+    }
+
+    for f in flight_pattern.finditer(text):
+        so_hieu = f"VN{f.group(1)}"
+        loai_ve = f.group(2)
+        ngay_cat_raw = f.group(3)
+        dep = f.group(4)
+        arr = f.group(5)
+        status = f.group(6)
+        gio_cat = f.group(7)
+        gio_ha = f.group(8)
+        ngay_ha_raw = f.group(9)
+
+        ngay_cat = convert_date(ngay_cat_raw)
+        ngay_ha = convert_date(ngay_ha_raw)
+
+        try:
+            # Parse giờ
+            t1 = datetime.strptime(gio_cat, "%H%M")
+            t2 = datetime.strptime(gio_ha, "%H%M")
+
+            # Nếu giờ hạ < giờ cất → sang ngày hôm sau
+            if t2 < t1:
+                ngay_ha += timedelta(days=1)
+
+            # Ghép lại thành datetime full
+            dep_dt = datetime.combine(ngay_cat.date(), t1.time())
+            arr_dt = datetime.combine(ngay_ha.date(), t2.time())
+
+            # Cộng/trừ theo chênh lệch múi giờ
+            dep_offset = timezone_offset.get(dep.upper(), 0)
+            arr_offset = timezone_offset.get(arr.upper(), 0)
+            delta_tz = (arr_offset - dep_offset)
+
+            # Thời gian bay thực tế
+            diff = arr_dt - dep_dt - timedelta(hours=delta_tz)
+            hours = diff.seconds // 3600
+            minutes = (diff.seconds // 60) % 60
+            flight_time = f"{hours:02}:{minutes:02}"
+
+        except Exception as e:
+            flight_time = ""
+
+        data["chang"].append({
+            "sochang": chang_so,
+            "departure": dep,
+            "departurename": map_airport_name(dep),
+            "arrival": arr,
+            "arrivalname": map_airport_name(arr),
+            "loaive": loai_ve,
+            "status": status,
+            "giocatcanh": f"{gio_cat[:2]}:{gio_cat[2:]}",
+            "ngaycatcanh": ngay_cat.strftime("%d/%m/%Y"),
+            "giohacanh": f"{gio_ha[:2]}:{gio_ha[2:]}",
+            "ngayhacanh": ngay_ha.strftime("%d/%m/%Y"),
+            "thoigianbay": flight_time,
+            "sohieumaybay": so_hieu
+        })
+        chang_so += 1
+
+    return data
+
+
+# ===============================
+# 📍 Map mã sân bay -> tên
+# ===============================
+def map_airport_name(code: str) -> str:
+    mapping = {
+        # 🇻🇳 VIỆT NAM
+        "SGN": "Ho Chi Minh",
+        "HAN": "Ha Noi",
+        "DAD": "Da Nang",
+        "CXR": "Nha Trang",
+        "PQC": "Phu Quoc",
+        "VII": "Vinh",
+        "VCA": "Can Tho",
+        "HPH": "Hai Phong",
+        "THD": "Thanh Hoa",
+        "UIH": "Quy Nhon",
+        "HUI": "Hue",
+        "VCL": "Chu Lai",
+        "BMV": "Buon Ma Thuot",
+        "DIN": "Dien Bien Phu",
+        "DLI": "Da Lat",
+        "PXU": "Pleiku",
+        "VCS": "Con Dao",
+        "CAH": "Ca Mau",
+        "TBB": "Tuy Hoa",
+        "VDH": "Dong Hoi",
+        "VKG": "Rach Gia",
+
+        # 🇰🇷 HÀN QUỐC
+        "ICN": "Seoul",
+        "GMP": "Seoul",
+        "PUS": "Busan",
+        "CJU": "Jeju",
+        "TAE": "Daegu",
+        "KWJ": "Gwangju",
+        "USN": "Ulsan",
+        "RSU": "Yeosu",
+        "KPO": "Pohang",
+        "WJU": "Wonju",
+        "YNY": "Yangyang",
+        "CHF": "Chuncheon",
+        "HIN": "Jinju",
+    }
+
+    # fallback: nếu không tìm thấy
+    return mapping.get(code.upper(), f"Unknown ({code.upper()})")
+def parse_price(text):
+    result = {
+        "total": 0,
+        "priceperone": False,
+        "doituong":"ADT",
+        "tqtnumber":"0"
+    }
+    if "KRH" in text:
+        result["doituong"] = "STU"
+    elif "KRE" in text:
+        result["doituong"] = "VFR"
+    # ======== CASE 1: Có GRAND TOTAL KRW ========
+    grand_total_match = re.search(r"\nGRAND TOTAL KRW\s+([\d,]+)", text)
+    if grand_total_match:
+        total = grand_total_match.group(1).replace(",", "")
+        result["total"] = int(total)
+        result["priceperone"] = True
+        return result
+
+    # ======== CASE 2: Không có GRAND TOTAL ========
+    price_matches = re.findall(r"KRW\s+([\d,]+)\s+BT\/", text)
+    if price_matches:
+        total_sum = sum(int(p.replace(",", "")) for p in price_matches)
+        result["total"] = total_sum
+        result["priceperone"] = False
+        # ======== Lấy số đầu tiên của dòng thứ 2 ========
+        lines = text.strip().splitlines()
+        if len(lines) >= 2:
+            match_num = re.match(r"\s*(\d+)", lines[1])
+            if match_num:
+                result["tqtnumber"] = str(match_num.group(1))
+
+    return result
+async def checkmatvechoVNA(code,ssid=None):
+    
+    segments=None
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            # chỉ gọi send_command lần đầu ở đây
+            ssid, res = await send_command(client, "IG", ssid)
+            print("clearcode")
+            ssid, res = await send_command(client, "RT"+str(code),ssid)
+            
+            # if str(res["code"])=="403":
+            #     return (str(res))
+            
+            data = res.json()
+            
+            # print(data)
+
+            rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
+            rt_respone = parse_pnr(rt_respone_raw,code)
+            
+
+                
+                
+            try:
+                ssid, res = await send_command(client, "TQT", ssid)
+            
+                
+                data = res.json()
+                tqt_reponse=data["model"]["output"]["crypticResponse"]["response"]
+                tqt = parse_price(tqt_reponse)
+                print(tqt["tqtnumber"])
+                
+                rt_respone["doituong"] = tqt["doituong"]
+                if tqt["priceperone"]==True:
+
+                    rt_respone["tongbillgiagoc"] = int(tqt["total"])*len(rt_respone["passengers"])
+                else :
+                    ssid, res_fare_raw = await send_command(client, "TQT/T"+tqt["tqtnumber"], ssid)
+                    res_fare = res_fare_raw.json()["model"]["output"]["crypticResponse"]["response"]
+                    vfr_fare = re.search(r"KRE", res_fare)
+                    stu_fare = re.search(r"KRH", res_fare)
+                    
+                    rt_respone["tongbillgiagoc"] = int(tqt["total"])
+                    if vfr_fare :
+                        rt_respone["doituong"] = "VFR"
+                    if stu_fare :
+                        rt_respone["doituong"] = "STU"
+
+            except:
+                pass
+
+            ssid, res = await send_command(client, "IG", ssid)
+            print("clearcode")
+        
+        return (rt_respone)
+    except Exception as e:
+        print (" lỗi :" +str(e))
+        await send_mess("lỗi api 1A")
+        return None
+if __name__ == "__main__":
+    b="DLOEQY"
+    b="D8D4LD"
+    a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
+    print(a)
 
 
 
