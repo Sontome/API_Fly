@@ -244,7 +244,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                     print("Không có yêu cầu chọn chuyến của INF:", e)
 
             # --- Gửi chuỗi lệnh chốt vé ---
-            for cmd in ["APE-hanvietair.service@gmail.com","APE-hanvietair.service@gmail.com/p1","APE-HANVIETAIR247@gmail.com/p1","APM-+82 1035463396","APM-+82 1035463396/p1","APM-+82 1021511790/p1","APN-E+HANVIETAIR.SERVICE@GMAIL.COM/VI/p1","APN-M+821035463396/VI/P1","TK OK", "RF HVA", "ER", "IG"]:
+            for cmd in ["APE-hanvietair.service@gmail.com","APE-hanvietair.service@gmail.com/p1","APE-HANVIETAIR247@gmail.com/p1","APM-+82 1035463396","APM-+82 1035463396/p1","APM-+82 1021511790/p1","APN-E+HANVIETAIR.SERVICE@GMAIL.COM/VI/p1","APN-M+82 1035463396/KR/P1","TK OK", "RF HVA", "ER", "IG"]:
                 print(f"✈️ Gửi {cmd}")
                 ssid, res = await send_command(client, cmd, "giuvelive")
                 responses.append({
@@ -1197,6 +1197,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
