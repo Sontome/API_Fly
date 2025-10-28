@@ -1013,8 +1013,8 @@ def parse_pnr(text,pnr):
             t2 = datetime.strptime(gio_ha, "%H%M")
 
             # Nếu giờ hạ < giờ cất → sang ngày hôm sau
-            if t2 < t1:
-                ngay_ha += timedelta(days=1)
+            # if t2 < t1:
+            #     ngay_ha += timedelta(days=1)
 
             # Ghép lại thành datetime full
             dep_dt = datetime.combine(ngay_cat.date(), t1.time())
@@ -1197,6 +1197,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
