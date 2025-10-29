@@ -957,7 +957,9 @@ def parse_pnr(text,pnr):
     data["paymentstatus"] = "FA PAX" in text
 
     # ======== BẮT HÀNH KHÁCH ========
-    passenger_pattern = re.compile(r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\((\w+)\))?(?=\s+\d+\.|\n|$)")
+    passenger_pattern = re.compile(
+    r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\(([A-Z]+)\))?(?:\([A-Z\/\s\d]+\))?(?=\s+\d+\.|\n|$)"
+
     for match in passenger_pattern.finditer(text):
         last, first, type_ = match.group(2), match.group(3).strip(), match.group(4) or ""
         data["passengers"].append({
@@ -1204,6 +1206,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
