@@ -957,7 +957,7 @@ def parse_pnr(text,pnr):
     data["paymentstatus"] = "FA PAX" in text
 
     # ======== BẮT HÀNH KHÁCH ========
-    pattern = re.compile(
+    passenger_pattern = re.compile(
         r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\(([A-Z]+)\))?(?:\([A-Z\/\s\d]+\))?(?=\s+\d+\.|\n|$)"
     )
 
@@ -1207,6 +1207,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
