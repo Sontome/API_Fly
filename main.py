@@ -849,10 +849,10 @@ async def proxy_gas(request: Request, background_tasks: BackgroundTasks):
 @app.post("/code1a")
 async def inputcode1a(data: CodeRequest):
     try:
-        results = []
-        for c in data.code:
-            result = await code1a(c, data.ssid)
-            results.append(result)
+        
+        
+        result = await code1a(data.code, data.ssid)
+            
         return results
     except Exception as e:
         return {"error": str(e)}
@@ -1177,6 +1177,7 @@ async def checkmatvecho_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
