@@ -748,8 +748,8 @@ async def code1a(codes, ssid):
     try:
         async with httpx.AsyncClient(http2=False) as client:
             ssid, res = await send_command(client, str("IG"), ssid)
-                    data = res.json()
-                    print(data)
+            data = res.json()
+            print(data)
             for code in codes:
                 try:
                     ssid, res = await send_command(client, str(code), ssid)
@@ -1204,6 +1204,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
