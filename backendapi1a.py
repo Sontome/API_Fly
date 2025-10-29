@@ -765,7 +765,7 @@ async def code1a(codes, ssid):
                         "code": code,
                         "error": str(e)
                     })
-                    await send_mess("lỗi api 1A)
+                    await send_mess("lỗi api 1A")
                     return [{"error": str(e)}]
 
         return results
@@ -1204,6 +1204,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
