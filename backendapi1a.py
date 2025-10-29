@@ -829,7 +829,7 @@ async def repricePNR(pnr, doituong):
             # ✅ Regex bắt tất cả dạng: "1.TEN/...(...)" kể cả dính nhau
             pattern = r"(\d+)\.([A-Z/\s]+(?:MR|MS|MISS|MSTR)?\([^)]*\))"
             matches = re.findall(pattern, resp_text, flags=re.DOTALL)
-            has_infant = "(INF/" in resp_text
+            has_infant = "(INF" in resp_text
             pax_cmd_parts = []
             
             for pax_num, pax_info in matches:
@@ -1204,6 +1204,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
