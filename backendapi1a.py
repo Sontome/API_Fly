@@ -743,28 +743,35 @@ async def checksomatveVNA(code,ssid=None):
     except Exception as e:
         print (" lỗi :" +str(e))
         return None
-async def code1a(code,ssid):
-    
-    segments=None
+async def code1a(codes, ssid):
+    results = []
     try:
         async with httpx.AsyncClient(http2=False) as client:
-            # chỉ gọi send_command lần đầu ở đây
-            
-            ssid, res = await send_command(client, str(code),ssid)
-            print(res.json())
-            respone = res.json()
-            
-            
-            
-            
-            
-            
-            
-            
-        return respone
+            ssid, res = await send_command(client, str("IG"), ssid)
+                    data = res.json()
+                    print(data)
+            for code in codes:
+                try:
+                    ssid, res = await send_command(client, str(code), ssid)
+                    data = res.json()
+                    print(data)
+                    results.append({
+                        "code": code,
+                        "response": data
+                    })
+                except Exception as e:
+                    print(f"Lỗi khi chạy lệnh {code}: {e}")
+                    results.append({
+                        "code": code,
+                        "error": str(e)
+                    })
+                    await send_mess("lỗi api 1A)
+                    return [{"error": str(e)}]
+
+        return results
     except Exception as e:
         await send_mess("lỗi api 1A")
-        return {"error": str(e)}
+        return [{"error": str(e)}]
 
 
 async def sendemail1a(code, ssid):
@@ -1197,6 +1204,7 @@ if __name__ == "__main__":
     b="D8D4LD"
     a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
     print(a)
+
 
 
 
