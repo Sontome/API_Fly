@@ -853,7 +853,7 @@ async def inputcode1a(data: CodeRequest):
         
         result = await code1a(data.code, data.ssid)
             
-        return results
+        return result
     except Exception as e:
         return {"error": str(e)}
        
@@ -1177,6 +1177,7 @@ async def checkmatvecho_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
