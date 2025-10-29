@@ -49,6 +49,9 @@ TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
+class CodeRequest(BaseModel):
+    code: List[str]
+    ssid: str
 class HanhKhach(BaseModel):
     Họ: str = Field(..., example="Nguyen")
     Tên: str = Field(..., example="An")
@@ -843,17 +846,16 @@ async def proxy_gas(request: Request, background_tasks: BackgroundTasks):
 
 
 
-@app.get("/code1a")
-async def inputcode1a(
-    code: str = Query(..., description="code"),
-    ssid: str = Query(..., description="ssidsession")
-):
+@app.post("/code1a")
+async def inputcode1a(data: CodeRequest):
     try:
-        result = await code1a(code,ssid)
-        
-        return result
+        results = []
+        for c in data.code:
+            result = await code1a(c, data.ssid)
+            results.append(result)
+        return results
     except Exception as e:
-        return (str(e))
+        return {"error": str(e)}
        
 @app.get("/get_bag_vj")
 def getbagvj(
@@ -1175,6 +1177,7 @@ async def checkmatvecho_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
