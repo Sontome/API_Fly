@@ -134,8 +134,8 @@ def replace_text_between_phrases(pdf_path,output_path,
                         ddmm = pre_night.strftime("%d/%m")
 
                         page.insert_text(
-                            (rect.x0-20, rect.y0 + 30),
-                            f"(Ra sân bay đêm ngày {ddmm})",
+                            (rect.x0-5, rect.y0 + 30),
+                            f"(Ra sân bay\n đêm {ddmm})",
                             fontsize=fs,
                             fontfile=FONT_ARIAL,
                             fontname="arial",
@@ -328,6 +328,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #reformat_VNA_VN("input.pdf","output.pdf")
+
 
 
 
