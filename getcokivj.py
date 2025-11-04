@@ -79,7 +79,7 @@ def try_login(page, context):
 
 with sync_playwright() as p:
     # Tweak arguments để giảm khả năng bị detect
-    browser = p.chromium.launch(headless=False,
+    browser = p.chromium.launch(headless=True,
                                 args=[
                                     "--disable-blink-features=AutomationControlled",
                                     "--no-sandbox",
@@ -166,3 +166,4 @@ with sync_playwright() as p:
         pass
 
     print("🏁 Xong lượt chạy.")
+
