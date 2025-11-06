@@ -35,12 +35,30 @@ def replace_text_between_phrases(pdf_path,output_path,
                 page.insert_text(
                     (new_x, new_y + 5),
                     "IT FARE    ",
-                    fontsize=font_size,
+                    fontsize=font_size*0.9,
                     fontfile=FONT_ARIAL,
                     fontname="arial",
                     fill=(0, 0, 0),
                     render_mode=0
                 )  
+                new_x = rect.x0 + 195
+                new_y = rect.y0 - 70
+
+                # Tạo vùng cần xóa ở vị trí mới (kích thước tương tự chữ gốc)
+                new_rect = fitz.Rect(new_x, new_y, new_x + (rect.x1 - rect.x0+80), new_y+1)
+                page.add_redact_annot(new_rect)
+                page.apply_redactions()
+
+                # Chèn chữ IT FARE vào đúng vị trí mới
+                page.insert_text(
+                    (new_x, new_y + 5),
+                    "IT FARE    ",
+                    fontsize=font_size*0.9,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 0),
+                    render_mode=0
+                )
                 print(f"✅ Đã thay 'Tổngtiền:' → 'IT FARE' ở trang {page_number + 1}")                              
     page = doc[0]  # chỉ page đầu
     fs = font_size * 0.8
@@ -346,6 +364,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
