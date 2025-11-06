@@ -18,7 +18,7 @@ def replace_text_between_phrases(pdf_path,output_path,
     if type == 1:
         for page_number in range(len(doc)):
             page = doc[page_number]
-            tongtien_matches = page.search_for("Tổng tiền:")
+            tongtien_matches = page.search_for("합계:")
             if not tongtien_matches:
                 continue
             for rect in tongtien_matches:
@@ -346,6 +346,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
