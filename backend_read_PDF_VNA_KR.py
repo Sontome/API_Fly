@@ -329,7 +329,7 @@ def extract_first_page(input_pdf, prnpax, type=0):
 
 
  
-def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
+def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT,type=0):
     if new_text=="":
         new_text=NEW_TEXT
     replace_text_between_phrases(
@@ -346,6 +346,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
