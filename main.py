@@ -627,7 +627,8 @@ async def vna_checkpnr(pnr,ssid):
 async def process_pdf_VNA(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    option: str = Form("")
+    option: str = Form(""),
+    type: int = Form(0)  # 👈 thêm tham số type, mặc định 0
 ):
     # Tạo đường dẫn file tạm input
     temp_path = os.path.join(TEMP_DIR, f"{file.filename}")
@@ -643,11 +644,11 @@ async def process_pdf_VNA(
     try:
         ngonngu = check_ngon_ngu(temp_path)
         if ngonngu == "VN":
-            reformat_VNA_VN(temp_path, new_text=option,output_path=output_path)
+            reformat_VNA_VN(temp_path, new_text=option,output_path=output_path, type=type)
         if ngonngu == "KR":
-            reformat_VNA_KR(temp_path, new_text=option,output_path=output_path)
+            reformat_VNA_KR(temp_path, new_text=option,output_path=output_path, type=type)
         if ngonngu == "EN":
-            reformat_VNA_EN(temp_path, new_text=option,output_path=output_path)
+            reformat_VNA_EN(temp_path, new_text=option,output_path=output_path, type=type)
         
     except Exception as e:
         return {"error": str(e)}
@@ -1177,6 +1178,7 @@ async def checkmatvecho_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
