@@ -36,7 +36,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                 page.insert_text(
                     (new_x, new_y + 5),
                     "IT FARE    ",
-                    fontsize=font_size,
+                    fontsize=font_size*0.9,
                     fontfile=FONT_ARIAL,
                     fontname="arial",
                     fill=(0, 0, 0),
@@ -365,6 +365,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
