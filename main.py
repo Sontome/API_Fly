@@ -1178,7 +1178,7 @@ async def checkmatvecho_VNA(
         return result
     except Exception as e:
         return (str(e))
-@app.get("/huyveVNA")
+@app.post("/huyveVNA")
 async def huyve_VNA(
     pnr: str = Query(..., description="pnr"),
     ssid: str = Query(..., description="ssid")
@@ -1190,6 +1190,7 @@ async def huyve_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
