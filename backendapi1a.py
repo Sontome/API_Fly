@@ -26,6 +26,23 @@ AIRPORT_TZ = {
     "PQC": 7,
     # nếu cần thì bổ sung thêm
 }
+def get_payment_status(pnr_text: str) -> str:
+    if not pnr_text:
+        return "không xác định"
+    
+    text = pnr_text.lower()
+
+    has_fe = "fe pax" in text
+    has_fa_738 = "fa pax 738" in text
+
+    if not has_fe:
+        return "không xác định"
+    if has_fe and has_fa_738:
+        return "đã thanh toán"
+    if has_fe and not has_fa_738:
+        return "chưa thanh toán"
+    
+    return "không xác định"
 def build_an_command(dep, arr, depdate, deptime, arrdate=None, arrtime=None):
     """
     Build lệnh AN cho Vietnam Airlines (1A format)
@@ -1202,11 +1219,53 @@ async def checkmatvechoVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return None
-if __name__ == "__main__":
-    b="DLOEQY"
-    b="D8D4LD"
-    a = asyncio.run(checkmatvechoVNA(b,"checkmatvecho"))
-    print(a)
+async def huyveVNA(code,ssid=None):
+    
+    segments=None
+    rt_respone={"status":"không xác định","log":""}
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            # chỉ gọi send_command lần đầu ở đây
+            ssid, res = await send_command(client, "IG", ssid)
+            print("clearcode")
+            ssid, res = await send_command(client, "RT"+str(code),ssid)
+            
+            # if str(res["code"])=="403":
+            #     return (str(res))
+            
+            data = res.json()
+            
+            # print(data)
+
+            rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
+            rt_respone["status"] = get_payment_status(rt_respone_raw)
+            try:
+                if rt_respone["status"] == "chưa thanh toán":
+                    ssid, res = await send_command(client, "XI", ssid)
+                    rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
+                    rt_respone["log"] = rt_respone_raw
+                    print("log")
+                    ssid, res = await send_command(client, "RF HVA", ssid)
+                    print("RF HVA")
+                    ssid, res = await send_command(client, "ER", ssid)
+                    print("ER")
+                    
+                
+            except:
+                pass
+
+                
+                
+            
+
+            ssid, res = await send_command(client, "IG", ssid)
+            print("clearcode")
+        
+        return (rt_respone)
+    except Exception as e:
+        print (" lỗi :" +str(e))
+        await send_mess("lỗi api 1A")
+        return ("lỗi api hủy vé")
 
 
 
