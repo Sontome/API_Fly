@@ -37,7 +37,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA
+from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA,huyveVNA
 import shutil
 from fastapi.concurrency import run_in_threadpool
 from typing import List
@@ -1178,7 +1178,18 @@ async def checkmatvecho_VNA(
         return result
     except Exception as e:
         return (str(e))
-
+@app.get("/huyveVNA")
+async def huyve_VNA(
+    pnr: str = Query(..., description="pnr"),
+    ssid: str = Query(..., description="ssid")
+    
+):
+    try:
+        result = await huyveVNA(pnr,ssid)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
