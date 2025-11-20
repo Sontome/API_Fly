@@ -77,7 +77,7 @@ def get_company(bear,retry=False):
         print(response.text)
         return None
 def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/ancillaryOptions"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/ancillaryOptions"
     if booking_key_return:
         params = {
             "bookingKey": booking_key,
@@ -205,7 +205,7 @@ def get_payment_methods(token,bookingkey_departure, bookingkey_arrival=None):
       
         return None  
 def create_booking(payload_dict, bearer_token):
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/createbooking"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/createbooking"
 
     headers = {
         "accept": "application/json, text/plain, */*",
@@ -480,6 +480,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
