@@ -303,7 +303,7 @@ def build_passenger_data(passenger_list,soluong,iso,exten,phone,email,start_inde
                 "loyaltyProgram": {}
             }
         }
-        if index == 1:
+        if index == 1 and is_child==False:
             passenger["reservationProfile"]["nationCountry"]={
                 "code": nation_code,
                 "name": nation_name
@@ -371,7 +371,7 @@ def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi
     soluongembe = len(passenger_data.get("embe", [])) 
     nguoilon, index = build_passenger_data(passenger_data.get("nguoilon", []),soluong,iso,exten,phone,email,start_index=index, is_child=False)
     all_passengers += nguoilon
-    treem, index = build_passenger_data(passenger_data.get("treem", []),soluong,start_index=index, is_child=True)
+    treem, index = build_passenger_data(passenger_data.get("treem", []),soluong,iso,exten,phone,email,start_index=index, is_child=True)
     all_passengers += treem
     if soluongembe:
         all_passengers= build_passenger_embe(passenger_data.get("embe", []),all_passengers)
@@ -480,6 +480,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
