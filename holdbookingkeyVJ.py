@@ -254,7 +254,7 @@ def build_passenger_embe(embe_list, passengers):
             passenger["infants"] = [infant_data]
             embe_index += 1
     return passengers
-def build_passenger_data(passenger_list,soluong,start_index=1, is_child=False, is_infant=False):
+def build_passenger_data(passenger_list,soluong,iso,exten,phone,email,start_index=1, is_child=False, is_infant=False):
     passengers = []
     index = start_index
    
@@ -309,13 +309,13 @@ def build_passenger_data(passenger_list,soluong,start_index=1, is_child=False, i
                 "name": nation_name
             }
             passenger["reservationProfile"]["personalContactInformation"] = {
-                "number": "1035463396",
-                "mobileIsoCode": "KR",
-                "mobileNumber": "1035463396",
-                "extension": "82",
-                "isoCode": "KR",
-                "phoneNumber": "1035463396",
-                "email": "hanvietair247@gmail.com"
+                "number": phone,
+                "mobileIsoCode": iso,
+                "mobileNumber": phone,
+                "extension": exten,
+                "isoCode": iso,
+                
+                "email": email
             }
 
         passengers.append(passenger)
@@ -364,12 +364,12 @@ def build_ancillary(passengers_count, keyhanhly=None, keyhanhlychieuve=None):
         ]
     return ancillary
 
-def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi, bookingkeychieuve=None, keyhanhlychieuve=None):
+def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi,iso,exten,phone,email, bookingkeychieuve=None, keyhanhlychieuve=None):
     all_passengers = []
     index = 1
     soluong = len(passenger_data.get("nguoilon", [])) 
     soluongembe = len(passenger_data.get("embe", [])) 
-    nguoilon, index = build_passenger_data(passenger_data.get("nguoilon", []),soluong,start_index=index, is_child=False)
+    nguoilon, index = build_passenger_data(passenger_data.get("nguoilon", []),soluong,iso,exten,phone,email,start_index=index, is_child=False)
     all_passengers += nguoilon
     treem, index = build_passenger_data(passenger_data.get("treem", []),soluong,start_index=index, is_child=True)
     all_passengers += treem
@@ -417,7 +417,7 @@ def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi
     }
     return payload
 
-def booking(passenger_data,bookingkey,sochieu,sanbaydi,bookingkeychieuve=None):
+def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phoneF2="1035463396",emailF2="hanvietair247@gmail.com" ,bookingkeychieuve=None):
     token = get_app_access_token_from_state()
     get_company(token)
     token = get_app_access_token_from_state()
@@ -438,7 +438,7 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,bookingkeychieuve=None):
     keypaylate = get_payment_methods(token,bookingkey,bookingkeychieuve)
     #print(keyhanhly)
     #print(keypaylate)
-    payload = build_payload_all(passenger_data, bookingkey, keyhanhlychieudi, keypaylate,sanbaydi, bookingkeychieuve, keyhanhlychieuve)
+    payload = build_payload_all(passenger_data, bookingkey, keyhanhlychieudi, keypaylate,sanbaydi,iso,exten,phone,email, bookingkeychieuve, keyhanhlychieuve)
     #print(payload)
     result = create_booking(payload,token)
     #print(result)
@@ -480,6 +480,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
