@@ -417,7 +417,7 @@ def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi
     }
     return payload
 
-def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phoneF2="1035463396",emailF2="hanvietair247@gmail.com" ,bookingkeychieuve=None):
+def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone="1035463396",email="hanvietair247@gmail.com" ,bookingkeychieuve=None):
     token = get_app_access_token_from_state()
     get_company(token)
     token = get_app_access_token_from_state()
@@ -480,6 +480,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
