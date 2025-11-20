@@ -436,7 +436,7 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
         keyhanhlychieuve = None
         
     keypaylate = get_payment_methods(token,bookingkey,bookingkeychieuve)
-    #print(keyhanhly)
+    print(keyhanhly)
     #print(keypaylate)
     payload = build_payload_all(passenger_data, bookingkey, keyhanhlychieudi, keypaylate,sanbaydi,iso,exten,phone,email, bookingkeychieuve, keyhanhlychieuve)
     #print(payload)
@@ -480,6 +480,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
