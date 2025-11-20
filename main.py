@@ -69,6 +69,10 @@ class BookingRequest(BaseModel):
     bookingkey: str = Field(..., description="Booking Key chiều đi", example="")
     sochieu: str = Field(..., description="OW (1 chiều) hoặc RT (khứ hồi)", example="OW")
     sanbaydi: Optional[str] = Field(None, description="Sân bay đi (ví dụ: ICN)", example="")
+    iso: Optional[str] = Field("KR", description="Sân bay đi (ví dụ: ICN)", example="")
+    exten: Optional[str] = Field("82", description="Sân bay đi (ví dụ: ICN)", example="")
+    phone: Optional[str] = Field("1035463396", description="Sân bay đi (ví dụ: ICN)", example="")
+    email: Optional[str] = Field("hanvietair247@gmail.com", description="Sân bay đi (ví dụ: ICN)", example="")
     bookingkeychieuve: Optional[str] = Field(None, description="Booking Key chiều về (nếu có)", example="")
 class VjLowFareRequest(BaseModel):
     departure: str  = Field(..., description="Mã sân bay đi (VD: ICN)",example="ICN")
@@ -579,7 +583,7 @@ async def create_booking(request: BookingRequest):
 
     # Bọc hàm sync thành bất đồng bộ
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.bookingkeychieuve)
+    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.iso,request.exten,request.phone,request.email,request.bookingkeychieuve)
     asyncio.create_task(safe_send_vj(result))
     return result
 @app.post("/vj/lowfare-v2")
@@ -1190,6 +1194,7 @@ async def huyve_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
