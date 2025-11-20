@@ -315,7 +315,7 @@ def build_passenger_data(passenger_list,soluong,start_index=1, is_child=False, i
                 "extension": "82",
                 "isoCode": "KR",
                 "phoneNumber": "1035463396",
-                "email": "hanvietair.service@gmail.com"
+                "email": "hanvietair247@gmail.com"
             }
 
         passengers.append(passenger)
@@ -390,7 +390,7 @@ def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi
                 "extension": "82",
                 "phoneNumber": "1085092507",
                 "name": "KOR HANVIET AIR",
-                "email": "hanvietair247@gmail.com"
+                "email": "hanvietair.service@gmail.com"
             }
         },
         "departureAirportCode": sanbaydi,
@@ -480,6 +480,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
