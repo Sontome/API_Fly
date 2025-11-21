@@ -103,7 +103,8 @@ def format_flight_data(data):
             "phonenumber": p.get("phonenumber", ""),
             "email": p.get("email", ""),
             "child" : p.get("child", ""),
-            "infant" : p.get("infant", "")
+            "infant" : p.get("infant", ""),
+            "gender" : p.get("gender", "")
         })
     for a in listthongtinchuyenbay:
         raw_loaive = a.get("fareClassDes", "")
@@ -207,6 +208,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
