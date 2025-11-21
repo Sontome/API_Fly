@@ -238,8 +238,12 @@ async def checkpnr_vj(pnr):
     return result
 def format_getDetailByReservationKey(data):
     passportNumber = data.get("passportNumber", "")
-    isoCode= data.get("isoCode", "")
-    return [passportNumber,isoCode]
+    isoCode= data.get("nationCountry", "")
+    if isoCode == "VNM":
+        quoctich= "VN"
+    else : 
+        quoctich= "KR"
+    return [passportNumber,quoctich]
 async def checkvisa_vj(key,keyhanhkhach):
     token = await get_app_access_token_from_state()
     res = await get_visa_vj(token,key,keyhanhkhach)
@@ -260,6 +264,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
