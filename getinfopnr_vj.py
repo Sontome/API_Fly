@@ -115,7 +115,7 @@ async def get_visa_vj(token, key , keyhanhkhach):
         print(f"Lỗi khi gọi API check PNR: {response.status_code}")
         print(response.text)
         return None
-def format_flight_data(data):
+async def format_flight_data(data):
     passengers = data.get("passengers", [])
     key = data.get("key", "")
     hanthanhtoan = data.get("datePayLater", "")
@@ -132,7 +132,7 @@ def format_flight_data(data):
     for p in passengers:
         keyhanhkhach =  p.get("key", "")
         if keyhanhkhach:
-            passportNumber = checkvisa_vj(key,keyhanhkhach)
+            passportNumber = await checkvisa_vj(key,keyhanhkhach)
         passenger_list.append({
             "lastName": p.get("lastName", ""),
             "firstName": p.get("firstName", ""),
@@ -220,7 +220,7 @@ async def checkpnr_vj(pnr):
     token = await get_app_access_token_from_state()
     res = await get_vietjet_pnr(token,pnr)
     if res:
-        result = format_flight_data(res)
+        result =await format_flight_data(res)
     else :
         token = await get_app_access_token_from_state(vjvnd)
         company_info = await get_company(token,vjvndpy)
@@ -251,7 +251,7 @@ if __name__ == "__main__":
 
     async def main():
         a = await checkpnr_vj(
-            "WKAHFD"
+            "S6P566"
         )
         print(a)
 
