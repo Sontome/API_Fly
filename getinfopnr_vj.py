@@ -82,6 +82,39 @@ async def get_vietjet_pnr(token, PNR ):
         print(f"Lỗi khi gọi API check PNR: {response.status_code}")
         print(response.text)
         return None
+async def get_visa_vj(token, key , keyhanhkhach):
+    base_url = "https://agentapi.vietjetair.com/api/v14/EditBooking/passenger/getDetailByReservationKey"
+    
+    params = {
+        "reservationKey" : key,
+        "passengerKey" : keyhanhkhach
+
+    }
+    
+
+    headers = {
+        'accept': 'application/json, text/plain, */*',
+        'authorization': f"Bearer {token}",
+        'content-type': 'application/json',
+        'languagecode': 'vi',
+        'platform': '3'
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(base_url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        result = response.json()
+        print(result)
+        if result["resultcode"] == 1 :
+            print(result["data"])
+            return result["data"]
+        else :
+            return None
+    else:
+        print(f"Lỗi khi gọi API check PNR: {response.status_code}")
+        print(response.text)
+        return None
 def format_flight_data(data):
     passengers = data.get("passengers", [])
     key = data.get("key", "")
@@ -97,6 +130,9 @@ def format_flight_data(data):
     i = 1  # đặt ngoài vòng for
     passenger_list = []
     for p in passengers:
+        keyhanhkhach =  p.get("key", "")
+        if keyhanhkhach:
+            passportNumber = checkvisa_vj(key,keyhanhkhach)
         passenger_list.append({
             "lastName": p.get("lastName", ""),
             "firstName": p.get("firstName", ""),
@@ -105,7 +141,8 @@ def format_flight_data(data):
             "child" : p.get("child", ""),
             "infant" : p.get("infant", ""),
             "gender" : p.get("gender", ""),
-            "keyhanhkhach" : p.get("key", "")
+            "keyhanhkhach" : p.get("key", ""),
+            "passportNumber" : passportNumber
         })
     for a in listthongtinchuyenbay:
         raw_loaive = a.get("fareClassDes", "")
@@ -196,23 +233,29 @@ async def checkpnr_vj(pnr):
             return None
     print(result)
     return result
+def format_getDetailByReservationKey(data):
+    passportNumber = data.get("passportNumber", "")
+    return passportNumber
+async def checkvisa_vj(key,keyhanhkhach):
+    token = await get_app_access_token_from_state()
+    res = await get_visa_vj(token,key,keyhanhkhach)
+    if res:
+        result = format_getDetailByReservationKey(res)
+    else : 
+        return None
 
-
+    return result
 
 if __name__ == "__main__":
 
 
     async def main():
         a = await checkpnr_vj(
-            "4FM22V"
+            "WKAHFD"
         )
         print(a)
 
     asyncio.run(main())
-
-
-
-
 
 
 
