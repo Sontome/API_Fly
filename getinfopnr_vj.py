@@ -132,7 +132,9 @@ async def format_flight_data(data):
     for p in passengers:
         keyhanhkhach =  p.get("key", "")
         if keyhanhkhach:
-            passportNumber = await checkvisa_vj(key,keyhanhkhach)
+            passportNumberdata = await checkvisa_vj(key,keyhanhkhach)
+            passportNumber = passportNumberdata[0]
+            quoctich = passportNumberdata[1]
         passenger_list.append({
             "lastName": p.get("lastName", ""),
             "firstName": p.get("firstName", ""),
@@ -142,7 +144,8 @@ async def format_flight_data(data):
             "infant" : p.get("infant", ""),
             "gender" : p.get("gender", ""),
             "keyhanhkhach" : p.get("key", ""),
-            "passportNumber" : passportNumber
+            "passportNumber" : passportNumber,
+            "quoctich" : quoctich
         })
     for a in listthongtinchuyenbay:
         raw_loaive = a.get("fareClassDes", "")
@@ -235,7 +238,8 @@ async def checkpnr_vj(pnr):
     return result
 def format_getDetailByReservationKey(data):
     passportNumber = data.get("passportNumber", "")
-    return passportNumber
+    isoCode= data.get("isoCode", "")
+    return [passportNumber,isoCode]
 async def checkvisa_vj(key,keyhanhkhach):
     token = await get_app_access_token_from_state()
     res = await get_visa_vj(token,key,keyhanhkhach)
@@ -256,6 +260,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
