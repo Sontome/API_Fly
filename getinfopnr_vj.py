@@ -84,7 +84,7 @@ async def get_vietjet_pnr(token, PNR ):
         return None
 def format_flight_data(data):
     passengers = data.get("passengers", [])
-    
+    key = data.get("key", "")
     hanthanhtoan = data.get("datePayLater", "")
     paymentstatus = data.get("paymentstatus", "")
     tongbillgiagoc = data.get("totalamount", "")
@@ -163,7 +163,7 @@ def format_flight_data(data):
         "tongbillgiagoc": tongbillgiagoc,
         "currency" : currency,
         "paymentstatus": paymentstatus,
-        
+        "key": key,
         "hanthanhtoan": hanthanhtoan,
         "chieudi": result.get("1"),
         "chieuve": result.get("2",{}),
@@ -208,6 +208,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
