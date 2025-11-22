@@ -27,7 +27,7 @@ def login_and_save(page, context):
     print("🔐 Đang login...")
     page.goto("https://www.accounts.amadeus.com/LoginService/authorizeAngular?service=ARD_VN_DC&client_id=1ASIXARDVNDC&LANGUAGE=GB&redirect_uri=https%3A%2F%2Ftc345.resdesktop.altea.amadeus.com%2Fapp_ard%2Fapf%2Finit%2Flogin%3FSITE%3DAVNPAIDL%26LANGUAGE%3DGB%26MARKETS%3DARDW_PROD_WBP%26ACTION%3DclpLogin#/login")
 
-    page.fill('input[id="userAliasInput"]', "SEL28AA9")
+    page.fill('input[id="userAliasInput"]', "SEL28AA8")
     page.press('input[id="userAliasInput"]', "Enter")
     time.sleep(1)
 
@@ -71,4 +71,5 @@ with sync_playwright() as p:
         login_and_save(page, context)
     else:
         print("✅ Dùng lại cookie thành công!")
+
 
