@@ -988,7 +988,9 @@ def parse_pnr(text,pnr):
 
     # ======== BẮT CHẶNG BAY ========
     flight_pattern = re.compile(
-        r"VN\s*(\d+)\s+([A-Z])\s+(\d{2}[A-Z]{3})\s+\d+\s+([A-Z]{3})([A-Z]{3})\s+([A-Z]{2}\d+)\s+(\d{4})\s+(\d{4})\s+(\d{2}[A-Z]{3})"
+        r"VN\s*(\d+)\s+([A-Z])\s+(\d{2}[A-Z]{3})\s+\d+"
+        r"\s+(?:\d*\*?)?([A-Z]{3})([A-Z]{3})\s+([A-Z]{2}\d+)"
+        r"\s+(\d{4})\s+(\d{4})\s+(\d{2}[A-Z]{3})"
     )
     chang_so = 1
     current_year = datetime.now().year
@@ -1266,6 +1268,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
