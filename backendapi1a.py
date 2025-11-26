@@ -967,6 +967,7 @@ async def beginRepricePNR(pnr):
 
 
 def parse_pnr(text,pnr):
+    text=text.replace("*", " ")
     data = {"pnr": pnr,"chang": [], "passengers": [], "paymentstatus": False,"tongbillgiagoc":0,"doituong":"ADT"}
 
     # ======== CHECK THANH TOÁN ========
@@ -1268,6 +1269,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
