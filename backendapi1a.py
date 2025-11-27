@@ -856,7 +856,7 @@ async def repricePNR(pnr, doituong):
                
             
                 pax_type_suffix = ""
-                if "(CHD/" in pax_info:
+                if "(CHD" in pax_info:
                     pax_type_suffix = "-CH"
                     if pax_doituong == "STU":
                         pax_doituong = "VFR"
@@ -1270,6 +1270,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
