@@ -1150,7 +1150,8 @@ def parse_price(text):
         return result
 
     # ======== CASE 2: Không có GRAND TOTAL ========
-    price_matches = re.findall(r"KRW\s+([\d,]+)\s+BT\/", text)
+    #price_matches = re.findall(r"KRW\s+([\d,]+)\s+BT\/", text)
+    price_matches = re.findall(r"KRW\s+([\d,]+)", text)
     if price_matches:
         total_sum = sum(int(p.replace(",", "")) for p in price_matches)
         result["total"] = total_sum
@@ -1269,6 +1270,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
