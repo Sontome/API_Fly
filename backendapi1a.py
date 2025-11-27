@@ -247,8 +247,10 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
 
             # --- Nếu có INFANT ---
             if has_infant:
+                
                 print("Check list giá vé INF")
                 try:
+                    list_inf = res.json()
                     cmd_inf = get_cheapest_fxt_command(list_inf)
                     print(cmd_inf)
                     ssid, res = await send_command(client, cmd_inf, "giuvelive")
@@ -1270,6 +1272,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
