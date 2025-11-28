@@ -978,16 +978,33 @@ def parse_pnr(text,pnr):
 
     # ======== BẮT HÀNH KHÁCH ========
     passenger_pattern = re.compile(
-        r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\(([A-Z]+)\))?(?:\([A-Z\/\s\d]+\))?(?=\s+\d+\.|\n|$)"
+        r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\(([A-Z]+)\))?(?:\((INF[A-Z\/\s]+)\))?(?=\s+\d+\.|\n|$)"
     )
 
     for match in passenger_pattern.finditer(text):
-        last, first, type_ = match.group(2), match.group(3).strip(), match.group(4) or ""
-        data["passengers"].append({
+        last = match.group(2)
+        first = match.group(3).strip()
+        type_ = match.group(4) or ""
+
+        inf_raw = match.group(5)  # nguyên đoạn kiểu INFTRINH/VU MISS
+
+        passenger = {
             "lastName": last,
             "firstName": first,
             "loaikhach": type_
-        })
+        }
+
+        # ======== CHECK NẾU CÓ INF ========
+        if inf_raw:
+            inf_raw = inf_raw.replace("INF", "", 1).strip()
+            if "/" in inf_raw:
+                inf_last, inf_first = inf_raw.split("/", 1)
+                passenger["inf"] = {
+                    "lastName": inf_last.strip(),
+                    "firstName": inf_first.strip()
+                }
+
+        data["passengers"].append(passenger)
 
     # ======== BẮT CHẶNG BAY ========
     flight_pattern = re.compile(
@@ -1272,6 +1289,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
