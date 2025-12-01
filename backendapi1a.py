@@ -1154,7 +1154,8 @@ def parse_price(text):
         "total": 0,
         "priceperone": False,
         "doituong":"ADT",
-        "tqtnumber":"0"
+        "tqtnumber":"0",
+        "max":0
     }
     if "KRH" in text:
         result["doituong"] = "STU"
@@ -1175,6 +1176,7 @@ def parse_price(text):
         total_sum = sum(int(p.replace(",", "")) for p in price_matches)
         result["total"] = total_sum
         result["priceperone"] = False
+        result["max"] = max(int(p.replace(",", "")) for p in price_matches) if price_matches else 0
         # ======== Lấy số đầu tiên của dòng thứ 2 ========
         lines = text.strip().splitlines()
         if len(lines) >= 2:
@@ -1220,6 +1222,7 @@ async def checkmatvechoVNA(code,ssid=None):
                     rt_respone["giavegoc"] = int(tqt["total"])
                     rt_respone["tongbillgiagoc"] = int(tqt["total"])*len(rt_respone["passengers"])
                 else :
+                    rt_respone["giavegoc"] = int(tqt["max"])
                     ssid, res_fare_raw = await send_command(client, "TQT/T"+tqt["tqtnumber"], ssid)
                     res_fare = res_fare_raw.json()["model"]["output"]["crypticResponse"]["response"]
                     vfr_fare = re.search(r"KRE", res_fare)
@@ -1289,6 +1292,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
