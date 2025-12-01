@@ -978,23 +978,32 @@ def parse_pnr(text,pnr):
 
     # ======== BẮT HÀNH KHÁCH ========
     passenger_pattern = re.compile(
-        r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)(?:\(([A-Z]+)\))?(?:\((INF[A-Z\/\s]+)\))?(?=\s+\d+\.|\n|$)"
+        r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)"       # số thứ tự + họ + tên
+        r"(?:\(([A-Z]+(?:\/\d{2}[A-Z]{3}\d{2})?)\))?"  # loại hành khách + ngày sinh nếu có
+        r"(?:\((INF[A-Z\/\s]+)\))?"           # INF nếu có
+        r"(?=\s+\d+\.|\n|$)"
     )
 
     for match in passenger_pattern.finditer(text):
         last = match.group(2)
         first = match.group(3).strip()
-        type_ = match.group(4) or ""
+        type_ = match.group(4) or ""  # ADT, CHD, MSTR
 
-        inf_raw = match.group(5)  # nguyên đoạn kiểu INFTRINH/VU MISS
-
+        inf_raw = match.group(5)
+        if '/' in type_:
+            type_part, bd_raw = type_.split('/', 1)
+            type_ = type_part
+            try:
+                bd = datetime.strptime(bd_raw, "%d%b%y").strftime("%d/%m/%Y")
+            except ValueError:
+                bd = None 
         passenger = {
             "lastName": last,
             "firstName": first,
-            "loaikhach": type_
+            "loaikhach": type_,
+            "ngaysinh": bd
         }
 
-        # ======== CHECK NẾU CÓ INF ========
         if inf_raw:
             inf_raw = inf_raw.replace("INF", "", 1).strip()
             if "/" in inf_raw:
@@ -1292,6 +1301,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
