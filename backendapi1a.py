@@ -988,7 +988,7 @@ def parse_pnr(text,pnr):
         last = match.group(2)
         first = match.group(3).strip()
         type_ = match.group(4) or ""  # ADT, CHD, MSTR
-
+        bd = None
         inf_raw = match.group(5)
         if '/' in type_:
             type_part, bd_raw = type_.split('/', 1)
@@ -1301,6 +1301,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
