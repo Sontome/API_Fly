@@ -970,7 +970,7 @@ async def beginRepricePNR(pnr):
 
 def parse_pnr(text,pnr):
     text=text.replace("*", " ")
-    data = {"pnr": pnr,"chang": [], "passengers": [], "paymentstatus": False,"tongbillgiagoc":0,"doituong":"ADT"}
+    data = {"pnr": pnr,"chang": [], "passengers": [], "paymentstatus": False,"tongbillgiagoc":0,"doituong":"ADT","giavegoc":0}
 
     # ======== CHECK THANH TOÁN ========
     data["status"] = "OK"
@@ -1217,7 +1217,7 @@ async def checkmatvechoVNA(code,ssid=None):
                 
                 rt_respone["doituong"] = tqt["doituong"]
                 if tqt["priceperone"]==True:
-
+                    rt_respone["giavegoc"] = int(tqt["total"])
                     rt_respone["tongbillgiagoc"] = int(tqt["total"])*len(rt_respone["passengers"])
                 else :
                     ssid, res_fare_raw = await send_command(client, "TQT/T"+tqt["tqtnumber"], ssid)
@@ -1289,6 +1289,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
