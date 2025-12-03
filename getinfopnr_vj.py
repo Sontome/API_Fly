@@ -3,6 +3,7 @@ import httpx
 from datetime import datetime
 import asyncio
 import subprocess
+from backend_api_vj_v2 import get_ancillary_options,get_tax
 vjkrw ="state.json"
 vjvnd ="statevnd.json"
 vjkrwpy ="getcokivj.py"
@@ -72,9 +73,9 @@ async def get_vietjet_pnr(token, PNR ):
 
     if response.status_code == 200:
         result = response.json()
-        print(result)
+        #print(result)
         if result["resultcode"] == 1 :
-            print(result["data"])
+            #print(result["data"])
             return result["data"]
         else :
             return None
@@ -105,9 +106,72 @@ async def get_visa_vj(token, key , keyhanhkhach):
 
     if response.status_code == 200:
         result = response.json()
-        print(result)
+        #print(result)
         if result["resultcode"] == 1 :
-            print(result["data"])
+            #print(result["data"])
+            return result["data"]
+        else :
+            return None
+    else:
+        print(f"Lỗi khi gọi API check PNR: {response.status_code}")
+        print(response.text)
+        return None
+def tinh_gia_nguoi_lon(data):
+    ket_qua = 0
+
+    allowed = {"Admin Fee ITL", "Airport Tax ITL","Airport Security", "Fuel Surcharge", "Management Fee ITL"}
+
+    for chieu in data:
+        chieu_index = chieu["index"]
+        nguoi_lon = None   # chỉ lấy 1 thằng
+
+        for pax in chieu["passengers"]:
+            charges = pax["charges"]
+
+            # check người lớn: có Airport Tax ITL
+            is_adt = any(c["chargeDescription"] == "Airport Tax ITL" for c in charges)
+
+            if is_adt:
+                tong_base = sum(
+                    c["baseAmount"]
+                    for c in charges
+                    if c["chargeDescription"] in allowed
+                )
+
+                
+
+                ket_qua += tong_base
+                break   # gặp 1 thằng người lớn rồi thì té luôn
+
+        
+
+    return ket_qua
+async def get_price_goc( key ):
+    token = await get_app_access_token_from_state()
+    base_url = "https://agentapi.vietjetair.com/api/v14/EditBooking/getRevervationPassengerCharges"
+    
+    params = {
+        "reservationKey" : key
+
+    }
+    
+
+    headers = {
+        'accept': 'application/json, text/plain, */*',
+        'authorization': f"Bearer {token}",
+        'content-type': 'application/json',
+        'languagecode': 'vi',
+        'platform': '3'
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(base_url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        result = response.json()
+        #print(result)
+        if result["resultcode"] == 1 :
+            #print(result["data"])
             return result["data"]
         else :
             return None
@@ -116,7 +180,9 @@ async def get_visa_vj(token, key , keyhanhkhach):
         print(response.text)
         return None
 async def format_flight_data(data):
+    token = await get_app_access_token_from_state()
     passengers = data.get("passengers", [])
+    chargeForPassengers = data.get("chargeForPassengers", [])
     key = data.get("key", "")
     hanthanhtoan = data.get("datePayLater", "")
     paymentstatus = data.get("paymentstatus", "")
@@ -124,9 +190,11 @@ async def format_flight_data(data):
     currency = data.get("currency", "").get("code", "")
     pnr = data.get("locator", "")
     listthongtinchuyenbay = data.get("journeys", [])
-   
-    
+    giagocthuephi= await get_price_goc(key)
+    giagocthuephi = tinh_gia_nguoi_lon(giagocthuephi)
+    #print(giagocthuephi)
     result = {}
+    bk_key={"1":"","2":""}
     i = 1  # đặt ngoài vòng for
     passenger_list = []
     for p in passengers:
@@ -148,6 +216,7 @@ async def format_flight_data(data):
             "quoctich" : quoctich
         })
     for a in listthongtinchuyenbay:
+        bk_key[str(i)]= a.get("bookingkey", "")
         raw_loaive = a.get("fareClassDes", "")
         if raw_loaive == "Deluxe1":
             loaive = "DELUXE"
@@ -196,7 +265,24 @@ async def format_flight_data(data):
             "sohieumaybay": segments[0].get("Number", "")
         }
         i += 1
+    giahanhly = get_ancillary_options(token,bk_key["1"],bk_key["2"])
+    #print(giahanhly)
 
+    giacoban = chargeForPassengers[0].get("charges")[0].get("amountfare")
+    if result["1"].get("loaive") == "ECO":
+        giacoban += (giahanhly["chiều_đi"]["HANH_LY_ECO"])
+    else :
+        giacoban += (giahanhly["chiều_đi"]["HANH_LY_DELUXE"])
+    
+    if bk_key["2"]:
+        giacoban += chargeForPassengers[1].get("charges")[0].get("amountfare")
+        if result["2"].get("loaive") == "ECO":
+            giacoban += (giahanhly["chiều_về"]["HANH_LY_ECO"])
+        else :
+            giacoban += (giahanhly["chiều_về"]["HANH_LY_DELUXE"])
+    giacoban +=giagocthuephi
+    giacoban = (int(giacoban) // 100) * 100
+    #print(giacoban)
     res = {
         "pnr": pnr,
         "status": "OK",
@@ -208,7 +294,8 @@ async def format_flight_data(data):
         "hanthanhtoan": hanthanhtoan,
         "chieudi": result.get("1"),
         "chieuve": result.get("2",{}),
-        "passengers": passenger_list
+        "passengers": passenger_list,
+        "giacoban": giacoban
     }
 
     return res
@@ -223,7 +310,9 @@ async def checkpnr_vj(pnr):
     token = await get_app_access_token_from_state()
     res = await get_vietjet_pnr(token,pnr)
     if res:
+
         result =await format_flight_data(res)
+       
     else :
         token = await get_app_access_token_from_state(vjvnd)
         company_info = await get_company(token,vjvndpy)
@@ -234,7 +323,7 @@ async def checkpnr_vj(pnr):
         else :
             print(res)
             return None
-    print(result)
+    #print(result)
     return result
 def format_getDetailByReservationKey(data):
     passportNumber = data.get("passportNumber", "")
@@ -259,12 +348,11 @@ if __name__ == "__main__":
 
     async def main():
         a = await checkpnr_vj(
-            "S6P566"
+            "V7C9EY"
         )
         print(a)
 
     asyncio.run(main())
-
 
 
 
