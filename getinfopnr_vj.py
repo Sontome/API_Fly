@@ -281,6 +281,7 @@ async def format_flight_data(data):
         else :
             giacoban += (giahanhly["chiều_về"]["HANH_LY_DELUXE"])
     giacoban +=giagocthuephi
+    giacoban -= 100
     giacoban = (int(giacoban) // 100) * 100
     #print(giacoban)
     res = {
@@ -353,6 +354,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
