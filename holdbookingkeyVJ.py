@@ -443,11 +443,13 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
     result = create_booking(payload,token)
     #print(result)
     mess = result["message"]
+    
     try:
         mã_giữ_vé = result["data"]["locator"]
         hạn_thanh_toán = result["data"]["datePayLater"]
         print(mã_giữ_vé)
         print(hạn_thanh_toán)
+        mess = "Giữ vé VJ thành công! PNR: " + mã_giữ_vé
         try:
             asyncio.run(send_mess(mess))
         except :
@@ -480,6 +482,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
