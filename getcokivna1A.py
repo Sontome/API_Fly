@@ -31,7 +31,7 @@ def login_and_save(page, context):
     page.press('input[id="userAliasInput"]', "Enter")
     time.sleep(1)
 
-    page.fill('input[id="passwordInput"]', "Bkdfasdv@203414")
+    page.fill('input[id="passwordInput"]', "Bkdfasdv@203414@@")
     page.press('input[id="passwordInput"]', "Enter")
     time.sleep(3)
 
@@ -71,6 +71,7 @@ with sync_playwright() as p:
         login_and_save(page, context)
     else:
         print("✅ Dùng lại cookie thành công!")
+
 
 
 
