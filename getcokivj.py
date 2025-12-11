@@ -6,8 +6,8 @@ import shutil
 
 STATE_FILE = "state.json"
 LOGIN_URL = "https://agents2.vietjetair.com/login"
-USERNAME = "KR000242A47CY4"
-PASSWORD = "Bkdfasdv@203414"
+USERNAME = "KR000242A3D7BF"
+PASSWORD = "Glvav@31431564870@"
 
 # Thời hạn chờ (ms)
 SHORT_TIMEOUT = 10_000
@@ -166,4 +166,5 @@ with sync_playwright() as p:
         pass
 
     print("🏁 Xong lượt chạy.")
+
 
