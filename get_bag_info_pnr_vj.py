@@ -112,27 +112,30 @@ def get_vietjet_bag(token, reservationKey):
 def format_vj_data(data):
     result = []
     for item in data:
-        chieu = f"{item['departureAirport']}-{item['arrivalAirport']}"
-        passenger_list = []
-        for p in item['passengers']:
-            ten = f"{p['passengerLastName']}, {p['passengerFirstName']}"
-            bag_list = []
-            for charge in p.get('charges', []):
-                desc = charge['chargeDescription']
-                if ("Bag" in desc or "Deluxe" in desc) and "kgs" in desc.lower():
-                    if "Bag" in desc:
-                        bag_list.append(desc.split('Bag')[-1].strip())
-                    elif "Deluxe" in desc:
-                        bag_list.append(desc.split('Deluxe')[-1].strip())
-            bag_info = "+".join(bag_list) if bag_list else None
-            passenger_list.append({
-                "tên": ten,
-                "Bag": bag_info
+        try:
+            chieu = f"{item['departureAirport']}-{item['arrivalAirport']}"
+            passenger_list = []
+            for p in item['passengers']:
+                ten = f"{p['passengerLastName']}, {p['passengerFirstName']}"
+                bag_list = []
+                for charge in p.get('charges', []):
+                    desc = charge['chargeDescription']
+                    if ("Bag" in desc or "Deluxe" in desc) and "kgs" in desc.lower():
+                        if "Bag" in desc:
+                            bag_list.append(desc.split('Bag')[-1].strip())
+                        elif "Deluxe" in desc:
+                            bag_list.append(desc.split('Deluxe')[-1].strip())
+                bag_info = "+".join(bag_list) if bag_list else None
+                passenger_list.append({
+                    "tên": ten,
+                    "Bag": bag_info
+                })
+            result.append({
+                "chiều": chieu,
+                "passengers": passenger_list
             })
-        result.append({
-            "chiều": chieu,
-            "passengers": passenger_list
-        })
+        except:
+            pass
     return result
 
 def get_bag_info_vj(pnr):
@@ -160,6 +163,7 @@ def get_bag_info_vj(pnr):
 
     #print(result)
     return result
+
 
 
 
