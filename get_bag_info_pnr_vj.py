@@ -113,27 +113,47 @@ def format_vj_data(data):
     result = []
     for item in data:
         try:
+            # --- CHECK SKIP ---
+            # Nếu bất kỳ passenger nào có chargeDescription chứa "Cancellation Charge"
+            skip = False
+            for p in item.get('passengers', []):
+                for charge in p.get('charges', []):
+                    desc = charge.get('chargeDescription', '')
+                    if "Cancellation Charge" in desc:
+                        skip = True
+                        break
+                if skip:
+                    break
+            if skip:
+                continue  # bỏ qua nguyên vòng luôn
+            
+            # --- XỬ LÝ BÌNH THƯỜNG ---
             chieu = f"{item['departureAirport']}-{item['arrivalAirport']}"
             passenger_list = []
+
             for p in item['passengers']:
                 ten = f"{p['passengerLastName']}, {p['passengerFirstName']}"
                 bag_list = []
+
                 for charge in p.get('charges', []):
-                    desc = charge['chargeDescription']
+                    desc = charge.get('chargeDescription', '')
                     if ("Bag" in desc or "Deluxe" in desc) and "kgs" in desc.lower():
                         if "Bag" in desc:
                             bag_list.append(desc.split('Bag')[-1].strip())
                         elif "Deluxe" in desc:
                             bag_list.append(desc.split('Deluxe')[-1].strip())
+
                 bag_info = "+".join(bag_list) if bag_list else None
                 passenger_list.append({
                     "tên": ten,
                     "Bag": bag_info
                 })
+
             result.append({
                 "chiều": chieu,
                 "passengers": passenger_list
             })
+
         except:
             pass
     return result
@@ -163,6 +183,7 @@ def get_bag_info_vj(pnr):
 
     #print(result)
     return result
+
 
 
 
