@@ -284,6 +284,22 @@ async def format_flight_data(data):
     giacoban -= 100
     giacoban = (int(giacoban) // 100) * 100
     #print(giacoban)
+    listchieu = []
+    
+    i = 1
+    while True:
+        seg = result.get(str(i))
+        if not seg:
+            break
+        listchieu.append(seg)
+        i += 1
+    
+    # lọc bỏ segment nào có loaive = ""
+    listchieu = [s for s in listchieu if s.get("loaive", "") != ""]
+    
+    # gán lại chieudi - chieuve sau khi lọc
+    chieudi = listchieu[0] if len(listchieu) >= 1 else {}
+    chieuve = listchieu[1] if len(listchieu) >= 2 else {}
     res = {
         "pnr": pnr,
         "status": "OK",
@@ -293,8 +309,8 @@ async def format_flight_data(data):
         "paymentstatus": paymentstatus,
         "key": key,
         "hanthanhtoan": hanthanhtoan,
-        "chieudi": result.get("1"),
-        "chieuve": result.get("2",{}),
+        "chieudi": chieudi,
+        "chieuve": chieuve,
         "passengers": passenger_list,
         "giacoban": giacoban
     }
@@ -354,6 +370,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
