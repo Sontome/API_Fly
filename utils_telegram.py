@@ -3,7 +3,7 @@ import json
 import os
 
 # 👉 Thêm token và chat_id vào config, hoặc gán trực tiếp luôn
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "7359295123:AAGz0rHge3L5gM-XJmyzNq6sayULdHO4-qE")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "7843918695:AAGnIVDjJV52Citq0mn8zOQ0_Wr0MmD45qA")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-1002520783135")
 
 
@@ -22,3 +22,4 @@ async def send_mess(message: str):
                 print(f"❌ Lỗi gửi tin nhắn: {res.text}")
     except Exception as e:
         print(f"💥 Lỗi gửi message Telegram: {e}")
+
