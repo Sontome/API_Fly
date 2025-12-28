@@ -9,6 +9,7 @@ from utils_telegram import send_mess
 from datetime import datetime,timedelta
 from createNewSession import createNewSession
 from itertools import zip_longest
+
 EMAIL_RE = re.compile(r'([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})', re.I)
 
 # ================== SESSION HANDLER ==================
@@ -26,6 +27,19 @@ AIRPORT_TZ = {
     "PQC": 7,
     # nếu cần thì bổ sung thêm
 }
+def normalize_phone(phone: str | None):
+    if not phone:
+        return None
+
+    phone = phone.strip()
+
+    # Nếu là +84xxxx hoặc +82xxxx mà chưa có dấu cách
+    if phone.startswith("+84") and not phone.startswith("+84 "):
+        phone = "+84 " + phone[3:]
+    elif phone.startswith("+82") and not phone.startswith("+82 "):
+        phone = "+82 " + phone[3:]
+
+    return phone
 def get_payment_status(pnr_text: str) -> str:
     if not pnr_text:
         return "không xác định"
@@ -266,6 +280,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
             cmds = []
 
             if email is not None and phone is not None:
+                phone = normalize_phone(phone)
                 cmds = [
                     f"APE-{email}",
                     f"APE-{email}/p1",
@@ -1331,6 +1346,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
