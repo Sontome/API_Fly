@@ -1150,7 +1150,9 @@ async def giuveVNAlive(
     deptime: str = Query(..., description="Giờ đi, ví dụ: 1035"),
     arrdate: Optional[str] = Query(None, description="Ngày đến (nếu có)"),
     arrtime: Optional[str] = Query(None, description="Giờ đến (nếu có)"),
-    doituong: str = Query("VFR", description="Đối tượng giá, ví dụ: ADT/STU/VFR")
+    doituong: str = Query("VFR", description="Đối tượng giá, ví dụ: ADT/STU/VFR"),
+    email: Optional[str] = Query(None, description="email F2 (nếu có)"),
+    phone: Optional[str] = Query(None, description="phone F2 (nếu có)")
     
     
 ):
@@ -1162,7 +1164,11 @@ async def giuveVNAlive(
             deptime=deptime,
             arrdate=arrdate,
             arrtime=arrtime,
-            doituong=doituong)
+            doituong=doituong,
+            email = email,
+            phone= phone
+            )
+            
         
         return result
     except Exception as e:
@@ -1194,6 +1200,7 @@ async def huyve_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
