@@ -200,7 +200,7 @@ def build_pricing_command(hanhkhach, list_cmd, doituong):
     if has_infant and doituong=="VFR":
         list_cmd.append("FXP/INF/RVFR-INF,U")
     return list_cmd, has_infant
-async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR"):
+async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR",email=None, phone= None):
     cmd_AN = build_an_command(dep, arr, depdate, deptime, arrdate, arrtime)
     print("Lệnh AN:", cmd_AN)
 
@@ -263,7 +263,37 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                     print("Không có yêu cầu chọn chuyến của INF:", e)
 
             # --- Gửi chuỗi lệnh chốt vé ---
-            for cmd in ["APE-hanvietair.service@gmail.com","APE-hanvietair.service@gmail.com/p1","APE-HANVIETAIR247@gmail.com/p1","APM-+82 1035463396","APM-+82 1035463396/p1","APM-+82 1021511790/p1","APN-E+HANVIETAIR.SERVICE@GMAIL.COM/VI/p1","APN-M+82 1035463396/KR/P1","TK OK", "RF HVA", "ER", "IG"]:
+            cmds = []
+
+            if email is not None and phone is not None:
+                cmds = [
+                    f"APE-{email}",
+                    f"APE-{email}/p1",
+                    f"APM-{phone}",
+                    f"APM-{phone}/p1",
+                    f"APN-E+{email}/VI/p1",
+                    "TK OK",
+                    "RF HVA",
+                    "ER",
+                    "IG"
+                ]
+            else:
+                cmds = [
+                    "APE-hanvietair.service@gmail.com",
+                    "APE-hanvietair.service@gmail.com/p1",
+                    "APE-HANVIETAIR247@gmail.com/p1",
+                    "APM-+82 1035463396",
+                    "APM-+82 1035463396/p1",
+                    "APM-+82 1021511790/p1",
+                    "APN-E+HANVIETAIR.SERVICE@GMAIL.COM/VI/p1",
+                    "APN-M+82 1035463396/KR/P1",
+                    "TK OK",
+                    "RF HVA",
+                    "ER",
+                    "IG"
+                ]
+            
+            for cmd in cmds:
                 print(f"✈️ Gửi {cmd}")
                 ssid, res = await send_command(client, cmd, "giuvelive")
                 responses.append({
@@ -1301,6 +1331,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
