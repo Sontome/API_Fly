@@ -284,9 +284,11 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 cmds = [
                     f"APE-{email}",
                     f"APE-{email}/p1",
+                    "APE-no.reply.vna.tkt@gmail.com/p1",
                     f"APM-{phone}",
                     f"APM-{phone}/p1",
                     f"APN-E+{email}/VI/p1",
+                    
                     "TK OK",
                     "RF HVA",
                     "ER",
@@ -1346,6 +1348,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
