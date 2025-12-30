@@ -8,7 +8,13 @@ FILES_DIR = "/var/www/files"
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 #FONT_ARIAL = "C:\\Windows\\Fonts\\arial.ttf"
 NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
- 
+NOTE_LINES = [
+    "• Lưu ý:",
+    "• Quý khách khi bay cần mang theo Hộ chiếu (còn hạn trên 6 tháng, tính từ ngày bay),",
+    "  Chứng minh thư, thẻ sinh viên (nếu cần), Visa còn hạn.",
+    "• Xác nhận lại số kiện hành lý, số kg hành lý mỗi chặng trên mặt vé.",
+    "• Có mặt tại sân bay ít nhất 2–3 tiếng trước giờ khởi hành."
+] 
 START_PHRASE = "Nơi xuất vé:"
 END_PHRASE = "Ngày:"
 def replace_text_between_phrases(pdf_path,output_path,
@@ -251,15 +257,36 @@ def replace_text_between_phrases(pdf_path,output_path,
             rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
             page.add_redact_annot(rect_del)
             page.apply_redactions()
-            # Thêm note_str
-            page.insert_text(
-                (rect.x0, rect.y1 + 20),
-                #note_str,
-                "",
-                fontsize=fs*1.7,
-                fill=(1, 0, 0),
-                render_mode=0
+            # Vị trí box note
+            line_height = fs * 1.6     # 👉 GIÃN DÒNG Ở ĐÂY
+            padding = 12
+
+            box_height = line_height * len(NOTE_LINES) + padding * 2
+
+            note_rect = fitz.Rect(
+                rect.x0,
+                rect.y1 + 10,
+                page.rect.x1 - 20,
+                rect.y1 + 10 + box_height
             )
+
+            page.draw_rect(
+                note_rect,
+                color=(0/255, 53/255, 67/255),
+                width=1.5
+            )
+            y = note_rect.y0 + padding + fs
+
+            for line in NOTE_LINES:
+                page.insert_text(
+                    (note_rect.x0 + padding, y),
+                    line,
+                    fontsize=fs * 1.3,
+                    fontfile=FONT_ARIAL,
+                    fontname= "arial",
+                    color=(0/255, 53/255, 67/255)
+                )
+                y += line_height
 
     # ===== REPLACE TEXT CHÍNH =====
     blocks = page.get_text("blocks")
@@ -375,7 +402,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 
-#reformat_VNA_VN("input1.pdf","output.pdf",type=0)
+#reformat_VNA_VN("pdf2.pdf","output.pdf",type=0)
 
 
 
