@@ -363,12 +363,12 @@ def extract_first_page(input_pdf, prnpax, type=0):
     doc = fitz.open(input_pdf)
     new_doc = fitz.open()
 
-    if type == 0:
-        # Page 0 là trang 1
-        new_doc.insert_pdf(doc, from_page=0, to_page=0, links=True)
-    else:
+    if type in (1, 2):
         # Lấy toàn bộ các trang
-        new_doc.insert_pdf(doc, from_page=0, to_page=len(doc)-1, links=True)
+        new_doc.insert_pdf(doc, from_page=0, to_page=len(doc) - 1, links=True)
+    else:
+        # type == 0 hoặc 3 → chỉ lấy trang 1
+        new_doc.insert_pdf(doc, from_page=0, to_page=0, links=True)
 
     doc.close()
     new_doc.save(input_pdf)
@@ -403,6 +403,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf2.pdf","output.pdf",type=0)
+
 
 
 
