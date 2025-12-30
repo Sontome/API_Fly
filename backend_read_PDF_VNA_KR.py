@@ -7,12 +7,12 @@ FILES_DIR = "/var/www/files"
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
 NOTE_LINES = [
-    "• Lưu ý:",
-    "• Quý khách khi bay cần mang theo Hộ chiếu (còn hạn trên 6 tháng, tính từ ngày bay),",
-    "  Chứng minh thư, thẻ sinh viên (nếu cần), Visa còn hạn.",
-    "• Xác nhận lại số kiện hành lý, số kg hành lý mỗi chặng trên mặt vé.",
-    "• Có mặt tại sân bay ít nhất 2–3 tiếng trước giờ khởi hành."
-]  
+    "• Note:",
+    "• Passengers are required to carry a valid passport (with at least 6 months validity from the date of travel),",
+    "  Identity card, student card (if applicable), and a valid visa.",
+    "• Please recheck the number of baggage pieces and baggage weight for each flight segment as shown on the ticket.",
+    "• Passengers must arrive at the airport at least 2–3 hours prior to departure time."
+] 
 START_PHRASE = "발행점소:"
 END_PHRASE = "출발일자:"
 def replace_text_between_phrases(pdf_path,output_path,
@@ -391,6 +391,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
