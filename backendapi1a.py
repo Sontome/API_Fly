@@ -1213,9 +1213,11 @@ def parse_price(text):
         "tqtnumber":"0",
         "max":0
     }
-    if "KRH" in text:
+    text_upper = text.upper()
+
+    if  "RSTU" in text_upper:
         result["doituong"] = "STU"
-    elif "KRE" in text:
+    elif "2PC" in text_upper:
         result["doituong"] = "VFR"
     # ======== CASE 1: Có GRAND TOTAL KRW ========
     grand_total_match = re.search(r"\nGRAND TOTAL KRW\s+([\d,]+)", text)
@@ -1348,6 +1350,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
