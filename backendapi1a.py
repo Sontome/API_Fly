@@ -1283,11 +1283,11 @@ async def checkmatvechoVNA(code,ssid=None):
                     res_fare = res_fare_raw.json()["model"]["output"]["crypticResponse"]["response"]
                     vfr_fare = re.search(r"KRE", res_fare)
                     stu_fare = re.search(r"KRH", res_fare)
-                    
+                    rstu_fare = re.search(r"RSTU", res_fare)
                     rt_respone["tongbillgiagoc"] = int(tqt["total"])
                     if vfr_fare :
                         rt_respone["doituong"] = "VFR"
-                    if stu_fare :
+                    if stu_fare and rstu_fare :
                         rt_respone["doituong"] = "STU"
 
             except:
@@ -1348,6 +1348,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
