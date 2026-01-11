@@ -5,6 +5,7 @@ import asyncio
 import subprocess
 import sys
 import time
+
 from attr import dataclass
 def log_step(name, start_time):
     end = time.perf_counter()
@@ -465,7 +466,7 @@ async def api_checkve_vna_v3(trip:str="RT",
             t2 = log_step("getflights VNA bay thẳng", t2) 
                
             print("🔀 Bay thẳng:", flightsVNA_baythang["TOTALFARES"])
-            resultfull.append(prase_flights(
+            resultfull.extend(prase_flights(
                 data=flightsVNA_baythang["FARES"],
                 trip=trip
             ))
@@ -482,7 +483,7 @@ async def api_checkve_vna_v3(trip:str="RT",
             activedVia="1")
             t3 = log_step("getflights VNA nối chuyến", t3)
             print("🔀 Nối chuyến:", flightsVNA_noichuyen["TOTALFARES"])
-            resultfull.append(prase_flights(
+            resultfull.extend(prase_flights(
                 data=flightsVNA_noichuyen["FARES"],
                 trip=trip
             ))
@@ -507,19 +508,25 @@ async def api_checkve_vna_v3(trip:str="RT",
                 )
 
                 log_step("parse_flights", t5)
-                resultfull.append(prase_flights(
+                resultfull.extend(prase_flights(
                     data=flightsfull_noichuyen["FARES"],
                     trip=trip
                 ))
         log_step("TỔNG THỜI GIAN MAIN", t0)
         if sskey and resultfull :
+            data_sorted = sorted(
+                resultfull,
+                key=lambda x: int(x["thông_tin_chung"]["giá_vé"])
+            )
+            print(len(resultfull))
+            
             return {
             "status_code": 200,
             "trang": "1",
             "tổng_trang": "1",
             "session_key" : sskey,
             "activedVia" : "0,1",
-            "body" : resultfull
+            "body" : data_sorted
             }
         return {
             "status_code": 200,
@@ -529,11 +536,3 @@ async def api_checkve_vna_v3(trip:str="RT",
             "activedVia" : "0,1",
             "body" : "null"
             }
-a = asyncio.run(api_checkve_vna_v3(trip="OW",
-            dep0="ICN",
-            dep1="HAN",
-            depdate0="2026-01-16",
-            depdate1="2026-01-19",
-            activedCar="",
-            activedVia="0,1"))
-print(a)
