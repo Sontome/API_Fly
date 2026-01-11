@@ -28,7 +28,7 @@ from backend_api_vj_v2 import api_vj_rt_v2
 from getinfopnr_vj import checkpnr_vj
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
-from backend_api_vna_v3 import api_checkve_vna_v3
+
 from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
 from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
@@ -51,15 +51,7 @@ TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
-class VnaCheckveRequest_V3(BaseModel):
-    dep0: str ="ICN"
-    arr0: str ="HAN"
-    depdate0: str = tomorrow
-    depdate1: Optional[str] = day_after
-    activedVia: str = "0,1"
-    activedCar:str = ""
-    
-    sochieu: str = "RT"
+
     
 class CodeRequest(BaseModel):
     code: List[str]
@@ -1212,6 +1204,7 @@ async def huyve_VNA(
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
