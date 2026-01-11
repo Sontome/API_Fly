@@ -1216,48 +1216,8 @@ async def huyve_VNA(
 
 
 
-@app.post("/vna/check-ve-v3")
-async def VNA_V3(request: VnaCheckveRequest_V3):
-    try:
-        depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
 
-    if request.sochieu.upper() == "RT":
-        if not request.depdate1:
-            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
-        try:
-            depdate1_dt = datetime.strptime(request.depdate1, "%Y-%m-%d")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
 
-        if depdate1_dt < depdate0_dt:
-            raise HTTPException(
-                status_code=400,
-                detail="Ngày về phải sau hoặc bằng ngày đi "
-            )
-
-    try:
-        
-        result = await api_checkve_vna_v3(
-            dep0=request.dep0,
-            dep1=request.arr0,
-            depdate0=request.depdate0,
-            depdate1=request.depdate1,
-            activedVia=request.activedVia,
-            
-            trip=request.sochieu,
-            activedCar=request.activedCar
-        )
-        
-
-        if result:
-            return result
-        else:
-            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
-
-    except Exception as e:
-        return {"status_code": 401, "body": str(e)}
 
 
 
