@@ -44,6 +44,7 @@ import shutil
 from fastapi.concurrency import run_in_threadpool
 from typing import List
 from ocr_gemini import ocr_then_parse
+from backend_api_vna_v3 import api_checkve_vna_v3
 
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://thuhongtour.com"
@@ -52,7 +53,15 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 
+class VnaCheckveRequest_V3(BaseModel):
+    dep0: str ="ICN"
+    arr0: str ="HAN"
+    depdate0: str = tomorrow
+    depdate1: Optional[str] = day_after
+    activedVia: str = "0,1"
+    activedCar:str = ""
     
+    sochieu: str = "RT"    
 class CodeRequest(BaseModel):
     code: List[str]
     ssid: str
@@ -1204,6 +1213,48 @@ async def huyve_VNA(
         return result
     except Exception as e:
         return (str(e))
+@app.post("/vna/check-ve-v3")
+async def VNA_V3(request: VnaCheckveRequest_V3):
+    try:
+        depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
+
+    if request.sochieu.upper() == "RT":
+        if not request.depdate1:
+            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
+        try:
+            depdate1_dt = datetime.strptime(request.depdate1, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
+
+        if depdate1_dt < depdate0_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày về phải sau hoặc bằng ngày đi "
+            )
+
+    try:
+        
+        result = await api_checkve_vna_v3(
+            dep0=request.dep0,
+            dep1=request.arr0,
+            depdate0=request.depdate0,
+            depdate1=request.depdate1,
+            activedVia=request.activedVia,
+            
+            trip=request.sochieu,
+            activedCar=request.activedCar
+        )
+        
+
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+
+    except Exception as e:
+        return {"status_code": 401, "body": str(e)}
 
 
 
