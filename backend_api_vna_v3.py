@@ -493,7 +493,7 @@ async def api_checkve_vna_v3(trip:str="RT",
                 full_list=ca["fulllist"],
                 trip=trip,
                 session_key=sskey,
-                activedCar="KE,OZ,TW,7C",
+                activedCar="BX,7C,YP,LJ,TW,KE,OZ,RS",
                 dep0=dep0,
                 dep1=dep1,
                 depdate0=depdate_0,
@@ -536,3 +536,4 @@ async def api_checkve_vna_v3(trip:str="RT",
             "activedVia" : "0,1",
             "body" : "null"
             }
+
