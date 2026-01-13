@@ -454,10 +454,7 @@ def extract_first_page(input_pdf, prnpax, type=0):
     """Lấy page 1 hoặc full PDF tùy theo type, giữ nguyên hyperlink."""
     doc = fitz.open(input_pdf)
     new_doc = fitz.open()
-    if type == 3:
-        # Page 0 là trang 1
-        new_doc.insert_pdf(doc, from_page=0, to_page=0, links=True)
-    if type == 0:
+    if type == 0 or type == 3:
         # Page 0 là trang 1
         new_doc.insert_pdf(doc, from_page=0, to_page=0, links=True)
     else:
@@ -498,6 +495,7 @@ def reformat_VNA_KR(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
