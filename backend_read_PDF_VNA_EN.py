@@ -6,14 +6,19 @@ import os
 import shutil
 FILES_DIR = "/var/www/files"
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+QR_IMAGE_PATH = "qrhva.jpg"
+#FONT_ARIAL = "C:\\Windows\\Fonts\\arial.ttf"
 NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
+XANHSM_BANNER = "BAY CHUẨN "
 NOTE_LINES = [
-    "• Note:",
-    "• Passengers are required to carry a valid passport (with at least 6 months validity from the date of travel),",
-    "  Identity card, student card (if applicable), and a valid visa.",
-    "• Please recheck the number of baggage pieces and baggage weight for each flight segment as shown on the ticket.",
-    "• Passengers must arrive at the airport at least 2–3 hours prior to departure time."
+    "• Lưu ý:",
+    "• Quý khách khi bay cần mang theo Hộ chiếu (còn hạn trên 6 tháng, tính từ ngày bay),",
+    "  Chứng minh thư, thẻ sinh viên (nếu cần), Visa còn hạn.",
+    "• Xác nhận lại số kiện hành lý, số kg hành lý mỗi chặng trên mặt vé.",
+    "• Có mặt tại sân bay ít nhất 2–3 tiếng trước giờ khởi hành."
 ] 
+NOTE_LINES_XANHSM = ["Quý khách vui lòng kiểm tra thông tin hành trình.",
+        "For a seamless journey, please check information about your itinerary."] 
 START_PHRASE = "Issuing office:"
 END_PHRASE = "Date:"
 def replace_text_between_phrases(pdf_path,output_path,
@@ -234,16 +239,44 @@ def replace_text_between_phrases(pdf_path,output_path,
                 fill=(1, 0, 0),
                 render_mode=0
             )
+    # ===== THÊM NOTE KHI THẤY DÒNG XANHSM BANNER =====
+    note_text_xanhsm = XANHSM_BANNER
+    search_rects_xanhsm = page.search_for(note_text_xanhsm)
+    
+    for rect in search_rects_xanhsm:
+        # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+        rect_del = fitz.Rect(rect.x0, rect.y0, page.rect.x1, rect.y0+40)
+        page.add_redact_annot(rect_del)
+        page.apply_redactions()
+        # Vị trí box note
+        line_height = fs * 1.6     # 👉 GIÃN DÒNG Ở ĐÂY
+        padding = 12
+        
+        box_height = line_height * len(NOTE_LINES_XANHSM) + padding * 2
 
+        note_rect = fitz.Rect(
+            rect.x0,
+            rect.y0,
+            page.rect.x1 - 20,
+            rect.y0+30
+        )
+
+        
+        y = note_rect.y0 
+
+        for line in NOTE_LINES_XANHSM:
+            page.insert_text(
+                (note_rect.x0 + padding, y),
+                line,
+                fontsize=fs * 1.3,
+                fontfile=FONT_ARIAL,
+                fontname= "arial",
+                color=(0/255, 0/255, 0/255)
+            )
+            y += line_height+17
     # ===== THÊM NOTE KHI THẤY DÒNG OK/RQ =====
     note_text = "(1)OK = confirmed , RQ/SA = Waitlisted"
     search_rects = page.search_for(note_text)
-    if type==3:
-        for rect in search_rects:
-            # Xóa tất cả dòng phía dưới (về mặt hiển thị)
-            rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
-            page.add_redact_annot(rect_del)
-            page.apply_redactions()                                   
     if type==0:
         for rect in search_rects:
             # Xóa tất cả dòng phía dưới (về mặt hiển thị)
@@ -280,6 +313,65 @@ def replace_text_between_phrases(pdf_path,output_path,
                     color=(0/255, 53/255, 67/255)
                 )
                 y += line_height
+            # ===== THÊM QR + LINK NẾU CÓ B2BAGTHANVIETAIR =====
+            if type == 0 and "B2BAGTHANVIETAIR" in new_text:
+                qr_size = 90
+                qr_x = note_rect.x0 + padding
+                qr_y = y + 10
+
+                link_url = "https://hanvietair.com/vi/plane-booking"
+
+                # ===== QR IMAGE =====
+                page.insert_image(
+                    fitz.Rect(
+                        qr_x,
+                        qr_y,
+                        qr_x + qr_size,
+                        qr_y + qr_size
+                    ),
+                    filename=QR_IMAGE_PATH
+                )
+
+                # ===== TEXT LINK =====
+                text_x = qr_x + qr_size + 12
+                text_y = qr_y + 15
+
+                title_text = "Xem ưu đãi vé máy bay chặng Hàn-Việt tại đây"
+                link_text = link_url
+
+                page.insert_text(
+                    (text_x, text_y),
+                    title_text,
+                    fontsize=fs * 1.2,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 0)
+                )
+
+                page.insert_text(
+                    (text_x, text_y + 16),
+                    link_text,
+                    fontsize=fs,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 1)
+                )
+
+                # ===== TẠO HYPERLINK =====
+                link_width = fitz.get_text_length(link_text, fontsize=fs)
+
+                link_rect = fitz.Rect(
+                    text_x,
+                    text_y + 16 - fs,
+                    text_x + link_width,
+                    text_y + 16 + 4
+                )
+
+                page.insert_link({
+                    "kind": fitz.LINK_URI,
+                    "from": link_rect,
+                    "uri": link_url
+                })
 
 
     # ===== REPLACE TEXT CHÍNH =====
@@ -357,13 +449,12 @@ def extract_first_page(input_pdf, prnpax, type=0):
     doc = fitz.open(input_pdf)
     new_doc = fitz.open()
 
-    
-    if type in (1, 2):
-        # Lấy toàn bộ các trang
-        new_doc.insert_pdf(doc, from_page=0, to_page=len(doc) - 1, links=True)
-    else:
-        # type == 0 hoặc 3 → chỉ lấy trang 1
+    if type == 0:
+        # Page 0 là trang 1
         new_doc.insert_pdf(doc, from_page=0, to_page=0, links=True)
+    else:
+        # Lấy toàn bộ các trang
+        new_doc.insert_pdf(doc, from_page=0, to_page=len(doc)-1, links=True)
 
     doc.close()
     new_doc.save(input_pdf)
@@ -394,14 +485,11 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 # Ví dụ dùng
 
 # ===== TEST =====
-#reformat_VNA_EN("input.pdf","output.pdf")
+#reformat_VNA_EN("pdf1.pdf","output.pdf")
 
 
 
 #extract_first_page("output.pdf")
-
-
-
 
 
 
