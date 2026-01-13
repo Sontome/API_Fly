@@ -277,6 +277,12 @@ def replace_text_between_phrases(pdf_path,output_path,
     # ===== THÊM NOTE KHI THẤY DÒNG OK/RQ =====
     note_text = "(1)OK = confirmed , RQ/SA = Waitlisted"
     search_rects = page.search_for(note_text)
+    if type==3:
+        for rect in search_rects:
+            # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+            rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()                                   
     if type==0:
         for rect in search_rects:
             # Xóa tất cả dòng phía dưới (về mặt hiển thị)
@@ -490,6 +496,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
