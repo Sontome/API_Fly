@@ -831,7 +831,7 @@ async def code1a(codes, ssid):
                         "code": code,
                         "error": str(e)
                     })
-                    await send_mess("lỗi api 1A")
+                    
                     return [{"error": str(e)}]
 
         return results
@@ -1350,6 +1350,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
