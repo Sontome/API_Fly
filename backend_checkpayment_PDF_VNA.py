@@ -34,6 +34,14 @@ def check_payment_vna(pdf_path):
     airports_map = {k.upper(): v for k, v in airports_map_raw.items()}
 
     doc = fitz.open(pdf_path)
+    # ====== 🔥 TÌM SỐ VÉ 738 ======
+    full_text = ""
+    for p in doc:
+        full_text += p.get_text().upper() + "\n"
+
+    # match 738-xxxxxxxxxx | 738 xxxxxxxxxx | 738xxxxxxxxxx
+    ticket_match = re.search(r"\b738[-\s]?\d{10}\b", full_text)
+    sove = ticket_match.group(0) if ticket_match else ""
     page = doc[0]
     raw_blocks = page.get_text("blocks")  # list of tuples
 
@@ -136,11 +144,10 @@ def check_payment_vna(pdf_path):
     doc.close()
     return {
         "paymentstatus": "True",
-        
+        "sove": sove,
         "result": result
     }
 
 # ví dụ chạy
 #print(check_payment_vna("input.pdf"))
-
 
