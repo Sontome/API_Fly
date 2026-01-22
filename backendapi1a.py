@@ -919,6 +919,21 @@ async def repricePNR(pnr, doituong):
             ssid, res = await send_command(client, "tte/all", "reprice")
             list_inf = ""
             print("✅ Xóa TST all... ")
+            
+            
+
+            # Gộp các phần thành lệnh hoàn chỉnh
+            if doituong.upper() != "ADT":
+                final_cmd = "FXB" + "/".join(pax_cmd_parts)
+            else:
+                final_cmd = "FXB"
+            if doituong.upper() == "STU":
+                final_cmd = "FXB/PAX/RSTU,U"
+
+            print(f"⚙️ Lệnh final: {final_cmd}")
+
+            ssid, res = await send_command(client, final_cmd, "reprice")
+            print("✅ Response lenh reprice ... ")
             if has_infant and doituong.upper() != "ADT":
                 pax_doituong_inf = doituong.upper()
                 if pax_doituong_inf== "STU":
@@ -937,21 +952,6 @@ async def repricePNR(pnr, doituong):
                     print("Xử lý yêu cầu chọn chuyến của inf")
                 except:
                     print("Không có yêu cầu chọn chuyến của inf")
-            
-
-            # Gộp các phần thành lệnh hoàn chỉnh
-            if doituong.upper() != "ADT":
-                final_cmd = "FXB" + "/".join(pax_cmd_parts)
-            else:
-                final_cmd = "FXB"
-            if doituong.upper() == "STU":
-                final_cmd = "FXB/PAX/RSTU,U"
-
-            print(f"⚙️ Lệnh final: {final_cmd}")
-
-            ssid, res = await send_command(client, final_cmd, "reprice")
-            print("✅ Response lenh reprice ... ")
-
             ssid, pricemoires = await send_command(client, "TQT", "reprice")
 
             print("✅ Response gia moi ... ")
@@ -1350,6 +1350,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
