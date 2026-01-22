@@ -365,7 +365,7 @@ def get_cheapest_fxt_command(data):
 
     # Regex bắt dòng kiểu:
     # 01 TKAP4KRE+* * IN       * P1,4       *     40300  *      *Y
-    pattern = r"(\d{2})\s+\S+\*.*?\*\s+IN\s+\*\s+(P[\d,]+)\s+\*\s+(\d+)"
+    pattern = r"(\d{2})\s+\S+\s+\*\s+IN\s+\*\s+(P\d+(?:,\d+)*)\s+\*\s+(\d+)"
     matches = re.findall(pattern, text)
 
     fares = []
@@ -1350,6 +1350,7 @@ async def huyveVNA(code,ssid=None):
         print (" lỗi :" +str(e))
         await send_mess("lỗi api 1A")
         return ("lỗi api hủy vé")
+
 
 
 
