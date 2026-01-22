@@ -39,7 +39,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA,huyveVNA
+from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA,huyveVNA,repricePNR_v2
 import shutil
 from fastapi.concurrency import run_in_threadpool
 from typing import List
@@ -1142,6 +1142,17 @@ async def repricee(
         return result
     except Exception as e:
         return (str(e))
+@app.get("/reprice_v2")
+async def repriceev2(
+    pnr: str = Query(..., description="pnr"),
+    doituong: str = Query(..., description="doituong")
+):
+    try:
+        result = await repricePNR_v2(pnr,doituong)
+        
+        return result
+    except Exception as e:
+        return (str(e))        
 @app.get("/beginReprice")
 async def beginRepricee(
     pnr: str = Query(..., description="pnr")
@@ -1255,6 +1266,7 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+
 
 
 
