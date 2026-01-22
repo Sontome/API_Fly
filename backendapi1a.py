@@ -1352,6 +1352,167 @@ async def huyveVNA(code,ssid=None):
         return ("lỗi api hủy vé")
 
 
+def parsegia(data: str):
+    # 🚫 Không có TST active
+    if re.search(r'NO ACTIVE TST\s*-\s*DELETED TST RECORDS MAY EXIST', data):
+        return 0
+
+    # ✅ Đếm pax thật: phải có dạng 1.HO/TEN
+    pax_nums = set(re.findall(r'\b(\d+)\.[A-Z]+\/[A-Z]', data))
+    pax_count = len(pax_nums)
+
+    # 1️⃣ Có GRAND TOTAL → nhân pax
+    match_grand = re.search(r'GRAND TOTAL\s+KRW\s+([\d,]+)', data)
+    if match_grand:
+        grand = int(match_grand.group(1).replace(',', ''))
+        return grand * (pax_count if pax_count > 0 else 1)
+
+    # 2️⃣ Không có GRAND TOTAL → cộng KRW
+    prices = re.findall(r'KRW\s+([\d,]+)', data)
+    if not prices:
+        return None
+
+    return sum(int(p.replace(',', '')) for p in prices)
+async def repricePNR_v2(pnr, doituong):
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            ssid, res = await send_command(client, "IG", "repricev2")
+            print("clear code")
+            ssid, rtres = await send_command(client, "RT" + str(pnr), "repricev2")
+            rtres=rtres.json()
+            paymentstatus= rtres["model"]["output"]["crypticResponse"]["response"]
+            if re.search(r'\bPAX\s+738-\d{10}\b', paymentstatus):
+                return {
+                    "status": "ISSUED",
+                    "message": "Vé đã xuất, bỏ qua reprice"
+                }
+            print("✅ Response RT ... ")
+            ssid, namelist = await send_command(client, "RTN", "repricev2")
+
+            print("✅ Response RTN ... ")
+            ssid, pricegocres = await send_command(client, "TQT", "repricev2")
+            
+            print("✅ Response gia goc ... ")
+            pricegoc_data = pricegocres.json()
+            pricegoc = pricegoc_data["model"]["output"]["crypticResponse"]["response"]
+            # Build lệnh 
+            namelist_data = namelist.json()
+            resp_text = namelist_data["model"]["output"]["crypticResponse"]["response"]
+            lines = [x.strip() for x in resp_text.split("\n") if re.match(r"^\d+\.", x.strip())]
+            # ✅ Regex bắt tất cả dạng: "1.TEN/...(...)" kể cả dính nhau
+            pattern = r"(\d+)\.([A-Z/\s]+(?:MR|MS|MISS|MSTR)?\([^)]*\))"
+            matches = re.findall(pattern, resp_text, flags=re.DOTALL)
+            has_infant = "(INF" in resp_text
+            pax_cmd_parts = []
+            
+            for pax_num, pax_info in matches:
+                pax_info = pax_info.strip()
+                pax_doituong = doituong.upper()
+            
+               
+            
+                pax_type_suffix = ""
+                if "(CHD" in pax_info:
+                    pax_type_suffix = "-CH"
+                    if pax_doituong == "STU":
+                        pax_doituong = "VFR"
+                elif "(ADT)" in pax_info:
+                    pax_type_suffix = ""
+            
+                pax_cmd = f"/PAX/P{pax_num}/R{pax_doituong}{pax_type_suffix},U"
+                pax_cmd_parts.append(pax_cmd)
+                
+            # Nếu có trẻ sơ sinh → gọi lệnh riêng trước
+            ssid, res = await send_command(client, "tte/all", "repricev2")
+            list_inf = ""
+            print("✅ Xóa TST all... ")
+            
+            
+
+            # Gộp các phần thành lệnh hoàn chỉnh
+            if doituong.upper() != "ADT":
+                final_cmd = "FXB" + "/".join(pax_cmd_parts)
+            else:
+                final_cmd = "FXB"
+            if doituong.upper() == "STU":
+                final_cmd = "FXB/PAX/RSTU,U"
+
+            print(f"⚙️ Lệnh final: {final_cmd}")
+
+            ssid, res = await send_command(client, final_cmd, "repricev2")
+            print("✅ Response lenh reprice ... ")
+            if has_infant and doituong.upper() != "ADT":
+                pax_doituong_inf = doituong.upper()
+                if pax_doituong_inf== "STU":
+                    pax_doituong_inf = "VFR"
+                pax_cmd_inf = f"FXP/INF/RVFR-INF,U"
+                print("👶 Có trẻ sơ sinh → gọi FXP/INF trước")
+                
+                ssid, list_inf_raw = await send_command(client, pax_cmd_inf, "repricev2")
+                list_inf = list_inf_raw.json()
+                print(pax_cmd_inf)
+                try:
+
+                    cmd_inf = get_cheapest_fxt_command(list_inf)
+                    print(cmd_inf)
+                    ssid, res = await send_command(client, cmd_inf, "repricev2")
+                    print("Xử lý yêu cầu chọn chuyến của inf")
+                except:
+                    print("Không có yêu cầu chọn chuyến của inf")
+            ssid, pricemoires = await send_command(client, "TQT", "repricev2")
+
+            print("✅ Response gia moi ... ")
+            pricemoi_data = pricemoires.json()
+            pricemoi = pricemoi_data["model"]["output"]["crypticResponse"]["response"]
+            
+            gia_goc = parsegia(pricegoc)
+            gia_moi = parsegia(pricemoi)
+
+            print(f"💰 Giá gốc: {gia_goc} | Giá mới: {gia_moi}")
+            # 🚫 Không có TST cả gốc lẫn mới → CANCEL
+            if gia_goc == 0 and gia_moi == 0:
+                print("🚫 Không có TST → CANCEL")
+
+                ssid, _ = await send_command(client, "IG", "repricev2")
+
+                return {
+                    "status": "CANCEL",
+                    "pricegoc": pricegoc,
+                    "pricemoi": pricemoi,
+                    "message": "No active TST, cancelled"
+                }
+            if gia_goc is not None and gia_moi is not None and gia_moi < gia_goc:
+                print("🔥 Giá mới thấp hơn → RFSON + ET")
+                
+                ssid, res = await send_command(client, "rfson hva", "repricev2")
+                print("✅ Response rfson ... ")
+
+                ssid, res = await send_command(client, "ET", "repricev2")
+                print("✅ Response ET ... ")
+
+                respone = res.json()
+            else:
+                print("❌ Giá không tốt hơn hoặc không parse được → IG, bỏ qua")
+                respone = res.json() if res else {}
+
+            # Gắn info để log / debug
+            respone["pricegoc"] = pricegoc
+            respone["pricemoi"] = pricemoi
+            respone["list_inf"] = list_inf
+
+            ssid, res = await send_command(client, "IG", "repricev2")
+            respone["status"]="OK"
+            #print (respone)
+            
+            
+        return respone
+
+    except Exception as e:
+        print("🚨 Lỗi khi chạy:", e)
+        await send_mess("lỗi api 1A")
+        return {"error": str(e),
+        "status":"401"
+        }
 
 
 
