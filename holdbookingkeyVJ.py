@@ -147,13 +147,13 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             default_ancillaries_departure = defaultWithFare_item.get("ancillariesDeparture", [])
             default_ancillaries_return = defaultWithFare_item.get("ancillariesReturn", [])
         if default_ancillaries_departure:
-            hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Deluxe 20kgs"), [])
+            hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Bag 20kgs"), [])
             giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("purchaseKey","")
             result["key_hành_lý_chiều_đi"]= giá_hành_lý_deluxe_chiều_đi
             result["loai_hành_lý_chiều_đi"]= "DELUXE"
             
         if default_ancillaries_return:
-            hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Deluxe 20kgs"), [])
+            hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Bag 20kgs"), [])
             giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("purchaseKey","")
             
             result["key_hành_lý_chiều_về"]= giá_hành_lý_deluxe_chiều_về
@@ -482,6 +482,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
