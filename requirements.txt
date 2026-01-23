@@ -10,3 +10,5 @@ python-multipart
 opencv-python
 pytesseract
 easyocr
+python-dotenv
+supabase
