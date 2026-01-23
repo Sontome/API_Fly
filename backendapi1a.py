@@ -9,7 +9,7 @@ from utils_telegram import send_mess
 from datetime import datetime,timedelta
 from createNewSession import createNewSession
 from itertools import zip_longest
-
+from backend_reprice import add_reprice_pnr
 EMAIL_RE = re.compile(r'([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})', re.I)
 
 # ================== SESSION HANDLER ==================
@@ -327,6 +327,10 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
             if match:
                 pnr = match.group(1)
                 print(f"✅ Giữ vé thành công! PNR: {pnr}")
+                try:
+                    add_reprice_pnr(pnr,doituong)
+                except:
+                    pass
                 await send_mess(f"✅ Giữ vé VNA thành công! PNR: {pnr}")
                 return {
                     "status": "OK",
@@ -1513,6 +1517,7 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
 
 
 
