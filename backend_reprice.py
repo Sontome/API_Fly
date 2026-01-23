@@ -31,4 +31,5 @@ def add_reprice_pnr(pnr: str, pnr_type: str):
     else:
         print("❌ Insert fail:", res)
         return None
-add_reprice_pnr("ABC123", "VFR")        
+
+#add_reprice_pnr("ABC123", "VFR")        
