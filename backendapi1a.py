@@ -1481,8 +1481,8 @@ async def repricePNR_v2(pnr, doituong):
 
                 return {
                     "status": "CANCEL",
-                    "pricegoc": pricegoc,
-                    "pricemoi": pricemoi,
+                    "pricegoc": gia_goc,
+                    "pricemoi": gia_moi,
                     "message": "No active TST, cancelled"
                 }
             if gia_goc is not None and gia_moi is not None and gia_moi < gia_goc:
@@ -1495,13 +1495,14 @@ async def repricePNR_v2(pnr, doituong):
                 print("✅ Response ET ... ")
 
                 respone = res.json()
+                respone["ET"] = True
             else:
                 print("❌ Giá không tốt hơn hoặc không parse được → IG, bỏ qua")
                 respone = res.json() if res else {}
-
+                respone["ET"] = False
             # Gắn info để log / debug
-            respone["pricegoc"] = pricegoc
-            respone["pricemoi"] = pricemoi
+            respone["pricegoc"] = gia_goc
+            respone["pricemoi"] = gia_moi
             respone["list_inf"] = list_inf
 
             ssid, res = await send_command(client, "IG", "repricev2")
@@ -1517,7 +1518,6 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
-
 
 
 
