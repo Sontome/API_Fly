@@ -8,7 +8,18 @@ from utils_telegram import send_mess
 import asyncio
 from datetime import datetime, timedelta, timezone
 
+def safe_fromiso(dt_str):
+    if not dt_str:
+        return None
 
+    # Fix microsecond thiếu số
+    if '.' in dt_str and '+' in dt_str:
+        main, rest = dt_str.split('.', 1)
+        micro, tz = rest.split('+', 1)
+        micro = micro.ljust(6, '0')  # bù cho đủ 6 số
+        dt_str = f"{main}.{micro}+{tz}"
+
+    return datetime.fromisoformat(dt_str)
 
 
 async def main_reprice():
@@ -23,7 +34,7 @@ async def main_reprice():
             pnr_id = item["id"]
             pnr = item["pnr"]
             pnr_type = item["type"]
-            created_at = datetime.fromisoformat(item["created_at"])
+            created_at = safe_fromiso(item["created_at"])
 
             # ===============================
             # 1️⃣ Quá 48h → OVERTIME
