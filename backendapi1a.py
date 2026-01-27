@@ -1385,6 +1385,9 @@ async def repricePNR_v2(pnr, doituong):
             ssid, rtres = await send_command(client, "RT" + str(pnr), "repricev2")
             rtres=rtres.json()
             paymentstatus= rtres["model"]["output"]["crypticResponse"]["response"]
+            trangthai="OK"
+            if "HL1" in paymentstatus:
+                trangthai= "HL"
             if re.search(r'\bPAX\s+738-\d{10}\b', paymentstatus):
                 return {
                     "status": "ISSUED",
@@ -1471,14 +1474,42 @@ async def repricePNR_v2(pnr, doituong):
             
             gia_goc = parsegia(pricegoc)
             gia_moi = parsegia(pricemoi)
+            # HL đã có giá vào HK1 
+            if gia_goc == 0 and gia_moi > 0:
+                ssid, res = await send_command(client, "rfson hva", "repricev2")
+                print("✅ Response rfson ... ")
+
+                ssid, res = await send_command(client, "ET", "repricev2")
+                print("✅ Response ET ... ")
+
+                respone = res.json()
+                
+                return {
+                        "status": "HL",
+                        "pricegoc": gia_goc,
+                        "pricemoi": gia_moi,
+                        "message": "HL - vé HOLD",
+                        
+                        "ET" : True
+                    }
 
             print(f"💰 Giá gốc: {gia_goc} | Giá mới: {gia_moi}")
             # 🚫 Không có TST cả gốc lẫn mới → CANCEL
             if gia_goc == 0 and gia_moi == 0:
+                
+
                 print("🚫 Không có TST → CANCEL")
 
                 ssid, _ = await send_command(client, "IG", "repricev2")
-
+                if trangthai == "HL":
+                    
+                    return {
+                        "status": "HL",
+                        "pricegoc": gia_goc,
+                        "pricemoi": gia_moi,
+                        "message": "HL - vé HOLD",
+                        "ET" : False
+                    }
                 return {
                     "status": "CANCEL",
                     "pricegoc": gia_goc,
@@ -1522,6 +1553,9 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
+
+
 
 
 
