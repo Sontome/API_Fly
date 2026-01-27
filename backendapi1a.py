@@ -1485,7 +1485,11 @@ async def repricePNR_v2(pnr, doituong):
                     "pricemoi": gia_moi,
                     "message": "No active TST, cancelled"
                 }
-            if gia_goc is not None and gia_moi is not None and gia_moi < gia_goc:
+            if (
+                gia_goc is not None 
+                and gia_moi is not None 
+                and (gia_goc - gia_moi) >= 3000
+            ):
                 print("🔥 Giá mới thấp hơn → RFSON + ET")
                 
                 ssid, res = await send_command(client, "rfson hva", "repricev2")
@@ -1518,6 +1522,7 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
 
 
 
