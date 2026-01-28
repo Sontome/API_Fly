@@ -24,7 +24,7 @@ def safe_fromiso(dt_str):
 
 async def main_reprice():
     now = datetime.now(timezone.utc)
-    await send_mess("Reprice ....")
+    #await send_mess("Reprice ....")
     # Lấy danh sách HOLD
     listpnr = get_reprice_pnr(status="HOLD")
     print(f"🔥 Bắt đầu xử lý {len(listpnr)} PNR HOLD")
@@ -139,5 +139,5 @@ async def main_reprice():
 
         except Exception as e:
             print(f"💥 Lỗi khi xử lý {item.get('pnr')}:", e)
-    await send_mess("Đã Reprice Xong")
-asyncio.run(main_reprice())
+    #await send_mess("Đã Reprice Xong")
+#asyncio.run(main_reprice())
