@@ -111,7 +111,7 @@ async def main_reprice():
             elif status == "OK":
                 fields = {
                     "last_checked_at": now.isoformat(),
-                    "email" = email,
+                    "email" : email,
                 }
 
                 if et is True:
