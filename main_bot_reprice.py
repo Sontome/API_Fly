@@ -4,7 +4,7 @@
 
 from backendapi1a import repricePNR_v2
 from backend_reprice import get_reprice_pnr,update_reprice_pnr
-from utils_telegram import send_mess
+from utils_telegram_bot_reprice import send_mess
 import asyncio
 from datetime import datetime, timedelta, timezone
 
