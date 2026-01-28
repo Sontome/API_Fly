@@ -92,6 +92,8 @@ async def main_reprice():
                     last_checked_at=now.isoformat(),
                     email = email,
                 )
+                mess = f"PNR {pnr} đã bị huỷ DUE TO EXP TTL"
+                await send_mess(mess)
                 print(f"❌ {pnr} CANCEL")
             # ===============================
             # HL + ET → Vào được chỗ
