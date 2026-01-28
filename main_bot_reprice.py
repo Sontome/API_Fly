@@ -67,7 +67,7 @@ async def main_reprice():
             et = body.get("ET", False)
             pricegoc = body.get("pricegoc")
             pricemoi = body.get("pricemoi")
-
+            email = body.get("email")
             # ===============================
             # ISSUED → PAID
             # ===============================
@@ -77,6 +77,7 @@ async def main_reprice():
                     status="PAID",
                     auto_reprice=False,
                     last_checked_at=now.isoformat(),
+                    email = email,
                 )
                 print(f"💰 {pnr} ISSUED → PAID")
 
@@ -89,6 +90,7 @@ async def main_reprice():
                     status="CANCEL",
                     auto_reprice=False,
                     last_checked_at=now.isoformat(),
+                    email = email,
                 )
                 print(f"❌ {pnr} CANCEL")
             # ===============================
@@ -98,6 +100,7 @@ async def main_reprice():
                 update_reprice_pnr(
                     pnr_id,
                     last_checked_at=now.isoformat(),
+                    email = email,
                 )
                 mess = f"PNR {pnr} đã vào được chỗ thành công"
                 await send_mess(mess)
@@ -108,6 +111,7 @@ async def main_reprice():
             elif status == "OK":
                 fields = {
                     "last_checked_at": now.isoformat(),
+                    "email" = email,
                 }
 
                 if et is True:
