@@ -1385,13 +1385,24 @@ async def repricePNR_v2(pnr, doituong):
             ssid, rtres = await send_command(client, "RT" + str(pnr), "repricev2")
             rtres=rtres.json()
             paymentstatus= rtres["model"]["output"]["crypticResponse"]["response"]
+            # 2. Bắt email APE
+            emails = re.findall(
+                r'APE\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})',
+                paymentstatus,
+                re.IGNORECASE
+            )
+            
+            email = None
+            if emails:
+                email = emails[0]  # lấy cái đầu tiên
             trangthai="OK"
             if "HL1" in paymentstatus:
                 trangthai= "HL"
             if re.search(r'\bPAX\s+738-\d{10}\b', paymentstatus):
                 return {
                     "status": "ISSUED",
-                    "message": "Vé đã xuất, bỏ qua reprice"
+                    "message": "Vé đã xuất, bỏ qua reprice",
+                    "email": email
                 }
             print("✅ Response RT ... ")
             ssid, namelist = await send_command(client, "RTN", "repricev2")
@@ -1489,7 +1500,7 @@ async def repricePNR_v2(pnr, doituong):
                         "pricegoc": gia_goc,
                         "pricemoi": gia_moi,
                         "message": "HL - vé HOLD",
-                        
+                        "email": email,
                         "ET" : True
                     }
 
@@ -1508,12 +1519,14 @@ async def repricePNR_v2(pnr, doituong):
                         "pricegoc": gia_goc,
                         "pricemoi": gia_moi,
                         "message": "HL - vé HOLD",
+                        "email": email,
                         "ET" : False
                     }
                 return {
                     "status": "CANCEL",
                     "pricegoc": gia_goc,
                     "pricemoi": gia_moi,
+                    "email": email,
                     "message": "No active TST, cancelled"
                 }
             if (
@@ -1539,7 +1552,8 @@ async def repricePNR_v2(pnr, doituong):
             respone["pricegoc"] = gia_goc
             respone["pricemoi"] = gia_moi
             respone["list_inf"] = list_inf
-
+            
+            respone["email"] = email
             ssid, res = await send_command(client, "IG", "repricev2")
             respone["status"]="OK"
             #print (respone)
@@ -1553,6 +1567,7 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
 
 
 
