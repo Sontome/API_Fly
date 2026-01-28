@@ -105,6 +105,14 @@ async def main_reprice():
                 mess = f"PNR {pnr} đã vào được chỗ thành công"
                 await send_mess(mess)
                 print(f"🎯 {pnr} HL + ET → vào được chỗ")
+            elif status == "HL" and et is False:
+                update_reprice_pnr(
+                    pnr_id,
+                    last_checked_at=now.isoformat(),
+                    email = email,
+                )
+                
+                
             # ===============================
             # OK
             # ===============================
