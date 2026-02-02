@@ -1301,7 +1301,7 @@ def list_pnr_files(data: PNRRequest):
         raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
     for filename in files:
         input_path = os.path.join(BASE_DIR, filename)
-        output_path = os.path.join(TEMP_DIR, filename")
+        output_path = os.path.join(TEMP_DIR, filename)
 
         try:
             # ===== LUỒNG VJ =====
@@ -1333,6 +1333,7 @@ def list_pnr_files(data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
