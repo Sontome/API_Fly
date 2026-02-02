@@ -459,7 +459,7 @@ def replace_text_between_phrases(pdf_path,output_path,
     #print(f"[DEBUG] Đã lưu file ra: {outputpath}")
     doc.close()
     time.sleep(0.5)
-    extract_first_page(output_path,pnrpax,type=type)
+    extract_first_page(output_path,output_path,type=type)
     
 
 def extract_first_page(input_pdf, prnpax, type=0):
@@ -481,7 +481,7 @@ def extract_first_page(input_pdf, prnpax, type=0):
     print(f"{prnpax}.pdf")
     try:
         os.makedirs(FILES_DIR, exist_ok=True)
-        dest_filename = f"{prnpax}.pdf"
+        dest_filename = prnpax
         dest_path = os.path.join(FILES_DIR, dest_filename)
         shutil.copy2(input_pdf, dest_path)
         print(f"✅ Đã copy {input_pdf} sang {dest_path}")
@@ -507,6 +507,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
