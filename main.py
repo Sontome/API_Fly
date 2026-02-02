@@ -1295,7 +1295,17 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
         raise HTTPException(status_code=500, detail="Thư mục files chưa tồn tại")
 
     # lọc file có chứa pnr_key ở bất kỳ vị trí nào
-    files = [f for f in os.listdir(BASE_DIR) if pnr_key in f and f.endswith(".pdf")]
+    files = [
+        f for f in os.listdir(BASE_DIR)
+        if (
+            pnr_key in f
+            and f.upper().endswith(".PDF")
+            and (
+                f.upper().startswith("VJ")
+                or f.upper().startswith("VNA")
+            )
+        )
+    ]
 
     if not files:
         raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
@@ -1346,6 +1356,7 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
