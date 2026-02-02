@@ -698,7 +698,7 @@ async def check_payment_VJ(
     
 ):
     # Tạo đường dẫn file tạm input
-    temp_path = os.path.join(TEMP_DIR, f"{file.filename}")
+    temp_path = os.path.join(BASE_DIR, f"{file.filename}")
 
     # Ghi file upload vào thư mục tạm
     with open(temp_path, "wb") as f:
@@ -1268,6 +1268,7 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+
 
 
 
