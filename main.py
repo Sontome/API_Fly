@@ -1287,44 +1287,21 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
 @app.post("/list-pnr-v2")
 def list_pnr_files(data: PNRRequest):
-    """
-    Trả về danh sách link các file PDF trong BASE_DIR
-    có chứa pnr + banner
-    """
-
+    """Trả về danh sách link các file PDF có chứa chuỗi pnr_key"""
+    pnr_key = data.pnr
     if not os.path.exists(BASE_DIR):
-        raise HTTPException(status_code=500, detail="Thư mục gốc chưa tồn tại")
+        raise HTTPException(status_code=500, detail="Thư mục files chưa tồn tại")
 
-   
-    pnr_clean = data.pnr.upper()
+    # lọc file có chứa pnr_key ở bất kỳ vị trí nào
+    files = [f for f in os.listdir(BASE_DIR) if pnr_key in f and f.endswith(".pdf")]
 
-    matched_files = []
+    if not files:
+        raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
 
-    for f in os.listdir(BASE_DIR):
-        if not f.upper().endswith(".pdf"):
-            continue
+    # Trả về list link đầy đủ để user tải
+    links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
+    return {"search": pnr_key, "files": links}
 
-        filename_clean = re.sub(r"\s+", "", f.upper())
-
-        if pnr_clean in filename_clean :
-            matched_files.append(f)
-
-    if not matched_files:
-        raise HTTPException(
-            status_code=404,
-            detail="Không tìm thấy file nào khớp PNR và banner"
-        )
-
-    links = [
-        f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}"
-        for f in matched_files
-    ]
-
-    return {
-        "pnr": data.pnr,
-        "total": len(links),
-        "files": links
-    }
 
 
 
