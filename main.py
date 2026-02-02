@@ -716,11 +716,11 @@ async def check_payment_VJ(
         return {"error": str(e)}
 
     # Xóa file input ngay nếu không cần giữ
-    try:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-    except Exception as e:
-        print(f"Lỗi xóa file input: {e}")
+    # try:
+    #     if os.path.exists(temp_path):
+    #         os.remove(temp_path)
+    # except Exception as e:
+    #     print(f"Lỗi xóa file input: {e}")
 
     # Thêm task xóa file output sau khi gửi xong
     
@@ -1268,6 +1268,7 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+
 
 
 
