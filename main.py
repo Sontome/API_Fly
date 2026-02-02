@@ -1288,7 +1288,7 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
 
 @app.post("/list-pnr-v2")
-def list_pnr_files(data: PNRRequest):
+def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     """Trả về danh sách link các file PDF có chứa chuỗi pnr_key"""
     pnr_key = data.pnr
     if not os.path.exists(BASE_DIR):
@@ -1333,6 +1333,7 @@ def list_pnr_files(data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
