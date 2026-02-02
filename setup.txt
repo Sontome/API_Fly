@@ -7,6 +7,20 @@ Username: root
 Password: gT5dC7!!
 
 Bkdfasdv@2034141 thêm 1 
+--- Log clear matvegoc thu muc --------------------------------
+
+crontab -e
+
+0 1 * * * cd /root/API_Fly && /usr/bin/python3 clearmatvegoc.py >> clearmatvegoc.log 2>&1
+
+
+
+
+
+
+
+
+
 
 --- Log bot reprice--------------------------------
 tail -f /root/API_Fly/reprice.log
