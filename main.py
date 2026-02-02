@@ -1295,19 +1295,18 @@ def list_pnr_files(data: PNRRequest):
     if not os.path.exists(BASE_DIR):
         raise HTTPException(status_code=500, detail="Thư mục gốc chưa tồn tại")
 
-    # Chuẩn hoá banner: bỏ xuống dòng, dư space
-    banner_clean = re.sub(r"\s+", "", data.banner.lower())
-    pnr_clean = data.pnr.lower()
+   
+    pnr_clean = data.pnr.upper()
 
     matched_files = []
 
     for f in os.listdir(BASE_DIR):
-        if not f.lower().endswith(".pdf"):
+        if not f.upper().endswith(".pdf"):
             continue
 
-        filename_clean = re.sub(r"\s+", "", f.lower())
+        filename_clean = re.sub(r"\s+", "", f.upper())
 
-        if pnr_clean in filename_clean and banner_clean in filename_clean:
+        if pnr_clean in filename_clean :
             matched_files.append(f)
 
     if not matched_files:
@@ -1326,6 +1325,7 @@ def list_pnr_files(data: PNRRequest):
         "total": len(links),
         "files": links
     }
+
 
 
 
