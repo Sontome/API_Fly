@@ -54,7 +54,9 @@ BASE_DIR = "/root/matvegoc"
 os.makedirs(BASE_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
-
+class PNRRequest(BaseModel):
+    pnr: str
+    banner: str
 class VnaCheckveRequest_V3(BaseModel):
     dep0: str ="ICN"
     arr0: str ="HAN"
@@ -1283,6 +1285,47 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
         return {"status_code": 401, "body": str(e)}
 
 
+@app.post("/list-pnr-v2")
+def list_pnr_files(data: PNRRequest):
+    """
+    Trả về danh sách link các file PDF trong BASE_DIR
+    có chứa pnr + banner
+    """
+
+    if not os.path.exists(BASE_DIR):
+        raise HTTPException(status_code=500, detail="Thư mục gốc chưa tồn tại")
+
+    # Chuẩn hoá banner: bỏ xuống dòng, dư space
+    banner_clean = re.sub(r"\s+", "", data.banner.lower())
+    pnr_clean = data.pnr.lower()
+
+    matched_files = []
+
+    for f in os.listdir(BASE_DIR):
+        if not f.lower().endswith(".pdf"):
+            continue
+
+        filename_clean = re.sub(r"\s+", "", f.lower())
+
+        if pnr_clean in filename_clean and banner_clean in filename_clean:
+            matched_files.append(f)
+
+    if not matched_files:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy file nào khớp PNR và banner"
+        )
+
+    links = [
+        f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}"
+        for f in matched_files
+    ]
+
+    return {
+        "pnr": data.pnr,
+        "total": len(links),
+        "files": links
+    }
 
 
 
