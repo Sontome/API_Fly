@@ -52,6 +52,8 @@ TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 BASE_DIR = "/root/matvegoc"
 os.makedirs(BASE_DIR, exist_ok=True)
+F2_DIR = "/root/matvef2"
+os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 class PNRRequest(BaseModel):
@@ -1301,6 +1303,7 @@ def list_pnr_files(data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
