@@ -1314,8 +1314,21 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
 
             # ===== LUỒNG VNA (CHƯA HOÀN THIỆN) =====
             elif filename.upper().startswith("VNA"):
-                # TODO: xử lý VNA sau
-                continue
+                try:
+                    ngonngu = check_ngon_ngu(input_path)
+                    if ngonngu == "VN":
+                        reformat_VNA_VN(input_path, new_text=data.banner,output_path=output_path, type=0)
+                    if ngonngu == "KR":
+                        reformat_VNA_KR(input_path, new_text=data.banner,output_path=output_path, type=0)
+                    if ngonngu == "EN":
+                        reformat_VNA_EN(input_path, new_text=data.banner,output_path=output_path, type=0)
+                    
+                except Exception as e:
+                    return {"error": str(e)}
+            
+                
+            
+                
 
             else:
                 continue
@@ -1333,6 +1346,7 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
