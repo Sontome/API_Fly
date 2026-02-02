@@ -58,7 +58,7 @@ tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 class PNRRequest(BaseModel):
     pnr: str
-    banner: str
+    banner: Optional[str] =""
 class VnaCheckveRequest_V3(BaseModel):
     dep0: str ="ICN"
     arr0: str ="HAN"
@@ -1346,6 +1346,7 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
