@@ -1299,10 +1299,41 @@ def list_pnr_files(data: PNRRequest):
 
     if not files:
         raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
+    for filename in files:
+        input_path = os.path.join(BASE_DIR, filename)
+        output_path = os.path.join(TEMP_DIR, filename")
 
+        try:
+            # ===== LUỒNG VJ =====
+            if filename.upper().startswith("VJ"):
+                reformat_VJ(
+                    input_path,
+                    new_text=data.banner,
+                    output_path=output_path
+                )
+
+            # ===== LUỒNG VNA (CHƯA HOÀN THIỆN) =====
+            elif filename.upper().startswith("VNA"):
+                # TODO: xử lý VNA sau
+                continue
+
+            else:
+                continue
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Lỗi xử lý file {filename}: {str(e)}"
+            )
+
+        # Xóa file output sau khi gửi xong
+        background_tasks.add_task(
+            lambda p=output_path: os.path.exists(p) and os.remove(p)
+        )
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
