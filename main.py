@@ -1051,7 +1051,7 @@ async def checkpaymentVNA(
     
 ):
     # Tạo đường dẫn file tạm input
-    temp_path = os.path.join(TEMP_DIR, f"{file.filename}")
+    temp_path = os.path.join(BASE_DIR, f"{file.filename}")
 
     # Ghi file upload vào thư mục tạm
     with open(temp_path, "wb") as f:
@@ -1069,11 +1069,11 @@ async def checkpaymentVNA(
         return {"error": str(e)}
 
     # Xóa file input ngay nếu không cần giữ
-    try:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-    except Exception as e:
-        print(f"Lỗi xóa file input: {e}")
+    # try:
+    #     if os.path.exists(temp_path):
+    #         os.remove(temp_path)
+    # except Exception as e:
+    #     print(f"Lỗi xóa file input: {e}")
 
     # Thêm task xóa file output sau khi gửi xong
     
@@ -1275,6 +1275,7 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+
 
 
 
