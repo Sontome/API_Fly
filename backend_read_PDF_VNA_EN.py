@@ -468,8 +468,8 @@ def extract_first_page(input_pdf, prnpax, type=0):
     print(f"{prnpax}.pdf")
     try:
         os.makedirs(FILES_DIR, exist_ok=True)
-        dest_filename = prnpax
-        dest_path = os.path.join(FILES_DIR, dest_filename)
+        filename = os.path.basename(input_pdf)
+        dest_path = os.path.join(FILES_DIR, filename)
         shutil.copy2(input_pdf, dest_path)
         print(f"✅ Đã copy {input_pdf} sang {dest_path}")
     except Exception as e:
@@ -495,6 +495,7 @@ def reformat_VNA_EN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #extract_first_page("output.pdf")
+
 
 
 
