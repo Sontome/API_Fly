@@ -1050,8 +1050,14 @@ async def checkpaymentVNA(
     file: UploadFile = File(...)
     
 ):
-    # Tạo đường dẫn file tạm input
-    temp_path = os.path.join(BASE_DIR, f"{file.filename}")
+    # Lấy tên file gốc, bỏ path cho an toàn
+    filename = os.path.basename(file.filename)
+
+    # Thay khoảng trắng thành _
+    filename = filename.replace(" ", "_")
+
+    # Tạo path
+    temp_path = os.path.join(BASE_DIR, filename)
 
     # Ghi file upload vào thư mục tạm
     with open(temp_path, "wb") as f:
@@ -1275,6 +1281,7 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
+
 
 
 
