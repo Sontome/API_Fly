@@ -1031,7 +1031,7 @@ def parse_pnr(text,pnr):
     passenger_pattern = re.compile(
         r"(\d+)\.([A-Z]+)\/([A-Z\s]+?)"       # số thứ tự + họ + tên
         r"(?:\(([A-Z]+(?:\/\d{2}[A-Z]{3}\d{2})?)\))?"  # loại hành khách + ngày sinh nếu có
-        r"(?:\((INF[A-Z\/\s]+)\))?"           # INF nếu có
+        r"(?:\((INF[A-Z0-9\/\s]+)\))?"          # INF nếu có
         r"(?=\s+\d+\.|\n|$)"
     )
 
@@ -1567,6 +1567,7 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
 
 
 
