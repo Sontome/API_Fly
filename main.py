@@ -822,7 +822,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbyRjarwt6RL2eu5OvM8p6Pd7Ly4mPBo3FozGppWIj9DMUUTb8uGx09qk_NQTxS5kjKqYA/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbyDYskg0TIDkJh3ZmMdbySeg0mzBk_BBsI4sJCKoKxsfgpO_LoGThxLwBUHN0NFyhq_zA/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -944,7 +944,7 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwLr1ghoF-iG7-M-1fWrZrLleKRzgAcu_Rl6AXOzHqAOYAZug3bxOA0GZuF3fZ1gO67/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycby3EUd_q9-FnFsIj2tRXe4XxiGI1os2fW1iCkMR4ECS6OtfOB0q_J_TcV1JRXhP5GiM/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
@@ -1356,6 +1356,7 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     # Trả về list link đầy đủ để user tải
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
+
 
 
 
