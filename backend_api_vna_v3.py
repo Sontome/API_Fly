@@ -228,8 +228,8 @@ class PowerCallClient:
             "trip": trip,
 
             "activedCar": activedCar,
-            "activedCLSS1": "Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V",
-            "activedCLSS2": "Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V",
+            "activedCLSS1": "I,C,J,D,Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V",
+            "activedCLSS2": "I,C,J,D,Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V",
             "activedVia": activedVia,
             "activedStatus": "OK,HL",
             "activedIDT": "ADT,STU,VFR,LBR",
@@ -536,4 +536,5 @@ async def api_checkve_vna_v3(trip:str="RT",
             "activedVia" : "0,1",
             "body" : "null"
             }
+
 
