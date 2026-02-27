@@ -459,8 +459,8 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
         try :
             tenkakao = get_full_name(passenger_data)
             add_kakao_pnr(phonekakao,tenkakao,mã_giữ_vé)
-        except :
-            pass
+        except Exception as e:
+            print("❌ Lỗi add_kakao_pnr:", e)
         mess = "Giữ vé VJ thành công! PNR: " + mã_giữ_vé
         try:
             asyncio.run(send_mess(mess))
@@ -496,6 +496,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
