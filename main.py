@@ -57,6 +57,10 @@ F2_DIR = "/root/matvef2"
 os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
+class KakaoRequest(BaseModel):
+    to_number: str
+    image_id: str
+    content: str
 class PNRRequest(BaseModel):
     pnr: str
     banner: Optional[str] =""
@@ -1359,19 +1363,16 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     return {"search": pnr_key, "files": links}
 
 @app.post("/kakao-api")
-
-def send_mess_kakao(
-    to_number: str = Query(..., description="to_number"),
-    image_id: str = Query(..., description="VNA,VJ,DELAY"),
-    content: str = Query(..., description="content")
-    
-):
+def send_mess_kakao(req: KakaoRequest):
     try:
-        result = send_bms_image(to_number,image_id,content)
-        
+        result = send_bms_image(
+            to_number=req.to_number,
+            image=req.image_id,
+            content=req.content
+        )
         return result
     except Exception as e:
-        return (str(e))
+        return {"error": str(e)}
 
 
 
