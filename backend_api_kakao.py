@@ -49,7 +49,7 @@ def send_bms_image(
 
     auth_header = create_auth_header(API_KEY, API_SECRET)
     if image == "DELAY" : image_id = DELAY
-    elif image == "DELAY" : image_id = VJ
+    elif image == "VJ" : image_id = VJ
     else :image_id = VNA
     headers = {
         "Authorization": auth_header,
