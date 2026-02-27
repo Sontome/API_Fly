@@ -40,7 +40,7 @@ def create_auth_header(api_key: str, api_secret: str) -> str:
 def send_bms_image(
     to_number: str,
     
-    image_id: str,
+    image: str,
     content: str,
     image_link: str = "https://hanvietair.com/vi",
     sms = True
@@ -48,7 +48,9 @@ def send_bms_image(
     """Send Kakao BMS IMAGE message"""
 
     auth_header = create_auth_header(API_KEY, API_SECRET)
-
+    if image == "DELAY" : image_id = DELAY
+    elif image == "DELAY" : image_id = VJ
+    else :image_id = VNA
     headers = {
         "Authorization": auth_header,
         "Content-Type": "application/json"
