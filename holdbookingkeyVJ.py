@@ -469,16 +469,14 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
         return {
             "mã_giữ_vé" : mã_giữ_vé,
             "hạn_thanh_toán" : hạn_thanh_toán,
-            "mess" : mess,
-            "ds":passenger_data
+            "mess" : mess
         }
     except :
         print(mess)
         return {
             "mã_giữ_vé" : "",
             "hạn_thanh_toán" : "",
-            "mess" : mess,
-            "ds":passenger_data
+            "mess" : mess
         }
     
 
@@ -496,6 +494,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
