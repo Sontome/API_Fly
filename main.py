@@ -98,6 +98,7 @@ class BookingRequest(BaseModel):
     phone: Optional[str] = Field("1035463396", description="Sân bay đi (ví dụ: ICN)", example="")
     email: Optional[str] = Field("hanvietair247@gmail.com", description="Sân bay đi (ví dụ: ICN)", example="")
     bookingkeychieuve: Optional[str] = Field(None, description="Booking Key chiều về (nếu có)", example="")
+    phonekakao: Optional[str] = Field("", description="phonekakao (nếu có)", example="")
 class VjLowFareRequest(BaseModel):
     departure: str  = Field(..., description="Mã sân bay đi (VD: ICN)",example="ICN")
     arrival: str    = Field(..., description="Mã sân bay đến (VD: HAN)", example="HAN")
@@ -607,7 +608,7 @@ async def create_booking(request: BookingRequest):
 
     # Bọc hàm sync thành bất đồng bộ
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.iso,request.exten,request.phone,request.email,request.bookingkeychieuve)
+    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.iso,request.exten,request.phone,request.email,request.bookingkeychieuve,request.phonekakao)
     asyncio.create_task(safe_send_vj(result))
     return result
 @app.post("/vj/lowfare-v2")
@@ -1373,6 +1374,7 @@ def send_mess_kakao(req: KakaoRequest):
         return result
     except Exception as e:
         return {"error": str(e)}
+
 
 
 
