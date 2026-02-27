@@ -8,11 +8,17 @@ import asyncio
 import subprocess
 import urllib.parse
 global token
+from backend_supabase_kakao import add_kakao_pnr
 # 🔧 Giá mặc định
 
 
 
-
+def get_full_name(data):
+    for group in ["nguoilon", "treem", "embe"]:
+        if data.get(group):
+            p = data[group][0]
+            return f"{p['Họ']} {p['Tên']}"
+    return None
 # ✅ Lấy token từ state.json
 def get_app_access_token_from_state(file_path="state.json"):
     
@@ -417,7 +423,7 @@ def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi
     }
     return payload
 
-def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone="1035463396",email="hanvietair247@gmail.com" ,bookingkeychieuve=None):
+def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone="1035463396",email="hanvietair247@gmail.com" ,bookingkeychieuve=None,phonekakao=""):
     token = get_app_access_token_from_state()
     get_company(token)
     token = get_app_access_token_from_state()
@@ -443,12 +449,17 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
     result = create_booking(payload,token)
     #print(result)
     mess = result["message"]
+    tenkakao = get_full_name(passenger_data)
     
     try:
         mã_giữ_vé = result["data"]["locator"]
         hạn_thanh_toán = result["data"]["datePayLater"]
         print(mã_giữ_vé)
         print(hạn_thanh_toán)
+        try :
+            add_kakao_pnr(phonekakao,tenkakao,mã_giữ_vé)
+        except :
+            pass
         mess = "Giữ vé VJ thành công! PNR: " + mã_giữ_vé
         try:
             asyncio.run(send_mess(mess))
@@ -482,6 +493,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
