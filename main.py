@@ -5,6 +5,7 @@ from backend_read_PDF_VNA_VN import reformat_VNA_VN
 from backend_read_PDF_VNA_EN import reformat_VNA_EN
 from backend_read_PDF_VNA_KR import reformat_VNA_KR
 from backend_read_PDF_VJ import reformat_VJ
+from backend_api_kakao import send_bms_image
 from backend_checkpayment_PDF_VJ import check_payment
 from backend_checkpayment_PDF_VNA import check_payment_vna
 from checkdate_VJ import checkdate_VJ
@@ -1357,10 +1358,20 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
     links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
     return {"search": pnr_key, "files": links}
 
+@app.post("/kakao-api")
 
-
-
-
+async def send_mess_kakao(
+    to_number: str = Query(..., description="to_number"),
+    image_id: str = Query(..., description="VNA,VJ,DELAY"),
+    content: str = Query(..., description="content")
+    
+):
+    try:
+        result = await send_bms_image(to_number,image_id,content)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
