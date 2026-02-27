@@ -10,6 +10,7 @@ from datetime import datetime,timedelta
 from createNewSession import createNewSession
 from itertools import zip_longest
 from backend_reprice import add_reprice_pnr
+from backend_supabase_kakao import add_kakao_pnr
 EMAIL_RE = re.compile(r'([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})', re.I)
 
 # ================== SESSION HANDLER ==================
@@ -214,7 +215,7 @@ def build_pricing_command(hanhkhach, list_cmd, doituong):
     if has_infant and doituong=="VFR":
         list_cmd.append("FXP/INF/RVFR-INF,U")
     return list_cmd, has_infant
-async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR",email=None, phone= None):
+async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR",email=None, phone= None,phonekakao=""):
     cmd_AN = build_an_command(dep, arr, depdate, deptime, arrdate, arrtime)
     print("Lệnh AN:", cmd_AN)
 
@@ -327,6 +328,11 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
             if match:
                 pnr = match.group(1)
                 print(f"✅ Giữ vé thành công! PNR: {pnr}")
+                try :
+                    tenkakao = hanhkhach[0]
+                    add_kakao_pnr(phonekakao,tenkakao,pnr)
+                except Exception as e:
+                    print("❌ Lỗi add_kakao_pnr:", e)
                 try:
                     add_reprice_pnr(pnr,doituong)
                 except:
@@ -1567,6 +1573,7 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
 
 
 
