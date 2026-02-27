@@ -449,7 +449,7 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
     result = create_booking(payload,token)
     #print(result)
     mess = result["message"]
-    tenkakao = get_full_name(passenger_data)
+    
     
     try:
         mã_giữ_vé = result["data"]["locator"]
@@ -457,6 +457,7 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
         print(mã_giữ_vé)
         print(hạn_thanh_toán)
         try :
+            tenkakao = get_full_name(passenger_data)
             add_kakao_pnr(phonekakao,tenkakao,mã_giữ_vé)
         except :
             pass
@@ -468,14 +469,16 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
         return {
             "mã_giữ_vé" : mã_giữ_vé,
             "hạn_thanh_toán" : hạn_thanh_toán,
-            "mess" : mess
+            "mess" : mess,
+            "ds":passenger_data
         }
     except :
         print(mess)
         return {
             "mã_giữ_vé" : "",
             "hạn_thanh_toán" : "",
-            "mess" : mess
+            "mess" : mess,
+            "ds":passenger_data
         }
     
 
@@ -493,6 +496,7 @@ ds_khach = {
         {"Họ": "Nguyen", "Tên": "An", "Hộ_chiếu": "123123123125", "Giới_tính": "nam", "Quốc_tịch": "VN"}
     ]
 }
+
 
 
 
