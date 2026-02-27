@@ -1360,18 +1360,19 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
 
 @app.post("/kakao-api")
 
-async def send_mess_kakao(
+def send_mess_kakao(
     to_number: str = Query(..., description="to_number"),
     image_id: str = Query(..., description="VNA,VJ,DELAY"),
     content: str = Query(..., description="content")
     
 ):
     try:
-        result = await send_bms_image(to_number,image_id,content)
+        result = send_bms_image(to_number,image_id,content)
         
         return result
     except Exception as e:
         return (str(e))
+
 
 
 
