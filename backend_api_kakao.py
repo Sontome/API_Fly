@@ -55,7 +55,7 @@ def send_bms_image(
         "Authorization": auth_header,
         "Content-Type": "application/json"
     }
-    content = content.encode().decode("unicode_escape")
+    
     message_data = {
         "messages": [
             {
