@@ -1201,7 +1201,8 @@ async def giuveVNAlive(
     arrtime: Optional[str] = Query(None, description="Giờ đến (nếu có)"),
     doituong: str = Query("VFR", description="Đối tượng giá, ví dụ: ADT/STU/VFR"),
     email: Optional[str] = Query(None, description="email F2 (nếu có)"),
-    phone: Optional[str] = Query(None, description="phone F2 (nếu có)")
+    phone: Optional[str] = Query(None, description="phone F2 (nếu có)"),
+    phonekakao: Optional[str] = Query("", description="phone gửi noti kakao (nếu có)")
     
     
 ):
@@ -1215,7 +1216,8 @@ async def giuveVNAlive(
             arrtime=arrtime,
             doituong=doituong,
             email = email,
-            phone= phone
+            phone= phone,
+            phonekakao= phonekakao                          
             )
             
         
@@ -1374,6 +1376,7 @@ def send_mess_kakao(req: KakaoRequest):
         return result
     except Exception as e:
         return {"error": str(e)}
+
 
 
 
