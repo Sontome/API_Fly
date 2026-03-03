@@ -36,7 +36,31 @@ def add_kakao_pnr(phone: str, name: str,pnr: str):
     else:
         print("❌ Insert fail:", res)
         return None
+def update_sent_phone(phone: str):
+    """
+    Thêm sdt vao bảng đã gửi sent_phone
+    :phone
+   
+    """
 
+    data = {
+        "phone": phone,
+                 
+        "sent_at": datetime.utcnow().isoformat()
+    }
+
+    res = supabase.table("sent_phone").insert(data).execute()
+
+    if res.data:
+        print(f"✅ Đã thêm sdt {phone} ")
+        return res.data[0]
+    else:
+        print("❌ Insert fail:", res)
+        return None
+def get_unsent_latest_kakao():
+    res = supabase.rpc("get_unsent_latest_kakao").execute()
     
-
-    print(result)
+    if res.data:
+        return res.data
+    else:
+        return []
