@@ -22,6 +22,7 @@ async def process_all_unsent_kakao():
             continue  # bỏ qua nếu thiếu dữ liệu
 
         try:
+            print("gửi đến kakao "+ phone)
             await process_send_kakao(pnr, type_, phone)
         except Exception as e:
             print(f"Lỗi khi xử lý PNR {pnr} - {phone}: {e}")
