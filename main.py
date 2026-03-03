@@ -46,6 +46,7 @@ from fastapi.concurrency import run_in_threadpool
 from typing import List
 from ocr_gemini import ocr_then_parse
 from backend_api_vna_v3 import api_checkve_vna_v3
+from utils_kakao import process_all_unsent_kakao
 
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://thuhongtour.com"
@@ -1378,6 +1379,12 @@ def send_mess_kakao(req: KakaoRequest):
         return {"error": str(e)}
 
 
+@app.post("/api/kakao-trigger")
+async def kakao_trigger():
+   
+        await process_all_unsent_kakao()
+
+    return {"status": "ok"}
 
 
 
