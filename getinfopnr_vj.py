@@ -116,6 +116,27 @@ async def get_visa_vj(token, key , keyhanhkhach):
         print(f"Lỗi khi gọi API check PNR: {response.status_code}")
         print(response.text)
         return None
+# ===== Tạo nội dung Kakao message =====
+def build_kakao_message(chieudi, chieuve):
+    lines = []
+
+    for seg in [chieudi, chieuve]:
+        if seg and seg.get("departure") and seg.get("arrival"):
+            route = f"{seg.get('departure','')}-{seg.get('arrival','')}"
+            time = seg.get("giocatcanh","")
+            full_date = seg.get("ngaycatcanh","")
+
+            short_date = ""
+            if full_date:
+                parts = full_date.split("/")
+                if len(parts) >= 2:
+                    short_date = f"{parts[0]}/{parts[1]}"
+
+            lines.append(f"{route} {time} ngày {short_date}")
+
+    return "\n".join(lines)
+
+     
 def tinh_gia_nguoi_lon(data):
     ket_qua = 0
 
@@ -300,6 +321,7 @@ async def format_flight_data(data):
     # gán lại chieudi - chieuve sau khi lọc
     chieudi = listchieu[0] if len(listchieu) >= 1 else {}
     chieuve = listchieu[1] if len(listchieu) >= 2 else {}
+    kakaomess = build_kakao_message(chieudi, chieuve)   
     res = {
         "pnr": pnr,
         "status": "OK",
@@ -312,7 +334,8 @@ async def format_flight_data(data):
         "chieudi": chieudi,
         "chieuve": chieuve,
         "passengers": passenger_list,
-        "giacoban": giacoban
+        "giacoban": giacoban,
+        "kakaomess" :kakaomess
     }
 
     return res
@@ -370,6 +393,7 @@ if __name__ == "__main__":
         print(a)
 
     asyncio.run(main())
+
 
 
 
