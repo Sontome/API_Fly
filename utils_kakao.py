@@ -19,6 +19,7 @@ async def process_all_unsent_kakao():
         type_ = item.get("type")
 
         if not phone or not pnr:
+            print("bỏ qua nếu thiếu dữ liệu")
             continue  # bỏ qua nếu thiếu dữ liệu
 
         try:
