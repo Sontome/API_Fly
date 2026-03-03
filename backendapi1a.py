@@ -1165,7 +1165,25 @@ def parse_pnr(text,pnr):
             "sohieumaybay": so_hieu
         })
         chang_so += 1
+    # ======== BUILD KAKAO MESSAGE ========
+    lines = []
 
+    for seg in data.get("chang", []):
+        dep = seg.get("departure", "")
+        arr = seg.get("arrival", "")
+        time = seg.get("giocatcanh", "")
+        full_date = seg.get("ngaycatcanh", "")
+
+        short_date = ""
+        if full_date:
+            parts = full_date.split("/")
+            if len(parts) >= 2:
+                short_date = f"{parts[0]}/{parts[1]}"
+
+        if dep and arr:
+            lines.append(f"{dep}-{arr} {time} ngày {short_date}")
+
+    data["kakaomess"] = "\n".join(lines)
     return data
 
 
@@ -1573,6 +1591,7 @@ async def repricePNR_v2(pnr, doituong):
         return {"error": str(e),
         "status":"401"
         }
+
 
 
 
