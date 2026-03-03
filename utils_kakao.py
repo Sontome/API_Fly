@@ -1,6 +1,7 @@
 from datetime import datetime
 from backend_supabase_kakao import update_sent_phone,get_unsent_latest_kakao
 from getinfopnr_vj import checkpnr_vj
+from backend_api_kakao import send_bms_image
 from backendapi1a import checkmatvechoVNA
 import asyncio
 
