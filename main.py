@@ -1379,12 +1379,8 @@ def send_mess_kakao(req: KakaoRequest):
         return {"error": str(e)}
 
 
-@app.post("/api/kakao-trigger")
-async def kakao_trigger():
-   
-        await process_all_unsent_kakao()
 
-    return {"status": "ok"}
+
 
 
 
