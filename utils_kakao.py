@@ -1,9 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from backend_supabase_kakao import update_sent_phone,get_unsent_latest_kakao
 from getinfopnr_vj import checkpnr_vj
 from backend_api_kakao import send_bms_image
 from backendapi1a import checkmatvechoVNA
 import asyncio
+KST = timezone(timedelta(hours=9))  # GMT+9
+
 
 async def process_all_unsent_kakao():
     # Lấy danh sách chưa gửi
@@ -28,7 +30,9 @@ async def process_all_unsent_kakao():
         except Exception as e:
             print(f"Lỗi khi xử lý PNR {pnr} - {phone}: {e}")
 async def process_send_kakao(PNR, type, phone):
-    current_time = datetime.now().strftime("%Hh%Mp ngày %d/%m/%Y")
+    now = datetime.now(KST)
+    current_time = now.strftime("%Hh%Mp ngày %d/%m/%Y")
+    
 
     if type == "ISSUED":
         prefix = f"PNR {PNR} đã xuất vé thành công vào {current_time}"
