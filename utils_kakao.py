@@ -5,6 +5,26 @@ from backend_api_kakao import send_bms_image
 from backendapi1a import checkmatvechoVNA
 import asyncio
 
+async def process_all_unsent_kakao():
+    # Lấy danh sách chưa gửi
+    records = get_unsent_latest_kakao()
+
+    if not records:
+        print("Không có dữ liệu cần gửi.")
+        return
+
+    for item in records:
+        phone = item.get("phone")
+        pnr = item.get("pnr")
+        type_ = item.get("type")
+
+        if not phone or not pnr:
+            continue  # bỏ qua nếu thiếu dữ liệu
+
+        try:
+            await process_send_kakao(pnr, type_, phone)
+        except Exception as e:
+            print(f"Lỗi khi xử lý PNR {pnr} - {phone}: {e}")
 async def process_send_kakao(PNR, type, phone):
     current_time = datetime.now().strftime("%Hh%Mp ngày %d/%m/%Y")
 
@@ -41,5 +61,4 @@ async def process_send_kakao(PNR, type, phone):
         )
         update_sent_phone(phone)
 if __name__ == "__main__":
-    asyncio.run(process_send_kakao("D422P2", "ISSUED", "0764301092"))
-    asyncio.run(process_send_kakao("G49B3G", "HOLD", "0764301092"))
+    asyncio.run(process_all_unsent_kakao())
