@@ -35,7 +35,7 @@ from utils_telegram import send_mess as send_vj
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
 from fastapi import Query
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -58,6 +58,7 @@ F2_DIR = "/root/matvef2"
 os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
+KST = timezone(timedelta(hours=9))  # GMT+9
 class KakaoRequest(BaseModel):
     to_number: str
     image_id: str
@@ -1380,6 +1381,16 @@ def send_mess_kakao(req: KakaoRequest):
 
 @app.post("/api/kakao-trigger")
 async def kakao_trigger():
+    now = datetime.now(KST)
+
+    start_time = now.replace(hour=8, minute=0, second=0, microsecond=0)
+    end_time = now.replace(hour=20, minute=50, second=0, microsecond=0)
+
+    # Nếu ngoài khung giờ thì bỏ qua
+    if not (start_time <= now <= end_time):
+        print("Ngoài khung giờ gửi, bỏ qua.")
+        return {"status": "outside_allowed_time"}
+
     await process_all_unsent_kakao()
     return {"status": "ok"}
 
