@@ -22,7 +22,7 @@ async def process_send_kakao(PNR, type, phone):
 
         send_bms_image(
             to_number=phone,
-            image_id="VJ",
+            image ="VJ",
             content=content
         )
         update_sent_phone(phone)
@@ -36,7 +36,7 @@ async def process_send_kakao(PNR, type, phone):
 
         send_bms_image(
             to_number=phone,
-            image_id="VNA",
+            image ="VNA",
             content=content
         )
         update_sent_phone(phone)
