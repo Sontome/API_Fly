@@ -47,6 +47,8 @@ from typing import List
 from ocr_gemini import ocr_then_parse
 from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
+from backend_supabase_kakao import add_kakao_pnr
+
 
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://thuhongtour.com"
@@ -63,6 +65,11 @@ class KakaoRequest(BaseModel):
     to_number: str
     image_id: str
     content: str
+class KakaoAddPNRRequest(BaseModel):
+    phone: str
+    name: str
+    pnr: str
+    type : str = "ISSUED"
 class PNRRequest(BaseModel):
     pnr: str
     banner: Optional[str] =""
@@ -1393,6 +1400,7 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+
 
 
 
