@@ -1385,7 +1385,18 @@ def send_mess_kakao(req: KakaoRequest):
         return result
     except Exception as e:
         return {"error": str(e)}
-
+@app.post("/kakao-add-queue")
+def addkakaopnr(req: KakaoAddPNRRequest):
+    try:
+        result = add_kakao_pnr(
+            phone=req.phone,
+            name=req.name,
+            pnr=req.pnr,
+            type = req.type
+        )
+        return result
+    except Exception as e:
+        return {"error": str(e)}
 @app.post("/api/kakao-trigger")
 async def kakao_trigger():
     now = datetime.now(KST)
@@ -1400,6 +1411,7 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+
 
 
 
