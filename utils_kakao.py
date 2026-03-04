@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from backend_supabase_kakao import update_sent_phone,get_unsent_latest_kakao
+from backend_supabase_kakao import update_sent_phone,get_unsent_latest_kakao,update_row_sent
 from getinfopnr_vj import checkpnr_vj
 from backend_api_kakao import send_bms_image
 from backendapi1a import checkmatvechoVNA
@@ -19,6 +19,7 @@ async def process_all_unsent_kakao():
         phone = item.get("phone")
         pnr = item.get("pnr")
         type_ = item.get("type")
+        id = item.get("id")
 
         if not phone or not pnr:
             print("bỏ qua nếu thiếu dữ liệu")
@@ -26,10 +27,10 @@ async def process_all_unsent_kakao():
 
         try:
             print("gửi đến kakao "+ phone)
-            await process_send_kakao(pnr, type_, phone)
+            await process_send_kakao(pnr, type_, phone,id)
         except Exception as e:
             print(f"Lỗi khi xử lý PNR {pnr} - {phone}: {e}")
-async def process_send_kakao(PNR, type, phone):
+async def process_send_kakao(PNR, type, phone,id):
     now = datetime.now(KST)
     current_time = now.strftime("%Hh%Mp ngày %d/%m/%Y")
     
@@ -51,6 +52,7 @@ async def process_send_kakao(PNR, type, phone):
             image ="VJ",
             content=content
         )
+        update_row_sent(id)
         update_sent_phone(phone)
         return
 
@@ -65,6 +67,7 @@ async def process_send_kakao(PNR, type, phone):
             image ="VNA",
             content=content
         )
+        update_row_sent(id)
         update_sent_phone(phone)
 if __name__ == "__main__":
     asyncio.run(process_all_unsent_kakao())
