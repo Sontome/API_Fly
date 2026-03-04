@@ -12,7 +12,26 @@ key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 supabase = create_client(url, key)
 
+def update_row_sent(row_id: str):
+    """
+    Cập nhật row_sent = true cho dòng có id tương ứng
+    :param row_id: uuid của dòng trong bảng kakanoti
+    """
 
+    res = (
+        supabase
+        .table("kakanoti")
+        .update({"row_sent": True})
+        .eq("id", row_id)
+        .execute()
+    )
+
+    if res.data:
+        print(f"✅ Đã cập nhật row_sent=true cho id={row_id}")
+        return res.data[0]
+    else:
+        print("❌ Update fail:", res)
+        return None
 def add_kakao_pnr(phone: str, name: str,pnr: str):
     """
     Thêm PNR vào bảng kakanoti
