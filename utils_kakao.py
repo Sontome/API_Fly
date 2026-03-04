@@ -20,6 +20,7 @@ async def process_all_unsent_kakao():
         pnr = item.get("pnr")
         type_ = item.get("type")
         id_ = item.get("id")
+        wl = item.get("wl")
 
         if not phone or not pnr:
             print("bỏ qua nếu thiếu dữ liệu")
@@ -27,10 +28,10 @@ async def process_all_unsent_kakao():
 
         try:
             print("gửi đến kakao "+ phone +   id_)
-            await process_send_kakao(pnr, type_, phone, id_)
+            await process_send_kakao(pnr, type_, phone, id_,wl)
         except Exception as e:
             print(f"Lỗi khi xử lý PNR {pnr} - {phone}: {e}")
-async def process_send_kakao(PNR, type, phone,id):
+async def process_send_kakao(PNR, type, phone,id,wl):
     now = datetime.now(KST)
     current_time = now.strftime("%Hh%Mp ngày %d/%m/%Y")
     
@@ -52,8 +53,8 @@ async def process_send_kakao(PNR, type, phone,id):
             image ="VJ",
             content=content
         )
-        
-        update_sent_phone(phone)
+        if wl == False:
+            update_sent_phone(phone)
         update_row_sent(id)
         return
 
@@ -68,8 +69,8 @@ async def process_send_kakao(PNR, type, phone,id):
             image ="VNA",
             content=content
         )
-        
-        update_sent_phone(phone)
+        if wl == False:
+            update_sent_phone(phone)
         update_row_sent(id)
 if __name__ == "__main__":
     asyncio.run(process_all_unsent_kakao())
