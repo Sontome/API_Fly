@@ -19,15 +19,15 @@ async def process_all_unsent_kakao():
         phone = item.get("phone")
         pnr = item.get("pnr")
         type_ = item.get("type")
-        id = item.get("id")
+        id_ = item.get("id")
 
         if not phone or not pnr:
             print("bỏ qua nếu thiếu dữ liệu")
             continue  # bỏ qua nếu thiếu dữ liệu
 
         try:
-            print("gửi đến kakao "+ phone)
-            await process_send_kakao(pnr, type_, phone,id)
+            print("gửi đến kakao "+ phone +   id_)
+            await process_send_kakao(pnr, type_, phone, id_)
         except Exception as e:
             print(f"Lỗi khi xử lý PNR {pnr} - {phone}: {e}")
 async def process_send_kakao(PNR, type, phone,id):
