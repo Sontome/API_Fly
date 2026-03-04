@@ -32,7 +32,7 @@ def update_row_sent(row_id: str):
     else:
         print("❌ Update fail:", res)
         return None
-def add_kakao_pnr(phone: str, name: str,pnr: str):
+def add_kakao_pnr(phone: str, name: str,pnr: str, type: str = "HOLD"):
     """
     Thêm PNR vào bảng kakanoti
     :phone
@@ -44,6 +44,7 @@ def add_kakao_pnr(phone: str, name: str,pnr: str):
         "phone": phone,
         "name": name,
         "pnr": pnr,           # optional, nếu có cột status
+        "type": type,
         "timecreat": datetime.utcnow().isoformat()
     }
 
