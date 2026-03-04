@@ -52,8 +52,9 @@ async def process_send_kakao(PNR, type, phone,id):
             image ="VJ",
             content=content
         )
-        update_row_sent(id)
+        
         update_sent_phone(phone)
+        update_row_sent(id)
         return
 
     result_vna = await checkmatvechoVNA(PNR, "checkvecho")
@@ -67,7 +68,8 @@ async def process_send_kakao(PNR, type, phone,id):
             image ="VNA",
             content=content
         )
-        update_row_sent(id)
+        
         update_sent_phone(phone)
+        update_row_sent(id)
 if __name__ == "__main__":
     asyncio.run(process_all_unsent_kakao())
