@@ -119,6 +119,33 @@ server {
 }
 
 -----------------------------------------
+
+nano api.hanvietair.com
+
+-----------------------------------------
+server {
+    listen 80;
+    server_name api.hanvietair.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+-----------------------------------------
+
+ln -s /etc/nginx/sites-available/api.hanvietair.com /etc/nginx/sites-enabled/
+systemctl reload nginx
+certbot --nginx -d api.hanvietair.com
+
+
+
 sudo nano /etc/nginx/sites-available/ip_default
 -----------------------------------------
 server {
