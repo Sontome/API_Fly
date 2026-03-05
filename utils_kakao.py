@@ -61,7 +61,12 @@ async def process_send_kakao(PNR, type, phone,id,wl):
     result_vna = await checkmatvechoVNA(PNR, "checkvecho")
 
     if result_vna and "kakaomess" in result_vna:
+        
         kakaomess = result_vna["kakaomess"]
+        if not kakaomess or not kakaomess.strip():
+            print(f"Bỏ qua PNR {PNR} vì kakaomess rỗng")
+            return
+
         content = f"{prefix}\n\n----------------------\n{kakaomess}"
 
         send_bms_image(
