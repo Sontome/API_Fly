@@ -51,7 +51,7 @@ from backend_supabase_kakao import add_kakao_pnr
 
 
 FILES_DIR = "/var/www/files"
-DOMAIN = "https://api.hanvietair.com"
+DOMAIN = "https://apilive.hanvietair.com"
 TEMP_DIR = "/root/API_Fly/tmp_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 BASE_DIR = "/root/matvegoc"
@@ -1411,6 +1411,7 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+
 
 
 
