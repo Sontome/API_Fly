@@ -49,7 +49,8 @@ from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr
 
-
+RATE_LIMIT_MINUTES = 5
+request_limit_cache = {}
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://apilive.hanvietair.com"
 TEMP_DIR = "/root/API_Fly/tmp_files"
@@ -185,7 +186,31 @@ async def safe_send_vna(result):
     except Exception as e:
         print(f"❌ Lỗi khi gửi Telegram VNA: {e}")
 app = FastAPI()
+@app.middleware("http")
+async def rate_limit_thuhongtour(request: Request, call_next):
 
+    host = request.headers.get("host", "")
+    path = request.url.path
+    ip = request.client.host
+
+    # chỉ limit domain thuhongtour
+    if "thuhongtour.com" in host:
+
+        if path in ["/vj/check-ve-vj", "/vna/check-ve-vna"]:
+
+            key = f"{ip}:{path}"
+            now = datetime.now()
+
+            if key in request_limit_cache:
+                last_time = request_limit_cache[key]
+
+                if now - last_time < timedelta(minutes=RATE_LIMIT_MINUTES):
+                    return Response(content="null", media_type="application/json")
+
+            request_limit_cache[key] = now
+
+    response = await call_next(request)
+    return response
 # Bật CORS full quyền
 app.add_middleware(
     CORSMiddleware,
@@ -1411,6 +1436,7 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+
 
 
 
