@@ -16,6 +16,7 @@ from get_gmail_service import get_gmail_service
 from sendmail_vj import sendmail_vj
 import fitz 
 import os
+from dotenv import load_dotenv
 import re
 import json
 import base64
@@ -49,7 +50,8 @@ from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr
 
-RATE_LIMIT_MINUTES = 3
+load_dotenv()
+RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
 request_limit_cache = {}
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://apilive.hanvietair.com"
@@ -62,6 +64,8 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
+class RateLimitUpdate(BaseModel):
+    minutes: int
 class KakaoRequest(BaseModel):
     to_number: str
     image_id: str
@@ -1436,6 +1440,30 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+@app.post("/admin/set-rate-limit")
+async def set_rate_limit(data: RateLimitUpdate):
+
+    global RATE_LIMIT_MINUTES
+    RATE_LIMIT_MINUTES = data.minutes
+
+    # ghi lại vào .env
+    env_path = ".env"
+    lines = []
+
+    with open(env_path, "r") as f:
+        lines = f.readlines()
+
+    with open(env_path, "w") as f:
+        for line in lines:
+            if line.startswith("RATE_LIMIT_MINUTES="):
+                f.write(f"RATE_LIMIT_MINUTES={data.minutes}\n")
+            else:
+                f.write(line)
+
+    return {
+        "status": "ok",
+        "new_rate_limit": RATE_LIMIT_MINUTES
+    }
 
 
 
