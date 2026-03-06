@@ -49,7 +49,7 @@ from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr
 
-RATE_LIMIT_MINUTES = 5
+RATE_LIMIT_MINUTES = 3
 request_limit_cache = {}
 FILES_DIR = "/var/www/files"
 DOMAIN = "https://apilive.hanvietair.com"
@@ -1436,6 +1436,7 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+
 
 
 
