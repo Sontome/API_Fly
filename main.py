@@ -196,7 +196,7 @@ async def rate_limit_thuhongtour(request: Request, call_next):
     # chỉ limit domain thuhongtour
     if "thuhongtour.com" in host:
 
-        if path in ["/vj/check-ve-vj", "/vna/check-ve-vna"]:
+        if path in ["/vj/check-ve-v2", "/vna/check-ve-vna"]:
 
             key = f"{ip}:{path}"
             now = datetime.now()
@@ -1436,6 +1436,7 @@ async def kakao_trigger():
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
+
 
 
 
