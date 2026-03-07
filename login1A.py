@@ -4,7 +4,7 @@ import threading, time
 from queue import Queue
 
 
-USERNAME = "SEL28AA10"
+USERNAME = "SEL28AA9"
 PASSWORD = "Bkdfasdv@203414@@"
 
 unlock_queue = Queue()
@@ -104,6 +104,7 @@ if __name__ == "__main__":
                 print("\n[!] Đóng browser")
             
         browser.close()
+
 
 
 
