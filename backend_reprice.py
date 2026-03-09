@@ -1,5 +1,6 @@
 from supabase import create_client
 import os
+import re
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -13,28 +14,51 @@ key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(url, key)
 
 
-def add_reprice_pnr(pnr: str, pnr_type: str):
+def add_reprice_pnr(pnrs: str, pnr_type: str):
     """
-    Thêm PNR vào bảng reprice
-    :param pnr: mã PNR (VD: ABC123)
-    :param pnr_type: type reprice (VD: auto / manual / vj / vna ...)
+    pnrs có thể nhập:
+    ABC123
+    ABC123,DEF456,GHI789
+    ABC123 DEF456 GHI789
     """
 
-    data = {
-        "pnr": pnr,
-        "type": pnr_type,
-        "status": "HOLD",           # optional, nếu có cột status
-        "created_at": datetime.utcnow().isoformat()
-    }
+    # tách theo , hoặc space
+    raw_list = re.split(r"[,\s]+", pnrs.strip())
+
+    # uppercase + bỏ trùng
+    unique_pnrs = list(set(p.upper() for p in raw_list if p))
+
+    valid_pnrs = []
+    invalid_pnrs = []
+
+    for pnr in unique_pnrs:
+        if re.fullmatch(r"[A-Z0-9]{6}", pnr):
+            valid_pnrs.append(pnr)
+        else:
+            invalid_pnrs.append(pnr)
+
+    if not valid_pnrs:
+        print("❌ Không có PNR hợp lệ")
+        return None
+
+    data = []
+    for pnr in valid_pnrs:
+        data.append({
+            "pnr": pnr,
+            "type": pnr_type,
+            "status": "HOLD",
+            "created_at": datetime.utcnow().isoformat()
+        })
 
     res = supabase.table("reprice").insert(data).execute()
 
     if res.data:
-        print(f"✅ Đã thêm PNR {pnr} | type={pnr_type}")
-        return res.data[0]
-    else:
-        print("❌ Insert fail:", res)
-        return None
+        print(f"✅ Đã thêm {len(res.data)} PNR:", valid_pnrs)
+
+    if invalid_pnrs:
+        print("⚠️ PNR không hợp lệ bị bỏ qua:", invalid_pnrs)
+
+    return res.data
 
 def get_reprice_pnr(pnr: str = None, pnr_type: str = None, status: str = None):
     """
@@ -95,3 +119,4 @@ def update_reprice_pnr(
     else:
         print("❌ Update fail cc gì đó:", res)
         return None
+
