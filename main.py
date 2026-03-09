@@ -49,6 +49,7 @@ from ocr_gemini import ocr_then_parse
 from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr
+from backend_reprice import add_reprice_pnr
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -64,6 +65,10 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
+
+class RepriceRequest(BaseModel):
+    pnrs: str
+    type: str
 class RateLimitUpdate(BaseModel):
     minutes: int
 class KakaoRequest(BaseModel):
@@ -1465,6 +1470,22 @@ async def set_rate_limit(data: RateLimitUpdate):
         "new_rate_limit": RATE_LIMIT_MINUTES
     }
 
+@app.post("/add-reprice")
+def add_reprice(data: RepriceRequest):
+    pnrs = data.pnrs
+    type = data.type
+    if not pnrs:
+        return {
+            "success": False,
+            "message": "Không có PNR hợp lệ"
+        }
+    result = add_reprice_pnr(pnrs = pnrs , pnr_type = type)
+    return {
+            "success": True,
+            "message": "OK"
+        }
+    
+    
 
 
 
