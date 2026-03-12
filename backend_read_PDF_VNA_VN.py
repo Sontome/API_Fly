@@ -229,34 +229,59 @@ def replace_text_between_phrases(pdf_path,output_path,
 
     # ===== ĐỔI MÀU HÀNH LÝ =====
     is_infant = "(INF)" in text
-    hl_pattern = re.compile(r"Hành lý ký gửi miễn cước: [12]PC")
+    hl_pattern = re.compile(r"Hành lý ký gửi miễn cước: ([12]PC)")
     matches = set(hl_pattern.findall(text))
-    for match in matches:
-        search_rects = page.search_for(match)
-        for rect in search_rects:
-            if "1PC" in match:
-                addon = " (10kg)" if is_infant else " (23kg)"
-            elif "2PC" in match:
-                addon = " (10kg+10kg)" if is_infant else " (23kg+23kg)"
+    
+    for pc in matches:
+        match_text = f"Hành lý ký gửi miễn cước: {pc}"
+        rects = page.search_for(match_text)
+    
+        for rect in rects:
+    
+            if pc == "1PC":
+                addon = "(10kg)" if is_infant else "(23kg)"
+            elif pc == "2PC":
+                addon = "(10kg+10kg)" if is_infant else "(23kg+23kg)"
             else:
                 addon = ""
+    
+            # xóa dòng cũ
             rect_del = fitz.Rect(rect.x0, rect.y0, page.rect.x1, rect.y1)
             page.add_redact_annot(rect_del)
             page.apply_redactions()
-            # Tính vị trí x để dịch sang phải
-            addon_x = rect.x1 + 0  # dịch sang phải 10pt
-            addon_y = rect.y0 + 9   # cùng line
-
+    
+            x = rect.x0
+            y = rect.y1 - 2
+    
+            # 1️⃣ Hành lý: (xanh + bold)
             page.insert_text(
-                (addon_x, addon_y),
-                addon,
+                (x, y),
+                "Hành lý:",
                 fontsize=fs*1.2,
-                fill=(1, 0, 0),
-                render_mode=0
+                fontname="helvB",
+                fill=(0, 0, 1)
             )
-            rect_del = fitz.Rect(rect.x0, rect.y0, page.rect.x1, rect.y1)
-            page.add_redact_annot(rect_del)
-            page.apply_redactions()
+    
+            # tính độ dài để đặt tiếp text
+            x += fitz.get_text_length("Hành lý:", fontname="helvB", fontsize=fs*1.2)
+    
+            # 2️⃣ 1PC / 2PC
+            page.insert_text(
+                (x, y),
+                f" {pc}",
+                fontsize=fs*1.2,
+                fill=(0, 0, 0)
+            )
+    
+            x += fitz.get_text_length(f" {pc}", fontsize=fs*1.2)
+    
+            # 3️⃣ (kg) đỏ
+            page.insert_text(
+                (x, y),
+                f" {addon}",
+                fontsize=fs*1.2,
+                fill=(1, 0, 0)
+            )
     # ===== THÊM NOTE KHI THẤY DÒNG XANHSM BANNER =====
     note_text_xanhsm = XANHSM_BANNER
     search_rects_xanhsm = page.search_for(note_text_xanhsm)
@@ -513,6 +538,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
