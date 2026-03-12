@@ -254,6 +254,9 @@ def replace_text_between_phrases(pdf_path,output_path,
                 fill=(1, 0, 0),
                 render_mode=0
             )
+            rect_del = fitz.Rect(rect.x0, rect.y0, page.rect.x1, rect.y1)
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()
     # ===== THÊM NOTE KHI THẤY DÒNG XANHSM BANNER =====
     note_text_xanhsm = XANHSM_BANNER
     search_rects_xanhsm = page.search_for(note_text_xanhsm)
@@ -510,6 +513,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
