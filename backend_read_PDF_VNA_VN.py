@@ -9,7 +9,7 @@ QR_IMAGE_PATH = "qrhva.jpg"
 FILES_DIR = "/var/www/files"
 FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 FONT_ARIAL_BOLD = "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf"
-font_bold = fitz.Font(file=FONT_ARIAL_BOLD)
+
 #FONT_ARIAL = "C:\\Windows\\Fonts\\arial.ttf"
 XANHSM_BANNER = "BAY CHUẨN "
 NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
@@ -540,6 +540,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
