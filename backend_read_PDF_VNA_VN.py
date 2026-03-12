@@ -251,12 +251,12 @@ def replace_text_between_phrases(pdf_path,output_path,
             page.apply_redactions()
     
             x = rect.x0
-            y = rect.y0 
+            y = rect.y0 +5
     
             # 1️⃣ Hành lý: (xanh + bold)
             page.insert_text(
                 (x, y),
-                "Hành lý:",
+                "Hành lý: ",
                 fontsize=fs*1.2,
                
                 fill=(0, 0, 1)
@@ -538,6 +538,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
