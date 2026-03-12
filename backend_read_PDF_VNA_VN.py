@@ -246,9 +246,9 @@ def replace_text_between_phrases(pdf_path,output_path,
                 addon = ""
     
             # xóa dòng cũ
-            rect_del = rect
-            page.add_redact_annot(rect_del)
-            page.apply_redactions()
+            # rect_del = rect
+            # page.add_redact_annot(rect_del)
+            # page.apply_redactions()
     
             x = rect.x0
             y = rect.y1 - 2
@@ -538,6 +538,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
