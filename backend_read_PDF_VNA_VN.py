@@ -242,6 +242,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                 addon = ""
             rect_del = fitz.Rect(rect.x0, rect.y0, page.rect.x1, rect.y1)
             page.add_redact_annot(rect_del)
+            page.apply_redactions()
             # Tính vị trí x để dịch sang phải
             addon_x = rect.x1 + 0  # dịch sang phải 10pt
             addon_y = rect.y0 + 9   # cùng line
@@ -509,6 +510,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
