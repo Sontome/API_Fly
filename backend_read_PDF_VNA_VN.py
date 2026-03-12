@@ -229,7 +229,7 @@ def replace_text_between_phrases(pdf_path,output_path,
 
     # ===== ĐỔI MÀU HÀNH LÝ =====
     is_infant = "(INF)" in text
-    hl_pattern = re.compile(r"Hành lý: [12]PC")
+    hl_pattern = re.compile(r"Hành lý ký gửi miễn cước: [12]PC")
     matches = set(hl_pattern.findall(text))
     for match in matches:
         search_rects = page.search_for(match)
@@ -508,6 +508,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
