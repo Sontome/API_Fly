@@ -39,17 +39,18 @@ def create_auth_header(api_key: str, api_secret: str) -> str:
 
 def send_bms_image(
     to_number: str,
-    
-    image: str,
-    content: str,
+    pnr: str,
+    time: str,
+    type: str,
+    trip: str,
     image_link: str = "https://hanvietair.com/vi",
     sms = True
 ) -> Dict[str, Any]:
     """Send Kakao BMS IMAGE message"""
 
     auth_header = create_auth_header(API_KEY, API_SECRET)
-    if image == "DELAY" : image_id = DELAY
-    elif image == "VJ" : image_id = VJ
+    if type == "DELAY" : image_id = DELAY
+    elif type == "VJ" : image_id = VJ
     else :image_id = VNA
     headers = {
         "Authorization": auth_header,
@@ -60,28 +61,27 @@ def send_bms_image(
         "messages": [
             {
                 "to": to_number,
-                "type": "BMS_FREE",
-                "text" :content,
+                "type": "ATA",
+                
                 "country": "82",
                 "from": "01035463396",
                 "kakaoOptions": {
                     "pfId": PF_ID,
                     "disableSms": sms,
-                    "bms": {
-                        "targeting": "I",
-                        "chatBubbleType": "IMAGE",
-                        "imageId": image_id,
-                        "adult": False,
-                        "content": content
+                    "templateId":image_id,
+                    "variables": {
+                        "#{pnr}": pnr,
+                        "#{reservation_time}": time,
+                        "#{trip_details}": trip,
                     }
+                    
                 }
             }
         ]
     }
 
     # Nếu có image_link thì thêm vào
-    if image_link:
-        message_data["messages"][0]["kakaoOptions"]["bms"]["imageLink"] = image_link
+    
 
     response = requests.post(
         "https://api.solapi.com/messages/v4/send-many/detail",
@@ -97,10 +97,11 @@ def send_bms_image(
 if __name__ == "__main__":
     result = send_bms_image(
         to_number="084764301092",
-        
-        image_id=DELAY,
-        content=(
-            "\nPNR ABCABC đã giữ chỗ thành công vào 13h00p ngày 27/02/2026.\n\n----------------------\n"
+        pnr= "ABCEDD",
+        time= "30h12p",
+        type=VJ,
+        trip=(
+            
             "ICN-HAN 06:25 ngày 24/04\n"
             "HAN-ICN 23:15 ngày 26/04"
         )
