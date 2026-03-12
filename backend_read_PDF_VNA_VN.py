@@ -246,9 +246,9 @@ def replace_text_between_phrases(pdf_path,output_path,
                 addon = ""
     
             # xóa dòng cũ
-            # rect_del = rect
-            # page.add_redact_annot(rect_del)
-            # page.apply_redactions()
+            rect_del = rect
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()
     
             x = rect.x0
             y = rect.y0 
@@ -263,7 +263,7 @@ def replace_text_between_phrases(pdf_path,output_path,
             )
     
             # tính độ dài để đặt tiếp text
-            x += fitz.get_text_length("Hành lý:", fontsize=fs*1.2)
+            x += fitz.get_text_length("Hành lý:", fontsize=fs*1.4)
     
             # 2️⃣ 1PC / 2PC
             page.insert_text(
@@ -273,7 +273,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                 fill=(0, 0, 0)
             )
     
-            x += fitz.get_text_length(f" {pc}", fontsize=fs*1.2)
+            x += fitz.get_text_length(f" {pc}", fontsize=fs*1.4)
     
             # 3️⃣ (kg) đỏ
             page.insert_text(
@@ -538,6 +538,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
