@@ -50,8 +50,10 @@ async def process_send_kakao(PNR, type, phone,id,wl):
 
         send_bms_image(
             to_number=phone,
-            image ="VJ",
-            content=content
+            type ="VJ",
+            pnr = PNR,
+            time = current_time,
+            trip=kakaomess
         )
         if wl == False:
             update_sent_phone(phone)
@@ -71,8 +73,10 @@ async def process_send_kakao(PNR, type, phone,id,wl):
 
         send_bms_image(
             to_number=phone,
-            image ="VNA",
-            content=content
+            type ="VNA",
+            pnr = PNR,
+            time = current_time,
+            trip=kakaomess
         )
         if wl == False:
             update_sent_phone(phone)
