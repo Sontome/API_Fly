@@ -263,7 +263,7 @@ def replace_text_between_phrases(pdf_path,output_path,
             )
     
             # tính độ dài để đặt tiếp text
-            x += fitz.get_text_length("Hành lý:", fontsize=fs*1.4)
+            x += fitz.get_text_length("Hành lý:", fontsize=fs*1.4 +3)
     
             # 2️⃣ 1PC / 2PC
             page.insert_text(
@@ -538,6 +538,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
