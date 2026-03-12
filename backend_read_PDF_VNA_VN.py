@@ -261,10 +261,10 @@ def replace_text_between_phrases(pdf_path,output_path,
                 "Hành lý: ",
                 fontsize=fs*1.2,
                 fontfile=FONT_ARIAL_BOLD,
-                fontname="arial",
+                
                 
                 fill=(0.0118, 0.1647, 0.2588),
-                render_mode=1
+                render_mode=2
             )
     
             # tính độ dài để đặt tiếp text
@@ -543,6 +543,7 @@ def reformat_VNA_VN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
 
 
 #reformat_VNA_VN("pdf1.pdf","output.pdf",type=0)
+
 
 
 
