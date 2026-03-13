@@ -82,8 +82,7 @@ class KakaoRequest(BaseModel):
     hang: str="",
     reason: str="",
     oldtime: str="",
-    newtime: str="",
-    sms=True
+    newtime: str=""
 class KakaoAddPNRRequest(BaseModel):
     phone: str
     name: str
@@ -1431,8 +1430,7 @@ def send_mess_kakao(req: KakaoRequest):
             hang= req.hang,
             reason= req.reason,
             oldtime= req.oldtime,
-            newtime= req.newtime,
-            sms=req.sms
+            newtime= req.newtime
         )
         return result
     except Exception as e:
