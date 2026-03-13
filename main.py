@@ -72,9 +72,18 @@ class RepriceRequest(BaseModel):
 class RateLimitUpdate(BaseModel):
     minutes: int
 class KakaoRequest(BaseModel):
-    to_number: str
-    image_id: str
-    content: str
+    
+    to_number: str,
+    pnr: str,
+    time: str="",
+    type: str="",
+    trip: str="",
+    image_link: str="https://hanvietair.com/vi",
+    hang: str="",
+    reason: str="",
+    oldtime: str="",
+    newtime: str="",
+    sms=True
 class KakaoAddPNRRequest(BaseModel):
     phone: str
     name: str
@@ -1412,9 +1421,18 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
 def send_mess_kakao(req: KakaoRequest):
     try:
         result = send_bms_image(
-            to_number=req.to_number,
-            image=req.image_id,
-            content=req.content
+            
+            to_number= req.to_number,
+            pnr= req.pnr,
+            time= req.time,
+            type= req.type,
+            trip= req.trip,
+            image_link= req.image_link,
+            hang= req.hang,
+            reason= req.reason,
+            oldtime= req.oldtime,
+            newtime= req.newtime,
+            sms=req.sms
         )
         return result
     except Exception as e:
