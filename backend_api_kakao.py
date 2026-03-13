@@ -59,10 +59,16 @@ def send_bms_image(
         "VJ": VJ,
         "VNA": VNA
     }
-
+    airline_map = {
+        "VJ": "Vietjet Air",
+        "VNA": "Vietnam Airlines",
+        "QH": "Bamboo Airways"
+    }
+    
+    airline_name = airline_map.get(hang, hang)
     variables_map = {
         "DELAY": {
-            "#{Airlines_name}": hang,
+            "#{Airlines_name}": airline_name,
             "#{pnr}": pnr,
             "#{trip_details}": trip,
             "#{old_time}": oldtime,
