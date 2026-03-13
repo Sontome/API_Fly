@@ -40,41 +40,68 @@ def create_auth_header(api_key: str, api_secret: str) -> str:
 def send_bms_image(
     to_number: str,
     pnr: str,
-    time: str,
-    type: str,
-    trip: str,
-    image_link: str = "https://hanvietair.com/vi",
-    sms = True
+    time: str="",
+    type: str="",
+    trip: str="",
+    image_link: str="https://hanvietair.com/vi",
+    hang: str="",
+    reason: str="",
+    oldtime: str="",
+    newtime: str="",
+    sms=True
 ) -> Dict[str, Any]:
     """Send Kakao BMS IMAGE message"""
 
     auth_header = create_auth_header(API_KEY, API_SECRET)
-    if type == "DELAY" : image_id = DELAY
-    elif type == "VJ" : image_id = VJ
-    else :image_id = VNA
+
+    image_map = {
+        "DELAY": DELAY,
+        "VJ": VJ,
+        "VNA": VNA
+    }
+
+    variables_map = {
+        "DELAY": {
+            "#{Airlines_name}": hang,
+            "#{pnr}": pnr,
+            "#{trip_details}": trip,
+            "#{old_time}": oldtime,
+            "#{new_time}": newtime,
+            "#{Delay_reason}": reason,
+            "#{url}": f"{hang}/{pnr}"
+        },
+        "VJ": {
+            "#{pnr}": pnr,
+            "#{reservation_time}": time,
+            "#{trip_details}": trip
+        },
+        "VNA": {
+            "#{pnr}": pnr,
+            "#{reservation_time}": time,
+            "#{trip_details}": trip
+        }
+    }
+
+    image_id = image_map.get(type, VNA)
+    variables = variables_map.get(type, variables_map["VNA"])
+
     headers = {
         "Authorization": auth_header,
         "Content-Type": "application/json"
     }
-    
+
     message_data = {
         "messages": [
             {
                 "to": to_number,
                 "type": "ATA",
-                
                 "country": "82",
                 "from": "01035463396",
                 "kakaoOptions": {
                     "pfId": PF_ID,
                     "disableSms": sms,
-                    "templateId":image_id,
-                    "variables": {
-                        "#{pnr}": pnr,
-                        "#{reservation_time}": time,
-                        "#{trip_details}": trip,
-                    }
-                    
+                    "templateId": image_id,
+                    "variables": variables
                 }
             }
         ]
