@@ -73,15 +73,15 @@ class RateLimitUpdate(BaseModel):
     minutes: int
 class KakaoRequest(BaseModel):
     
-    to_number: str,
-    pnr: str,
-    time: str="",
-    type: str="",
-    trip: str="",
-    image_link: str="https://hanvietair.com/vi",
-    hang: str="",
-    reason: str="",
-    oldtime: str="",
+    to_number: str
+    pnr: str
+    time: str=""
+    type: str=""
+    trip: str=""
+    image_link: str="https://hanvietair.com/vi"
+    hang: str=""
+    reason: str=""
+    oldtime: str=""
     newtime: str=""
 class KakaoAddPNRRequest(BaseModel):
     phone: str
