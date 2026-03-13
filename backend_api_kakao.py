@@ -74,7 +74,7 @@ def send_bms_image(
             "#{old_time}": oldtime,
             "#{new_time}": newtime,
             "#{Delay_reason}": reason,
-            "#{url}": f"{hang}/{pnr}"
+            "#{url}": f"check/{hang}/{pnr}"
         },
         "VJ": {
             "#{pnr}": pnr,
