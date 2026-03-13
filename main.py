@@ -75,14 +75,14 @@ class KakaoRequest(BaseModel):
     
     to_number: str
     pnr: str
-    time: str=""
-    type: str=""
-    trip: str=""
-    image_link: str="https://hanvietair.com/vi"
-    hang: str=""
-    reason: str=""
-    oldtime: str=""
-    newtime: str=""
+    time: Optional[str]=""
+    type: Optional[str]=""
+    trip: Optional[str]=""
+    image_link: Optional[str]="https://hanvietair.com/vi"
+    hang: Optional[str]=""
+    reason: Optional[str]=""
+    oldtime: Optional[str]=""
+    newtime: Optional[str]=""
 class KakaoAddPNRRequest(BaseModel):
     phone: str
     name: str
