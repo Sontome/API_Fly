@@ -1455,9 +1455,9 @@ async def kakao_trigger():
     end_time = now.replace(hour=20, minute=50, second=0, microsecond=0)
 
     # Nếu ngoài khung giờ thì bỏ qua
-    if not (start_time <= now <= end_time):
-        print("Ngoài khung giờ gửi, bỏ qua.")
-        return {"status": "outside_allowed_time"}
+    # if not (start_time <= now <= end_time):
+    #     print("Ngoài khung giờ gửi, bỏ qua.")
+    #     return {"status": "outside_allowed_time"}
 
     await process_all_unsent_kakao()
     return {"status": "ok"}
