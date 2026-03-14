@@ -70,7 +70,7 @@ def send_bms_image(
         "DELAY": {
             "#{Airlines_name}": airline_name,
             "#{pnr}": pnr,
-            "#{trip_details}": trip,
+            "#{trip_details}":  f"\n{trip}",
             "#{old_time}": oldtime,
             "#{new_time}": newtime,
             "#{Delay_reason}": reason,
