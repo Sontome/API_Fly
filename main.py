@@ -879,7 +879,7 @@ async def checkdate_VNA_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxOHWTGs3qvtDwsw9WqsuUXZUVEPJ8Lv9d-c0cGbV9Njj5RpljkAWYsYB_OcZoLPWS9DQ/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbx9TrSzTv9MYAASSt2ZUN3Wqn566VENVsrgyqHP75euKC4dsdtncEb8RPxKgePFMHzkQA/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -1001,7 +1001,7 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbxB0-adI_PPkiLG18idtOpaeY4JxftquS0_KrwOQFLYi-CivuCe5JXKRbvcRE4Wqz-6/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzOneBsEtheykFSxKM1zzqatcVYoBjRXyhli8ll8zGTr4ybiNCrrAAYlWuHncHJcKqk/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
