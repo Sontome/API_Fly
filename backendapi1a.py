@@ -1575,7 +1575,7 @@ async def repricePNR_v2(pnr, doituong):
                         "message": "HL - vé HOLD",
                         "email": email,
                         "ET" : True,
-                        "nametrip" :name+ trip
+                        "nametrip" :trip + "-"+name
                     }
 
             print(f"💰 Giá gốc: {gia_goc} | Giá mới: {gia_moi}")
@@ -1595,7 +1595,7 @@ async def repricePNR_v2(pnr, doituong):
                         "message": "HL - vé HOLD",
                         "email": email,
                         "ET" : False,
-                        "nametrip" :name+ trip
+                        "nametrip" :trip + "-"+name
                     }
                 return {
                     "status": "CANCEL",
@@ -1603,7 +1603,7 @@ async def repricePNR_v2(pnr, doituong):
                     "pricemoi": gia_moi,
                     "email": email,
                     "message": "No active TST, cancelled",
-                    "nametrip" :name+ trip
+                    "nametrip" :trip + "-"+name
                 }
             if (
                 gia_goc is not None 
@@ -1628,7 +1628,7 @@ async def repricePNR_v2(pnr, doituong):
             respone["pricegoc"] = gia_goc
             respone["pricemoi"] = gia_moi
             respone["list_inf"] = list_inf
-            respone["nametrip"] = name+trip
+            respone["nametrip"] = trip + "-"+name
             respone["email"] = email
             ssid, res = await send_command(client, "IG", "repricev2")
             respone["status"]="OK"
