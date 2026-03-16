@@ -68,6 +68,7 @@ async def main_reprice():
             pricegoc = body.get("pricegoc")
             pricemoi = body.get("pricemoi")
             email = body.get("email")
+            nametrip = body.get("nametrip") or ""
             # ===============================
             # ISSUED → PAID
             # ===============================
@@ -92,7 +93,7 @@ async def main_reprice():
                     last_checked_at=now.isoformat(),
                     email = email,
                 )
-                mess = f"PNR {pnr} đã bị huỷ DUE TO EXP TTL"
+                mess = f"PNR {pnr} {nametrip} đã bị huỷ DUE TO EXP TTL"
                 await send_mess(mess)
                 print(f"❌ {pnr} CANCEL")
             # ===============================
@@ -104,7 +105,7 @@ async def main_reprice():
                     last_checked_at=now.isoformat(),
                     email = email,
                 )
-                mess = f"PNR {pnr} đã vào được chỗ thành công"
+                mess = f"PNR {pnr} {nametrip} đã vào được chỗ thành công"
                 await send_mess(mess)
                 print(f"🎯 {pnr} HL + ET → vào được chỗ")
             elif status == "HL" and et is False:
@@ -135,7 +136,7 @@ async def main_reprice():
                 print(f"✅ {pnr} OK | ET={et}")
                 # 🔔 Gửi tin nhắn khi có giảm giá
                 if et is True and pricegoc and pricemoi:
-                    mess = f"PNR {pnr} đã giảm giá {pricegoc} > {pricemoi}"
+                    mess = f"PNR {pnr} {nametrip} đã giảm giá {pricegoc} > {pricemoi}"
                     await send_mess(mess)
             # ===============================
             # Status khác OK / CANCEL
