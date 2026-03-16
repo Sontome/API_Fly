@@ -28,6 +28,54 @@ AIRPORT_TZ = {
     "PQC": 7,
     # nếu cần thì bổ sung thêm
 }
+def get_name_trip(response):
+
+    name = ""
+    trip = ""
+
+    try:
+        # -------- NAME --------
+        name_match = re.search(
+            r'\d+\.\s*([A-Z]+/[A-Z ]+)\s+(MR|MRS)',
+            response
+        )
+
+        if name_match:
+            name = name_match.group(1).replace("/", " ").strip()
+
+        # -------- SEGMENTS --------
+        segments = re.findall(
+            r'\n\s*\d+\s+[A-Z0-9]{2,}\s*\d+\s+\w+\s+(\d{2}[A-Z]{3}).*?\b([A-Z]{6})\b\s+[A-Z]{2}\d',
+            response
+        )
+
+        if segments:
+
+            routes = []
+            dates = []
+
+            month_map = {
+                "JAN":"1","FEB":"2","MAR":"3","APR":"4","MAY":"5","JUN":"6",
+                "JUL":"7","AUG":"8","SEP":"9","OCT":"10","NOV":"11","DEC":"12"
+            }
+
+            for date, route in segments:
+
+                routes.append(route)
+
+                d = int(date[:2])
+                m = month_map.get(date[2:], "")
+
+                if m:
+                    dates.append(f"{d}/{m}")
+
+            if routes and dates:
+                trip = f"({' - '.join(routes)})-({'-'.join(dates)})"
+
+    except:
+        pass
+
+    return name, trip
 def normalize_phone(phone: str | None):
     if not phone:
         return None
@@ -1410,6 +1458,7 @@ async def repricePNR_v2(pnr, doituong):
             rtres=rtres.json()
             paymentstatus= rtres["model"]["output"]["crypticResponse"]["response"]
             # 2. Bắt email APE
+            name, trip = get_name_trip(paymentstatus)
             emails = re.findall(
                 r'APE\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})',
                 paymentstatus,
@@ -1525,7 +1574,8 @@ async def repricePNR_v2(pnr, doituong):
                         "pricemoi": gia_moi,
                         "message": "HL - vé HOLD",
                         "email": email,
-                        "ET" : True
+                        "ET" : True,
+                        "nametrip" :name+ trip
                     }
 
             print(f"💰 Giá gốc: {gia_goc} | Giá mới: {gia_moi}")
@@ -1544,14 +1594,16 @@ async def repricePNR_v2(pnr, doituong):
                         "pricemoi": gia_moi,
                         "message": "HL - vé HOLD",
                         "email": email,
-                        "ET" : False
+                        "ET" : False,
+                        "nametrip" :name+ trip
                     }
                 return {
                     "status": "CANCEL",
                     "pricegoc": gia_goc,
                     "pricemoi": gia_moi,
                     "email": email,
-                    "message": "No active TST, cancelled"
+                    "message": "No active TST, cancelled",
+                    "nametrip" :name+ trip
                 }
             if (
                 gia_goc is not None 
@@ -1576,7 +1628,7 @@ async def repricePNR_v2(pnr, doituong):
             respone["pricegoc"] = gia_goc
             respone["pricemoi"] = gia_moi
             respone["list_inf"] = list_inf
-            
+            respone["nametrip"] = name+trip
             respone["email"] = email
             ssid, res = await send_command(client, "IG", "repricev2")
             respone["status"]="OK"
