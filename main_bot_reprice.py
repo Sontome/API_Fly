@@ -151,4 +151,5 @@ async def main_reprice():
         except Exception as e:
             print(f"💥 Lỗi khi xử lý {item.get('pnr')}:", e)
     #await send_mess("Đã Reprice Xong")
+    await asyncio.sleep(2)
 asyncio.run(main_reprice())
