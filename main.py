@@ -1001,7 +1001,7 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzCQroIDNeBCdqvK-iLajbFPTr4ZTOfzy0TATDIxOS5bYHfq2qUp6a-av8Mq8WYgl4l/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbwSc6yTGUNAiyglQINeFFXuQWG-VxkXSPBMmCIabPmgfzv72nMzV1Cd5eeO8GvuDGMT/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
