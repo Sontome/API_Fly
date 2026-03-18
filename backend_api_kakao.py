@@ -78,13 +78,13 @@ def send_bms_image(
         },
         "VJ": {
             "#{pnr}": pnr,
-            "#{reservation_time}": time,
-            "#{trip_details}": trip
+            "#{Airlines_name}": airline_map.get(type, type),
+            "#{url}": f"check/{type}/{pnr}"
         },
         "VNA": {
             "#{pnr}": pnr,
-            "#{reservation_time}": time,
-            "#{trip_details}": trip
+            "#{Airlines_name}": airline_map.get(type, type),
+            "#{url}": f"check/{type}/{pnr}"
         }
     }
 
