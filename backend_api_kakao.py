@@ -6,9 +6,10 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, Any
 from dotenv import load_dotenv
-
+from utils_telegram import send_mess
 # Load biến môi trường từ .env
 load_dotenv()
+import asyncio
 
 API_KEY = os.getenv("API_KEY_SOLAPI")
 API_SECRET = os.getenv("API_SECRET_KAKAO")
@@ -183,13 +184,17 @@ def send_bms_image(
     )
 
     print(response.status_code)
-    print(response.text)
-
+    # print(response.text)
+    result = response.json()
+    new_balance = result["groupInfo"]["log"][-1]["newBalance"]
+    print(new_balance)
+    if new_balance < 5000:
+        asyncio.run(send_mess(f"Cảnh báo : số dư solapi sắp hết, vui lòng nạp tiền: {new_balance} w"))
     response.raise_for_status()
     return response.json()
 if __name__ == "__main__":
     result = send_bms_image(
-        to_number="084764301092",
+        to_number="08476430",
         pnr= "ABCEDD",
         time= "30h12p",
         type=VJ,
@@ -200,4 +205,4 @@ if __name__ == "__main__":
         )
     )
 
-    print(result)
+    # print(result)
