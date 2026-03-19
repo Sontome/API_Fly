@@ -16,7 +16,67 @@ PF_ID = os.getenv("PF_ID")
 VNA = os.getenv("IMAGE_VNA")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
+import re
 
+def normalize_phone_number(to_number: str) -> str:
+    # ====================
+    # 🧹 CLEAN INPUT
+    # ====================
+    to_number = to_number.strip()
+
+    # giữ lại số và dấu +
+    to_number = re.sub(r"[^\d+]", "", to_number)
+
+    # chỉ giữ + ở đầu (nếu có)
+    if "+" in to_number:
+        to_number = "+" + to_number.replace("+", "")
+
+    # ====================
+    # 🇰🇷 HÀN QUỐC
+    # ====================
+    if to_number.startswith("+82"):
+        to_number = "0" + to_number[3:]
+
+    if to_number.startswith("82"):
+        to_number = "0" + to_number[2:]
+
+    if to_number.startswith("01"):
+        if len(to_number) != 11:
+            print("⚠️ SĐT Hàn không đúng độ dài:", to_number)
+        return to_number
+
+    # ====================
+    # 🇻🇳 VIỆT NAM
+    # ====================
+    if to_number.startswith("+84"):
+        number = to_number[3:]
+        if len(number) != 9:
+            print("⚠️ SĐT VN không đúng độ dài:", to_number)
+        return "+84" + number
+
+    if to_number.startswith("84"):
+        number = to_number[2:]
+        if len(number) != 9:
+            print("⚠️ SĐT VN không đúng độ dài:", to_number)
+        return "+84" + number
+
+    if to_number.startswith("0"):
+        number = to_number[1:]
+        if len(number) != 9:
+            print("⚠️ SĐT VN không đúng độ dài:", to_number)
+        return "+84" + number
+
+    # ====================
+    # 🤡 ĐOÁN THIẾU
+    # ====================
+    if to_number.isdigit():
+        if len(to_number) == 9:
+            return "+84" + to_number
+        elif len(to_number) == 10 and to_number.startswith("1"):
+            return "0" + to_number
+
+    print("❌ Không nhận diện được số:", to_number)
+    return to_number
 def generate_signature(api_secret: str, date_time: str, salt: str) -> str:
     """HMAC-SHA256 signature"""
     data = date_time + salt
@@ -51,7 +111,7 @@ def send_bms_image(
     sms=True
 ) -> Dict[str, Any]:
     """Send Kakao BMS IMAGE message"""
-
+    to_number = normalize_phone_number(to_number)
     auth_header = create_auth_header(API_KEY, API_SECRET)
 
     image_map = {
