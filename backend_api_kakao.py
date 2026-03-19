@@ -10,7 +10,7 @@ from utils_telegram import send_mess
 # Load biến môi trường từ .env
 load_dotenv()
 import asyncio
-
+import re
 API_KEY = os.getenv("API_KEY_SOLAPI")
 API_SECRET = os.getenv("API_SECRET_KAKAO")
 PF_ID = os.getenv("PF_ID")
@@ -18,7 +18,7 @@ VNA = os.getenv("IMAGE_VNA")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
 BF24H = os.getenv("IMAGE_BF24H")
-import re
+
 
 def normalize_phone_number(to_number: str) -> str:
     # ====================
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     result = send_bms_image(
         to_number="",
         pnr= "ABCEDD",
-        time= "30h12p",
+       
         type="BF24H",
         hang= "VNA",
         trip=(
