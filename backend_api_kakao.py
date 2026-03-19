@@ -17,6 +17,7 @@ PF_ID = os.getenv("PF_ID")
 VNA = os.getenv("IMAGE_VNA")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
+BF24H = os.getenv("IMAGE_BF24H")
 import re
 
 def normalize_phone_number(to_number: str) -> str:
@@ -118,7 +119,8 @@ def send_bms_image(
     image_map = {
         "DELAY": DELAY,
         "VJ": VJ,
-        "VNA": VNA
+        "VNA": VNA,
+        "BF24H": BF24H
     }
     airline_map = {
         "VJ": "Vietjet Air",
@@ -129,7 +131,7 @@ def send_bms_image(
     airline_name = airline_map.get(hang, hang)
     variables_map = {
         "DELAY": {
-            "#{Airlines_name}": airline_name,
+            "#{Airlines_name}":"\n"+ airline_name,
             "#{pnr}": pnr,
             "#{trip_details}":  f"\n{trip}",
             "#{old_time}": oldtime,
@@ -139,13 +141,19 @@ def send_bms_image(
         },
         "VJ": {
             "#{pnr}": pnr,
-            "#{Airlines_name}": airline_map.get(type, type),
+            "#{Airlines_name}": "\n"+airline_map.get(type, type),
             "#{url}": f"check/{type}/{pnr}"
         },
         "VNA": {
             "#{pnr}": pnr,
-            "#{Airlines_name}": airline_map.get(type, type),
+            "#{Airlines_name}": "\n"+airline_map.get(type, type),
             "#{url}": f"check/{type}/{pnr}"
+        },
+        "BF24H": {
+            "#{pnr}": pnr,
+            "#{Airlines_name}": "\n"+airline_name,
+            "#{trip_info}": "\n"+trip,
+            "#{url}": f"check/{hang}/{pnr}"
         }
     }
 
@@ -186,18 +194,22 @@ def send_bms_image(
     print(response.status_code)
     # print(response.text)
     result = response.json()
-    new_balance = result["groupInfo"]["log"][-1]["newBalance"]
-    print(new_balance)
-    if new_balance < 5000:
-        asyncio.run(send_mess(f"Cảnh báo : số dư solapi sắp hết, vui lòng nạp tiền: {new_balance} w"))
-    response.raise_for_status()
+    try:
+        new_balance = result["groupInfo"]["log"][-1]["newBalance"]
+        print(new_balance)
+        if new_balance < 5000:
+            asyncio.run(send_mess(f"Cảnh báo : số dư solapi sắp hết, vui lòng nạp tiền: {new_balance} w"))
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Lỗi khi lấy số dư solapi: {e}")
     return response.json()
 if __name__ == "__main__":
     result = send_bms_image(
-        to_number="08476430",
+        to_number="",
         pnr= "ABCEDD",
         time= "30h12p",
-        type=VJ,
+        type="BF24H",
+        hang= "VNA",
         trip=(
             
             "ICN-HAN 06:25 ngày 24/04\n"
