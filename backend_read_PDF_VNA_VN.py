@@ -253,7 +253,7 @@ def replace_text_between_phrases(pdf_path,output_path,
             page.apply_redactions()
     
             x = rect.x0
-            y = rect.y0 +5
+            y = rect.y0 +9
     
             # 1️⃣ Hành lý: (xanh + bold)
             page.insert_text(
@@ -263,8 +263,18 @@ def replace_text_between_phrases(pdf_path,output_path,
                 fontfile=FONT_ARIAL_BOLD,
                 
                 
-                fill=(0.0118, 0.1647, 0.2588),
-                render_mode=2
+                fill=(0.1, 0.3, 0.4),
+                render_mode=0
+            )
+            page.insert_text(
+                (x, y+0.2),
+                "Hành lý: ",
+                fontsize=fs*1.2,
+                fontfile=FONT_ARIAL_BOLD,
+                
+                
+                fill=(0.1, 0.3, 0.4),
+                render_mode=0
             )
     
             # tính độ dài để đặt tiếp text
