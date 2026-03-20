@@ -26,7 +26,7 @@ async def main_reprice():
     now = datetime.now(timezone.utc)
     #await send_mess("Reprice ....")
     # Lấy danh sách HOLD
-    listpnr = get_reprice_pnr(status="HOLD")
+    listpnr = get_reprice_pnr(status="HOLD",auto_reprice = True)
     print(f"🔥 Bắt đầu xử lý {len(listpnr)} PNR HOLD")
 
     for item in listpnr:
