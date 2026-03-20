@@ -20,7 +20,7 @@ DELAY = os.getenv("IMAGE_DELAY")
 BF24H = os.getenv("IMAGE_BF24H")
 BLACKLIST_PARTIAL = [
     "1083695203",
-    "010999"
+    "764301092"
 ]
 
 
