@@ -60,7 +60,7 @@ def add_reprice_pnr(pnrs: str, pnr_type: str):
 
     return res.data
 
-def get_reprice_pnr(pnr: str = None, pnr_type: str = None, status: str = None):
+def get_reprice_pnr(pnr: str = None, pnr_type: str = None, status: str = None, auto_reprice: bool = None):
     """
     Lấy dữ liệu từ bảng reprice
     :param pnr: lọc theo mã PNR (optional)
@@ -78,6 +78,10 @@ def get_reprice_pnr(pnr: str = None, pnr_type: str = None, status: str = None):
 
     if status:
         query = query.eq("status", status)
+
+    if auto_reprice is not None:
+        query = query.eq("auto_reprice", auto_reprice)
+    
 
     res = query.execute()
 
@@ -119,4 +123,3 @@ def update_reprice_pnr(
     else:
         print("❌ Update fail cc gì đó:", res)
         return None
-
