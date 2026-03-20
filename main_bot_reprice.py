@@ -42,7 +42,7 @@ async def main_reprice():
             if now - created_at > timedelta(hours=48):
                 update_reprice_pnr(
                     pnr_id,
-                    status="OVERTIME",
+                    
                     auto_reprice=False,
                     last_checked_at=now.isoformat(),
                 )
