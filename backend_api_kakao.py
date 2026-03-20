@@ -18,6 +18,10 @@ VNA = os.getenv("IMAGE_VNA")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
 BF24H = os.getenv("IMAGE_BF24H")
+BLACKLIST_PARTIAL = [
+    "1083695203",
+    "010999"
+]
 
 
 def normalize_phone_number(to_number: str) -> str:
@@ -115,7 +119,14 @@ def send_bms_image(
     """Send Kakao BMS IMAGE message"""
     to_number = normalize_phone_number(to_number)
     auth_header = create_auth_header(API_KEY, API_SECRET)
-
+    for blocked in BLACKLIST_PARTIAL:
+        if blocked in to_number:
+            print(f"🚫 SĐT chứa blacklist ({blocked}), skip: {to_number}")
+            return {
+                "status": "blocked",
+                "reason": "blacklist_partial",
+                "to": to_number
+            }
     image_map = {
         "DELAY": DELAY,
         "VJ": VJ,
