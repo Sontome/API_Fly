@@ -218,28 +218,71 @@ def replace_text_between_phrases(pdf_path,output_path,
 
     # ===== ĐỔI MÀU HÀNH LÝ =====
     is_infant = "(INF)" in text
-    hl_pattern = re.compile(r"수하물: [12]PC")
+    hl_pattern = re.compile(r"무료 위탁 수하물: [12]PC")
     matches = set(hl_pattern.findall(text))
-    for match in matches:
-        search_rects = page.search_for(match)
-        for rect in search_rects:
-            if "1PC" in match:
-                addon = " (10kg)" if is_infant else " (23kg)"
-            elif "2PC" in match:
-                addon = " (10kg+10kg)" if is_infant else " (23kg+23kg)"
+    
+    for pc in matches:
+        match_text = f"무료 위탁 수하물: {pc}"
+        rects = page.search_for(match_text)
+    
+        for rect in rects:
+    
+            if pc == "1PC":
+                addon = "(10kg)" if is_infant else "(23kg)"
+            elif pc == "2PC":
+                addon = "(10kg+10kg)" if is_infant else "(23kg+23kg)"
             else:
                 addon = ""
-
-            # Tính vị trí x để dịch sang phải
-            addon_x = rect.x1 + 0  # dịch sang phải 10pt
-            addon_y = rect.y0 + 9   # cùng line
-
+    
+            # xóa dòng cũ
+            rect_del = rect
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()
+    
+            x = rect.x0
+            y = rect.y0 +9
+    
+            # 1️⃣ Hành lý: (xanh + bold)
             page.insert_text(
-                (addon_x, addon_y),
-                addon,
+                (x, y),
+                "수하물: ",
                 fontsize=fs*1.2,
-                fill=(1, 0, 0),
+                fontfile=FONT_ARIAL_BOLD,
+                
+                
+                fill=(0.1, 0.3, 0.4),
                 render_mode=0
+            )
+            page.insert_text(
+                (x, y+0.2),
+                "수하물: ",
+                fontsize=fs*1.2,
+                fontfile=FONT_ARIAL_BOLD,
+                
+                
+                fill=(0.1, 0.3, 0.4),
+                render_mode=0
+            )
+    
+            # tính độ dài để đặt tiếp text
+            x += fitz.get_text_length("수하물:", fontsize=fs*1.4 +3)
+    
+            # 2️⃣ 1PC / 2PC
+            page.insert_text(
+                (x, y),
+                f" {pc}",
+                fontsize=fs*1.2,
+                fill=(0, 0, 0)
+            )
+    
+            x += fitz.get_text_length(f" {pc}", fontsize=fs*1.4)
+    
+            # 3️⃣ (kg) đỏ
+            page.insert_text(
+                (x, y),
+                f" {addon}",
+                fontsize=fs*1.2,
+                fill=(1, 0, 0)
             )
     # ===== THÊM NOTE KHI THẤY DÒNG XANHSM BANNER =====
     note_text_xanhsm = XANHSM_BANNER
