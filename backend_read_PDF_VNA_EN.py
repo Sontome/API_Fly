@@ -253,7 +253,7 @@ def replace_text_between_phrases(pdf_path,output_path,
             )
             page.insert_text(
                 (x, y+0.2),
-                "Hành lý: ",
+                "Baggage: ",
                 fontsize=fs*1.2,
                 fontfile=FONT_ARIAL_BOLD,
                 
