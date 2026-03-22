@@ -32,29 +32,41 @@ def update_row_sent(row_id: str):
     else:
         print("❌ Update fail:", res)
         return None
-def add_kakao_pnr(phone: str, name: str,pnr: str):
+
+def add_kakao_pnr(phone: str, name: str, pnr,row_sent=False):
     """
-    Thêm PNR vào bảng kakanoti
-    :phone
-    :param pnr: mã PNR (VD: ABC123)
-    :param name: ten
+    Thêm nhiều PNR vào bảng kakanoti
+    pnr có thể là string hoặc list
     """
 
-    data = {
-        "phone": phone,
-        "name": name,
-        "pnr": pnr,           # optional, nếu có cột status
-        "timecreat": datetime.utcnow().isoformat()
-    }
+    # 🔥 nếu là string → convert thành list
+    if isinstance(pnr, str):
+        pnr = pnr.replace(" ", "")  # bỏ space
+        if len(pnr) % 6 != 0:
+            print("❌ Chuỗi PNR không hợp lệ đại ca")
+            return None
+        pnr = [pnr[i:i+6] for i in range(0, len(pnr), 6)]
 
-    res = supabase.table("kakanoti").insert(data).execute()
+    results = []
 
-    if res.data:
-        print(f"✅ Đã thêm PNR {pnr} | name={name}")
-        return res.data[0]
-    else:
-        print("❌ Insert fail:", res)
-        return None
+    for code in pnr:
+        data = {
+            "phone": phone,
+            "name": name,
+            "pnr": code,
+            "timecreat": datetime.utcnow().isoformat(),
+            "row_sent" : row_sent
+        }
+
+        res = supabase.table("kakanoti").insert(data).execute()
+
+        if res.data:
+            print(f"✅ Đã thêm PNR {code} | name={name}")
+            results.append(res.data[0])
+        else:
+            print(f"❌ Insert fail PNR {code}:", res)
+
+    return results
 def update_sent_phone(phone: str):
     """
     Thêm sdt vao bảng đã gửi sent_phone
