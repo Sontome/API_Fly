@@ -257,7 +257,7 @@ def kakao_delay(
         }
         print(payload)
         try:
-            send_bms_image(**payload)
+            result = send_bms_image(**payload)
             print(f"✅ Gửi OK -> {phone}")
             success += 1
         except Exception as e:
@@ -265,6 +265,7 @@ def kakao_delay(
             fail += 1
     time.sleep(1)
     print(f"🔥 Done : success={success}, fail={fail}")
+    return result
 # if __name__ == "__main__":
 #     result = kakao_delay(
        
