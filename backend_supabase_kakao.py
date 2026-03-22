@@ -25,7 +25,7 @@ def update_row_sent(row_id: str):
         .eq("id", row_id)
         .execute()
     )
-
+    
     if res.data:
         print(f"✅ Đã cập nhật row_sent=true cho id={row_id}")
         return res.data[0]
@@ -50,23 +50,25 @@ def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False):
     results = []
 
     for code in pnr:
-        data = {
-            "phone": phone,
-            "name": name,
-            "pnr": code,
-            "type" : type,
-            "timecreat": datetime.utcnow().isoformat(),
-            "row_sent" : row_sent
-        }
-
-        res = supabase.table("kakanoti").insert(data).execute()
-
-        if res.data:
-            print(f"✅ Đã thêm PNR {code} | name={name}")
-            results.append(res.data[0])
-        else:
-            print(f"❌ Insert fail PNR {code}:", res)
-
+        try:
+            data = {
+                "phone": phone,
+                "name": name,
+                "pnr": code,
+                "type" : type,
+                "timecreat": datetime.utcnow().isoformat(),
+                "row_sent" : row_sent
+            }
+                        
+            res = supabase.table("kakanoti").insert(data).execute()
+            
+            if res.data:
+                print(f"✅ Đã thêm PNR {code} | name={name}")
+                results.append(res.data[0])
+            else:
+                print(f"❌ Insert fail PNR {code}:", res)
+       except:
+           pass
     return results
 def update_sent_phone(phone: str):
     """
