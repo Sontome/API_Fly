@@ -66,42 +66,42 @@ def get_unsent_latest_kakao():
         return [] 
 #update_sent_phone("0764301092")
   
-def get_kakanoti_by_pnr(pnr: str):
-    """
-    Lấy dữ liệu từ bảng kakanoti theo pnr
-    và phone không được null / rỗng
-    + loại trùng phone
-    """
+# def get_kakanoti_by_pnr(pnr: str):
+#     """
+#     Lấy dữ liệu từ bảng kakanoti theo pnr
+#     và phone không được null / rỗng
+#     + loại trùng phone
+#     """
 
-    if not pnr:
-        print("❌ Thiếu pnr rồi đại ca")
-        return []
+#     if not pnr:
+#         print("❌ Thiếu pnr rồi đại ca")
+#         return []
 
-    query = (
-        supabase
-        .table("kakanoti")
-        .select("*")
-        .eq("pnr", pnr)
-        .not_.is_("phone", None)
-        .neq("phone", "")
-    )
+#     query = (
+#         supabase
+#         .table("kakanoti")
+#         .select("*")
+#         .eq("pnr", pnr)
+#         .not_.is_("phone", None)
+#         .neq("phone", "")
+#     )
 
-    res = query.execute()
+#     res = query.execute()
 
-    if not res.data:
-        print("⚠️ Không có dữ liệu hoặc query fail cc gì đó:", res)
-        return []
+#     if not res.data:
+#         print("⚠️ Không có dữ liệu hoặc query fail cc gì đó:", res)
+#         return []
 
-    # 🔥 lọc trùng phone
-    unique_data = {}
-    for row in res.data:
-        phone = row.get("phone")
-        if phone not in unique_data:
-            unique_data[phone] = row  # giữ bản ghi đầu tiên
+#     # 🔥 lọc trùng phone
+#     unique_data = {}
+#     for row in res.data:
+#         phone = row.get("phone")
+#         if phone not in unique_data:
+#             unique_data[phone] = row  # giữ bản ghi đầu tiên
 
-    result = list(unique_data.values())
+#     result = list(unique_data.values())
 
-    print(f"✅ Lấy được {len(result)} bản ghi (đã loại trùng phone)")
-    print(result)
+#     print(f"✅ Lấy được {len(result)} bản ghi (đã loại trùng phone)")
+#     print(result)
 
-    return result
+#     return result
