@@ -150,7 +150,7 @@ def send_bms_image(
             "#{trip_details}":  f"\n{trip}",
             "#{old_time}": oldtime,
             "#{new_time}": newtime,
-            "#{Delay_reason}": reason,
+            "#{delay_reason}": reason,
             "#{url}": f"check/{hang}/{pnr}"
         },
         "VJ": {
@@ -255,9 +255,9 @@ def kakao_delay(
             "oldtime": oldtime,
             "newtime": newtime
         }
-
+        print(payload)
         try:
-            send_bms_image(payload)
+            send_bms_image(**payload)
             print(f"✅ Gửi OK -> {phone}")
             success += 1
         except Exception as e:
@@ -265,18 +265,21 @@ def kakao_delay(
             fail += 1
     time.sleep(1)
     print(f"🔥 Done : success={success}, fail={fail}")
-if __name__ == "__main__":
-    result = send_bms_image(
-        to_number="",
-        pnr= "ABCEDD",
+# if __name__ == "__main__":
+#     result = kakao_delay(
        
-        type="BF24H",
-        hang= "VNA",
-        trip=(
+#         pnr= "U9XV2C",
+       
+#         type="DELAY",
+#         hang= "VNA",
+#         trip=(
             
-            "ICN-HAN 06:25 ngày 24/04\n"
-            "HAN-ICN 23:15 ngày 26/04"
-        )
-    )
+#             "ICN-HAN 06:25 ngày 24/04\n"
+#             "HAN-ICN 23:15 ngày 26/04"
+#         ),
+#         reason= "DELAY",
+#         oldtime= "10HP",
+#         newtime= "11H"
+#     )
 
     # print(result)
