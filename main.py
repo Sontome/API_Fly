@@ -87,10 +87,10 @@ class KakaoRequestDelay(BaseModel):
     
     
     pnr: str
-    time: Optional[str]=""
+    
     type: Optional[str]=""
     trip: Optional[str]=""
-    image_link: Optional[str]="https://hanvietair.com/vi"
+   
     hang: Optional[str]=""
     reason: Optional[str]=""
     oldtime: Optional[str]=""
@@ -1454,10 +1454,10 @@ def send_mess_kakao_delay(req: KakaoRequestDelay):
             
             
             pnr= req.pnr,
-            time= req.time,
+            
             type= req.type,
             trip= req.trip,
-            image_link= req.image_link,
+            
             hang= req.hang,
             reason= req.reason,
             oldtime= req.oldtime,
