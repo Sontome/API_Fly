@@ -5,7 +5,7 @@ from backend_read_PDF_VNA_VN import reformat_VNA_VN
 from backend_read_PDF_VNA_EN import reformat_VNA_EN
 from backend_read_PDF_VNA_KR import reformat_VNA_KR
 from backend_read_PDF_VJ import reformat_VJ
-from backend_api_kakao import send_bms_image,kakao_delay
+from backend_api_kakao import send_bms_image
 from backend_checkpayment_PDF_VJ import check_payment
 from backend_checkpayment_PDF_VNA import check_payment_vna
 from checkdate_VJ import checkdate_VJ
@@ -1447,25 +1447,25 @@ def send_mess_kakao(req: KakaoRequest):
         return result
     except Exception as e:
         return {"error": str(e)}
-@app.post("/kakao-api-delay")
-def send_mess_kakao_delay(req: KakaoRequestDelay):
-    try:
-        result = kakao_delay(
+# @app.post("/kakao-api-delay")
+# def send_mess_kakao_delay(req: KakaoRequestDelay):
+#     try:
+#         result = kakao_delay(
             
             
-            pnr= req.pnr,
-            time= req.time,
-            type= req.type,
-            trip= req.trip,
-            image_link= req.image_link,
-            hang= req.hang,
-            reason= req.reason,
-            oldtime= req.oldtime,
-            newtime= req.newtime
-        )
-        return result
-    except Exception as e:
-        return {"error": str(e)}
+#             pnr= req.pnr,
+#             time= req.time,
+#             type= req.type,
+#             trip= req.trip,
+#             image_link= req.image_link,
+#             hang= req.hang,
+#             reason= req.reason,
+#             oldtime= req.oldtime,
+#             newtime= req.newtime
+#         )
+#         return result
+#     except Exception as e:
+#         return {"error": str(e)}
 @app.post("/kakao-add-queue")
 def addkakaopnr(req: KakaoAddPNRRequest):
     try:
