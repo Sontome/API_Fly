@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any
 from dotenv import load_dotenv
 from utils_telegram import send_mess
-from backend_supabase_kakao import get_kakanoti_by_pnr
+# from backend_supabase_kakao import get_kakanoti_by_pnr
 # Load biến môi trường từ .env
 load_dotenv()
 import asyncio
