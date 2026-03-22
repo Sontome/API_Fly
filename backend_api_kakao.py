@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any
 from dotenv import load_dotenv
 from utils_telegram import send_mess
-# from backend_supabase_kakao import get_kakanoti_by_pnr
+from backend_supabase_kakao import get_kakanoti_by_pnr
 # Load biến môi trường từ .env
 load_dotenv()
 import asyncio
@@ -217,54 +217,54 @@ def send_bms_image(
     except Exception as e:
         print(f"Lỗi khi lấy số dư solapi: {e}")
     return response.json()
-# def kakao_delay(
-#     pnr: str,
-#     type: str,
-#     trip: str,
-#     hang: str,
-#     reason: str,
-#     oldtime: str,
-#     newtime: str
-# ):
-#     """
-#     Gửi BMS delay cho tất cả phone theo pnr
-#     """
+def kakao_delay(
+    pnr: str,
+    type: str,
+    trip: str,
+    hang: str,
+    reason: str,
+    oldtime: str,
+    newtime: str
+):
+    """
+    Gửi BMS delay cho tất cả phone theo pnr
+    """
 
-#     data_list = get_kakanoti_by_pnr(pnr)
+    data_list = get_kakanoti_by_pnr(pnr)
 
-#     if not data_list:
-#         print("⚠️ Không có data để gửi đại ca")
-#         return
+    if not data_list:
+        print("⚠️ Không có data để gửi ")
+        return
 
-#     success = 0
-#     fail = 0
+    success = 0
+    fail = 0
 
-#     for data in data_list:
-#         phone = data.get("phone")
+    for data in data_list:
+        phone = data.get("phone")
 
-#         if not phone:
-#             continue
+        if not phone:
+            continue
 
-#         payload = {
-#             "to_number": phone,
-#             "pnr": pnr,
-#             "type": type,
-#             "trip": trip,
-#             "hang": hang,
-#             "reason": reason,
-#             "oldtime": oldtime,
-#             "newtime": newtime
-#         }
-#         print(payload)
-#         try:
-#             send_bms_image(**payload)
-#             print(f"✅ Gửi OK -> {phone}")
-#             success += 1
-#         except Exception as e:
-#             print(f"❌ Lỗi gửi {phone}: {e}")
-#             fail += 1
-#     time.sleep(1)
-#     print(f"🔥 Done : success={success}, fail={fail}")
+        payload = {
+            "to_number": phone,
+            "pnr": pnr,
+            "type": type,
+            "trip": trip,
+            "hang": hang,
+            "reason": reason,
+            "oldtime": oldtime,
+            "newtime": newtime
+        }
+        print(payload)
+        try:
+            send_bms_image(**payload)
+            print(f"✅ Gửi OK -> {phone}")
+            success += 1
+        except Exception as e:
+            print(f"❌ Lỗi gửi {phone}: {e}")
+            fail += 1
+    time.sleep(1)
+    print(f"🔥 Done : success={success}, fail={fail}")
 # if __name__ == "__main__":
 #     result = kakao_delay(
        
