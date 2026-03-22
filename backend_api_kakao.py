@@ -218,13 +218,13 @@ def send_bms_image(
         print(f"Lỗi khi lấy số dư solapi: {e}")
     return response.json()
 def kakao_delay(
-    pnr: str,
-    type: str,
-    trip: str,
-    hang: str,
-    reason: str,
-    oldtime: str,
-    newtime: str
+    pnr: str="",
+    type: str="",
+    trip: str="",
+    hang: str="",
+    reason: str="",
+    oldtime: str="",
+    newtime: str=""
 ):
     """
     Gửi BMS delay cho tất cả phone theo pnr
