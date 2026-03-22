@@ -83,18 +83,18 @@ class KakaoRequest(BaseModel):
     reason: Optional[str]=""
     oldtime: Optional[str]=""
     newtime: Optional[str]=""
-class KakaoRequestDelay(BaseModel):
+# class KakaoRequestDelay(BaseModel):
     
     
-    pnr: str
-    time: Optional[str]=""
-    type: Optional[str]=""
-    trip: Optional[str]=""
-    image_link: Optional[str]="https://hanvietair.com/vi"
-    hang: Optional[str]=""
-    reason: Optional[str]=""
-    oldtime: Optional[str]=""
-    newtime: Optional[str]=""
+#     pnr: str
+#     time: Optional[str]=""
+#     type: Optional[str]=""
+#     trip: Optional[str]=""
+#     image_link: Optional[str]="https://hanvietair.com/vi"
+#     hang: Optional[str]=""
+#     reason: Optional[str]=""
+#     oldtime: Optional[str]=""
+#     newtime: Optional[str]=""
 class KakaoAddPNRRequest(BaseModel):
     phone: str
     name: str
