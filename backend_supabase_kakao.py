@@ -67,7 +67,7 @@ def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False):
                 results.append(res.data[0])
             else:
                 print(f"❌ Insert fail PNR {code}:", res)
-       except:
+        except:
            print(f"❌ Insert fail PNR {code}:", res)
     return results
 def update_sent_phone(phone: str):
