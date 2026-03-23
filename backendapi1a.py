@@ -374,7 +374,12 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
             # Regex tìm chuỗi dạng IGNORED - FMMOQR
             match = re.search(r"IGNORED\s*-\s*([A-Z0-9]{6})", resend_text)
             if match:
+                
                 pnr = match.group(1)
+                try :
+                    await repricePNR(pnr, doituong)
+                except:
+                    pass
                 print(f"✅ Giữ vé thành công! PNR: {pnr}")
                 try :
                     tenkakao = hanhkhach[0]
