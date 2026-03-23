@@ -477,6 +477,9 @@ def extract_flight(data, list_key, giá_hành_lý,phi_chieu_di):
         data = []
         stt = 1
         for chuyen in list_chuyen:
+            # ❌ bỏ qua nếu số điểm dừng khác 1
+            if chuyen.get("NumberOfStops") != 1:
+                continue
             if chuyen['fareOption']:
                 segments = chuyen.get("segmentOptions", [])
                 if not segments:
