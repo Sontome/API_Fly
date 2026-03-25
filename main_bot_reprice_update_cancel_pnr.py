@@ -39,7 +39,7 @@ async def main_reprice_update_cancel_pnr():
             
             body = await checkPNR(pnr,"update_cancel")
 
-            if not body or "status" not in body:
+            if not body :
                 print(f"⚠️ Body trả về gì đó cho {pnr}")
                 update_reprice_pnr(
                     pnr_id,
