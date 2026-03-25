@@ -29,7 +29,7 @@ async def main_reprice_update_cancel_pnr():
     listpnr = get_reprice_pnr(status="HOLD",auto_reprice = False)
     print(f"🔥 Bắt đầu xử lý {len(listpnr)} PNR HOLD")
 
-    for item in listpnr[:1]:
+    for item in listpnr:
         try:
             pnr_id = item["id"]
             pnr = item["pnr"]
