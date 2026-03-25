@@ -1534,7 +1534,54 @@ def add_reprice(data: RepriceRequest):
             "message": "OK"
         }
     
-    
+async def process_events(events):
+    if isinstance(events, dict):
+        events = [events]
+
+    for event in events:
+        try:
+            status_code = event.get("statusCode")
+            kakao = event.get("kakaoOptions", {})
+            template_id = kakao.get("templateId")
+            print(template_id)
+            type_map = {
+                os.getenv("IMAGE_DELAY"): "Delay",
+                os.getenv("IMAGE_VJ"): "Giữ vé",
+                os.getenv("IMAGE_VJ"): "Xuất vé",
+            }
+            print(type_map)
+            msg_type = type_map.get(template_id, "Không rõ")
+
+            variables = kakao.get("variables", {})
+            pnr = variables.get("#{pnr}", "")
+
+            status = "thành công" if status_code == "4000" else "thất bại"
+            to = event.get("to")
+
+            content = f"Thông báo {msg_type} PNR: {pnr}\nĐã gửi kakao {status}: {to}"
+
+            # 🔥 await async function
+            if msg_type == "Delay":
+                
+                await send_vj(content)
+            else:
+                await send_vj(content)
+
+        except Exception as e:
+            print("Lỗi xử lý event:", e)
+
+
+
+
+
+@app.post("/webhook")
+async def webhook(request: Request):
+    events = await request.json()
+
+    # chạy nền chuẩn async
+    asyncio.create_task(process_events(events))
+
+    return {"status": "OK"}    
 
 
 
