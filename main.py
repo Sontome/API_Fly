@@ -33,6 +33,7 @@ from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
 
 from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
 from utils_telegram import send_mess as send_vj
+from utils_telegram import send_mess as send_vj_delay
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
 from fastapi import Query
@@ -1563,7 +1564,7 @@ async def process_events(events):
             # 🔥 await async function
             if msg_type == "Delay":
                 
-                await send_vj(content)
+                await send_vj_delay(content)
             else:
                 await send_vj(content)
 
