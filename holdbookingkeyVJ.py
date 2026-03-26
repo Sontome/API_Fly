@@ -423,7 +423,7 @@ def build_payload_all(passenger_data, bookingkey, keyhanhly, keypaylate,sanbaydi
     }
     return payload
 
-def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone="1035463396",email="hanvietair247@gmail.com" ,bookingkeychieuve=None,phonekakao=""):
+def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone="1035463396",email="hanvietair247@gmail.com" ,bookingkeychieuve=None,phonekakao="",email=""):
     token = get_app_access_token_from_state()
     get_company(token)
     token = get_app_access_token_from_state()
@@ -458,7 +458,7 @@ def booking(passenger_data,bookingkey,sochieu,sanbaydi,iso="VN",exten="82",phone
         print(hạn_thanh_toán)
         try :
             tenkakao = get_full_name(passenger_data)
-            add_kakao_pnr(phonekakao,tenkakao,mã_giữ_vé)
+            add_kakao_pnr(phone=phonekakao,name=tenkakao,pnr=mã_giữ_vé,email=email)
         except Exception as e:
             print("❌ Lỗi add_kakao_pnr:", e)
         mess = "Giữ vé VJ thành công! PNR: " + mã_giữ_vé
