@@ -33,7 +33,7 @@ def update_row_sent(row_id: str):
         print("❌ Update fail:", res)
         return None
 
-def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False):
+def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False,email=None):
     """
     Thêm nhiều PNR vào bảng kakanoti
     pnr có thể là string hoặc list
@@ -59,7 +59,8 @@ def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False):
                 "timecreat": datetime.utcnow().isoformat(),
                 "row_sent" : row_sent
             }
-                        
+            if email:
+                    add_pnr_email(code, email)            
             res = supabase.table("kakanoti").insert(data).execute()
             
             if res.data:
@@ -99,7 +100,24 @@ def get_unsent_latest_kakao():
     else:
         return [] 
 #update_sent_phone("0764301092")
-  
+def add_pnr_email(pnr: str, email: str):
+    try:
+        data = {
+            "pnr": pnr,
+            "email": email,
+            "timecreat": datetime.utcnow().isoformat()
+        }
+
+        res = supabase.table("pnr_email") \
+            .upsert(data, on_conflict="pnr,email") \
+            .execute()
+
+        print(f"📧 Upsert email cho PNR {pnr}")
+        return res.data
+
+    except Exception as e:
+        print("❌ Lỗi add_pnr_email:", e)
+        return None  
 def get_kakanoti_by_pnr(pnr: str):
     """
     Lấy dữ liệu từ bảng kakanoti theo pnr
