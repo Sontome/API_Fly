@@ -102,6 +102,7 @@ class KakaoAddPNRRequest(BaseModel):
     pnr: str
     type : str = "ISSUED"
     row_sent : Optional[bool] = False
+    email : Optional[str] = ""
 class PNRRequest(BaseModel):
     pnr: str
     banner: Optional[str] =""
@@ -1476,7 +1477,8 @@ def addkakaopnr(req: KakaoAddPNRRequest):
             name=req.name,
             pnr=req.pnr,
             type = req.type,
-            row_sent = req.row_sent
+            row_sent = req.row_sent,
+            email=req.email
         )
         return result
     except Exception as e:
