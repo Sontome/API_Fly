@@ -33,15 +33,9 @@ def update_row_sent(row_id: str):
         print("❌ Update fail:", res)
         return None
 
-def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False,email=None):
-    """
-    Thêm nhiều PNR vào bảng kakanoti
-    pnr có thể là string hoặc list
-    """
-
-    # 🔥 nếu là string → convert thành list
+def add_kakao_pnr(phone: str, name: str, pnr, type="HOLD", row_sent=False, email=None):
     if isinstance(pnr, str):
-        pnr = pnr.replace(" ", "")  # bỏ space
+        pnr = pnr.replace(" ", "")
         if len(pnr) % 6 != 0:
             print("❌ Chuỗi PNR không hợp lệ đại ca")
             return None
@@ -55,21 +49,29 @@ def add_kakao_pnr(phone: str, name: str, pnr,type= "HOLD",row_sent=False,email=N
                 "phone": phone,
                 "name": name,
                 "pnr": code,
-                "type" : type,
+                "type": type,
                 "timecreat": datetime.utcnow().isoformat(),
-                "row_sent" : row_sent
+                "row_sent": row_sent
             }
+
+            # 👉 email xử lý riêng
             if email:
-                    add_pnr_email(code, email)            
-            res = supabase.table("kakanoti").insert(data).execute()
-            
+                add_pnr_email(code, email)
+
+            res = supabase.table("kakanoti").upsert(
+                data,
+                on_conflict="pnr,phone"   # 🔥 key unique
+            ).execute()
+
             if res.data:
-                print(f"✅ Đã thêm PNR {code} | name={name}")
+                print(f"✅ Upsert OK PNR {code} | name={name}")
                 results.append(res.data[0])
             else:
-                print(f"❌ Insert fail PNR {code}:", res)
-        except:
-           print("loi")
+                print(f"❌ Upsert fail PNR {code}:", res)
+
+        except Exception as e:
+            print("❌ Lỗi:", e)
+
     return results
 def update_sent_phone(phone: str):
     """
