@@ -1270,7 +1270,7 @@ async def giuveVNAlive(
     email: Optional[str] = Query(None, description="email F2 (nếu có)"),
     phone: Optional[str] = Query(None, description="phone F2 (nếu có)"),
     phonekakao: Optional[str] = Query("", description="phone gửi noti kakao (nếu có)"),
-    email: Optional[str] = Query("", description="email gửi noti kakao (nếu có)")
+    emailkakao: Optional[str] = Query("", description="email gửi noti kakao (nếu có)")
     
     
 ):
@@ -1286,7 +1286,7 @@ async def giuveVNAlive(
             email = email,
             phone= phone,
             phonekakao= phonekakao,
-            email=email                           
+            emailkakao=emailkakao                           
             )
             
         
