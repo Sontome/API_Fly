@@ -28,6 +28,41 @@ AIRPORT_TZ = {
     "PQC": 7,
     # nếu cần thì bổ sung thêm
 }
+def clean_name(raw_name: str):
+    if not raw_name:
+        return None
+
+    # bỏ (ADT), (CHD)
+    name = re.sub(r"\(.*?\)", "", raw_name)
+
+    # bỏ danh xưng
+    name = re.sub(r"\b(MR|MS|MSTR|MISS)\b", "", name, flags=re.IGNORECASE)
+
+    # thay / thành space
+    name = name.replace("/", " ")
+
+    # bỏ space thừa
+    name = re.sub(r"\s+", " ", name).strip()
+
+    return name
+
+
+def pick_representative_name(passengers: list):
+    if not passengers:
+        return None
+
+    # ưu tiên ADT
+    for p in passengers:
+        if "ADT" in p:
+            return clean_name(p)
+
+    # fallback CHD
+    for p in passengers:
+        if "CHD" in p:
+            return clean_name(p)
+
+    # fallback luôn cái đầu tiên
+    return clean_name(passengers[0])
 def get_name_trip(response):
 
     name = ""
@@ -382,7 +417,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                     pass
                 print(f"✅ Giữ vé thành công! PNR: {pnr}")
                 try :
-                    tenkakao = hanhkhach[0]
+                    tenkakao = pick_representative_name(hanhkhach)
                     add_kakao_pnr(phone=phonekakao,name=tenkakao,pnr=pnr,email=emailkakao)
                 except Exception as e:
                     print("❌ Lỗi add_kakao_pnr:", e)
