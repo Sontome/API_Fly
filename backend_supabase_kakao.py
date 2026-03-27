@@ -157,3 +157,11 @@ def get_kakanoti_by_pnr(pnr: str):
     # print(result)
 
     return result
+def get_phone_email_from_pnr(pnr):
+    res = supabase.rpc("get_phone_email_to_pnr",
+        {"pnr_input": pnr}).execute()
+    
+    if res.data:
+        return res.data
+    else:
+        return [] 
