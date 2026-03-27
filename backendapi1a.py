@@ -263,7 +263,7 @@ def build_pricing_command(hanhkhach, list_cmd, doituong):
     if has_infant and doituong=="VFR":
         list_cmd.append("FXP/INF/RVFR-INF,U")
     return list_cmd, has_infant
-async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR",email=None, phone= None,phonekakao="",email=""):
+async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR",email=None, phone= None,phonekakao="",emailkakao=""):
     cmd_AN = build_an_command(dep, arr, depdate, deptime, arrdate, arrtime)
     print("Lệnh AN:", cmd_AN)
 
@@ -383,7 +383,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 print(f"✅ Giữ vé thành công! PNR: {pnr}")
                 try :
                     tenkakao = hanhkhach[0]
-                    add_kakao_pnr(phone=phonekakao,name=tenkakao,pnr=pnr,email=email)
+                    add_kakao_pnr(phone=phonekakao,name=tenkakao,pnr=pnr,email=emailkakao)
                 except Exception as e:
                     print("❌ Lỗi add_kakao_pnr:", e)
                 try:
