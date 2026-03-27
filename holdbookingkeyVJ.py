@@ -17,7 +17,8 @@ def get_full_name(data):
     for group in ["nguoilon", "treem", "embe"]:
         if data.get(group):
             p = data[group][0]
-            return f"{p['Họ']} {p['Tên']}"
+            full_name = f"{p['Họ']} {p['Tên']}"
+            return full_name.replace(",", "").strip()
     return None
 # ✅ Lấy token từ state.json
 def get_app_access_token_from_state(file_path="state.json"):
