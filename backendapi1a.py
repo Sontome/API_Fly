@@ -40,9 +40,11 @@ def clean_name(raw_name: str):
 
     # thay / thành space
     name = name.replace("/", " ")
-
+    
     # bỏ space thừa
     name = re.sub(r"\s+", " ", name).strip()
+    # bỏ dấu phẩy dư (đầu/cuối)
+    name = name.strip(" ,")
 
     return name
 
