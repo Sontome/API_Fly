@@ -266,6 +266,74 @@ def kakao_delay(
     time.sleep(1)
     print(f"🔥 Done : success={success}, fail={fail}")
     return result
+def send_sms_kakao(
+    to_number: str,
+    pnr: str,
+    trip: str="",
+    newtime: str="",
+    type: str=""
+) -> Dict[str, Any]:
+    """Send Kakao BMS IMAGE message"""
+    to_number = normalize_phone_number(to_number)
+    auth_header = create_auth_header(API_KEY, API_SECRET)
+    for blocked in BLACKLIST_PARTIAL:
+        if blocked in to_number:
+            print(f"🚫 SĐT chứa blacklist ({blocked}), skip: {to_number}")
+            return {
+                "status": "blocked",
+                "reason": "blacklist_partial",
+                "to": to_number
+            }
+    
+    if type == "DELAY":
+        text = f"[HanVietAir] Thong bao DELAY: PNR {pnr}. Chang {trip} Gio bay moi: {newtime}"
+    elif type == "HOLD":
+        text = f"[HanVietAir] Dat ve {pnr} THANH CONG. Cam on quy khach! Website: hanvietair.com"
+    
+    
+
+    
+
+    headers = {
+        "Authorization": auth_header,
+        "Content-Type": "application/json"
+    }
+
+    message_data = {
+        "messages": [
+            {
+                "to": to_number,
+                "type": "SMS",
+                "country": "82",
+                "from": "07040363396",
+                "text": text
+                
+                
+            }
+        ]
+    }
+
+    # Nếu có image_link thì thêm vào
+    
+
+    response = requests.post(
+        "https://api.solapi.com/messages/v4/send-many/detail",
+        json=message_data,
+        headers=headers
+    )
+
+    print(response.status_code)
+    # print(response.text)
+    result = response.json()
+    try:
+        new_balance = result["groupInfo"]["log"][-1]["newBalance"]
+        print(new_balance)
+        if new_balance < 5000:
+            asyncio.run(send_mess(f"Cảnh báo : số dư solapi sắp hết, vui lòng nạp tiền: {new_balance} w"))
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Lỗi khi lấy số dư solapi: {e}")
+    return response.json()
 # if __name__ == "__main__":
 #     result = kakao_delay(
        
