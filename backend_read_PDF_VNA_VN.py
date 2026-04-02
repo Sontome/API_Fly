@@ -231,7 +231,7 @@ def replace_text_between_phrases(pdf_path,output_path,
 
     # ===== ĐỔI MÀU HÀNH LÝ =====
     is_infant = "(INF)" in text
-    hl_pattern = re.compile(r"Hành lý ký gửi miễn cước: ([12]PC)")
+    hl_pattern = re.compile(r"Hành lý ký gửi miễn cước: ([123]PC)")
     matches = set(hl_pattern.findall(text))
     
     for pc in matches:
@@ -244,6 +244,8 @@ def replace_text_between_phrases(pdf_path,output_path,
                 addon = "(10kg)" if is_infant else "(23kg)"
             elif pc == "2PC":
                 addon = "(10kg+10kg)" if is_infant else "(23kg+23kg)"
+            elif pc == "3PC":
+                addon = "(32kg+32kg+32kg)" if is_infant else "(32kg+32kg+32kg)"
             else:
                 addon = ""
     
