@@ -14,7 +14,7 @@ key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(url, key)
 
 
-def add_reprice_pnr(pnrs: str, pnr_type: str):
+def add_reprice_pnr(pnrs: str, pnr_type: str,id_f2: str = None):
     """
     pnrs có thể nhập:
     ABC123
@@ -47,7 +47,8 @@ def add_reprice_pnr(pnrs: str, pnr_type: str):
             "pnr": pnr,
             "type": pnr_type,
             "status": "HOLD",
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
+            "id_f2": id_f2
         })
 
     res = supabase.table("reprice").insert(data).execute()
