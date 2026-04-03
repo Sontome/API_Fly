@@ -3,8 +3,8 @@
 
 
 from backendapi1a import repricePNR_v2
-from backend_reprice import get_reprice_pnr,update_reprice_pnr
-from utils_telegram_bot_reprice import send_mess
+from backend_reprice import get_reprice_pnr,update_reprice_pnr,get_apikey_f2
+from utils_telegram_bot_reprice import send_mess,send_mess_f2
 import asyncio
 from datetime import datetime, timedelta, timezone
 
@@ -35,7 +35,8 @@ async def main_reprice():
             pnr = item["pnr"]
             pnr_type = item["type"]
             created_at = safe_fromiso(item["created_at"])
-
+            
+            
             # ===============================
             # 1️⃣ Quá 48h → OVERTIME
             # ===============================
@@ -95,6 +96,18 @@ async def main_reprice():
                 )
                 mess = f"PNR {pnr} {nametrip} đã bị huỷ DUE TO EXP TTL"
                 await send_mess(mess)
+                try:
+                    id_f2 = item["id_f2"]
+                    if id_f2:
+                        apikey,chat_id=get_apikey_f2(id_f2)
+                        if apikey and chat_id:
+                            await send_mess_f2(token=apikey,chat_id=chat_id,message=mess)
+                        else:
+                            print(f"❌ Không tìm thấy apikey hoặc chat_id cho {pnr}")
+                    else:
+                        print(f"❌ Không tìm thấy id_f2 cho {pnr}")
+                except Exception as e:
+                    print(f"💥 Lỗi khi xử lý {item.get('pnr')}:", e)
                 print(f"❌ {pnr} CANCEL")
             # ===============================
             # HL + ET → Vào được chỗ
@@ -108,6 +121,18 @@ async def main_reprice():
                 mess = f"PNR {pnr} {nametrip} đã vào được chỗ thành công"
                 await send_mess(mess)
                 print(f"🎯 {pnr} HL + ET → vào được chỗ")
+                try:
+                    id_f2 = item["id_f2"]
+                    if id_f2:
+                        apikey,chat_id=get_apikey_f2(id_f2)
+                        if apikey and chat_id:
+                            await send_mess_f2(token=apikey,chat_id=chat_id,message=mess)
+                        else:
+                            print(f"❌ Không tìm thấy apikey hoặc chat_id cho {pnr}")
+                    else:
+                        print(f"❌ Không tìm thấy id_f2 cho {pnr}")
+                except Exception as e:
+                    print(f"💥 Lỗi khi xử lý {item.get('pnr')}:", e)
             elif status == "HL" and et is False:
                 update_reprice_pnr(
                     pnr_id,
@@ -138,6 +163,18 @@ async def main_reprice():
                 if et is True and pricegoc and pricemoi:
                     mess = f"PNR {pnr} {nametrip} đã giảm giá {pricegoc} > {pricemoi}"
                     await send_mess(mess)
+                    try:
+                        id_f2 = item["id_f2"]
+                        if id_f2:
+                            apikey,chat_id=get_apikey_f2(id_f2)
+                            if apikey and chat_id:
+                                await send_mess_f2(token=apikey,chat_id=chat_id,message=mess)
+                            else:
+                                print(f"❌ Không tìm thấy apikey hoặc chat_id cho {pnr}")
+                        else:
+                            print(f"❌ Không tìm thấy id_f2 cho {pnr}")
+                    except Exception as e:
+                        print(f"💥 Lỗi khi xử lý {item.get('pnr')}:", e)
             # ===============================
             # Status khác OK / CANCEL
             # ===============================
