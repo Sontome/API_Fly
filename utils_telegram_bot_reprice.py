@@ -22,3 +22,18 @@ async def send_mess(message: str):
                 print(f"❌ Lỗi gửi tin nhắn: {res.text}")
     except Exception as e:
         print(f"💥 Lỗi gửi message Telegram: {e}")
+async def send_mess_f2(token: str, chat_id: str, message: str):
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "HTML"
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload)
+            if res.status_code != 200:
+                print(f"❌ Lỗi gửi tin nhắn: {res.text}")
+    except Exception as e:
+        print(f"💥 Lỗi gửi message Telegram: {e}")
