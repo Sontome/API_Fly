@@ -13,7 +13,29 @@ key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 supabase = create_client(url, key)
 
+def get_apikey_f2(user_id: str):
+    """
+    Lấy apikey_telegram và idchat_telegram từ bảng profiles theo id
+    :param user_id: id của user trong bảng profiles
+    :return: tuple (apikey_telegram, idchat_telegram) hoặc (None, None)
+    """
 
+    query = supabase.table("profiles") \
+        .select("apikey_telegram, idchat_telegram") \
+        .eq("id", user_id)
+
+    res = query.execute()
+
+    if res.data and len(res.data) > 0:
+        data = res.data[0]
+        apikey = data.get("apikey_telegram")
+        chat_id = data.get("idchat_telegram")
+
+        print("✅ Lấy key thành công:", apikey, chat_id)
+        return apikey, chat_id
+    else:
+        print("⚠️ ko tìm thấy user hoặc lỗi gì đó:", res)
+        return None, None
 def add_reprice_pnr(pnrs: str, pnr_type: str,id_f2: str = None):
     """
     pnrs có thể nhập:
@@ -91,7 +113,7 @@ def get_reprice_pnr(pnr: str = None, pnr_type: str = None, status: str = None, a
         print(res.data)
         return res.data
     else:
-        print("⚠️ Không có dữ liệu hoặc query fail cc gì đó:", res)
+        print("⚠️ Không có dữ liệu hoặc query fail  gì đó:", res)
         return []
 def update_reprice_pnr(
     pnr_id: str,
@@ -104,7 +126,7 @@ def update_reprice_pnr(
     """
 
     if not fields:
-        print("❌ Không có field nào để update, xàm vl")
+        print("❌ Không có field nào để update")
         return None
 
     # auto cập nhật updated_at
@@ -122,5 +144,5 @@ def update_reprice_pnr(
         print(f"✅ Update thành công PNR id={pnr_id}")
         return res.data[0]
     else:
-        print("❌ Update fail cc gì đó:", res)
+        print("❌ Update fail  gì đó:", res)
         return None
