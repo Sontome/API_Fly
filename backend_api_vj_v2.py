@@ -574,14 +574,17 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                     try:
                         BookingKeyDeluxe = None
 
-                        for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
-                            fare_option = list_departure[i].get("fareOption", [])
-                            if len(fare_option) > 1 and fare_option[0].get("Description") == "Eco":
-                                BookingKeyDeluxe = fare_option[0].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Eco":
-                                BookingKeyDeluxe = fare_option[1].get("BookingKey")
-                                break # Gặp Deluxe đầu tiên là lấy luôn, dừng
+                        for item in list_departure:
+                            fare_option = item.get("fareOption", [])
+                            
+                            deluxe = next(
+                                (f for f in fare_option if f.get("Description") == "Deluxe"),
+                                None
+                            )
+                            
+                            if deluxe:
+                                BookingKeyDeluxe = deluxe.get("BookingKey")
+                                break
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe)
                         if giá_hành_lý:
                             print ("lấy được giá hành lý")
@@ -716,14 +719,17 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                     try:
                         BookingKeyDeluxe = None
 
-                        for i in range(2):  # Chạy lần lượt 2 phần tử đầu của list_departure
-                            fare_option = list_departure[i].get("fareOption", [])
-                            if len(fare_option) > 1 and fare_option[0].get("Description") == "Eco":
-                                BookingKeyDeluxe = fare_option[0].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Eco":
-                                BookingKeyDeluxe = fare_option[1].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
+                        for item in list_departure:
+                            fare_option = item.get("fareOption", [])
+                            
+                            deluxe = next(
+                                (f for f in fare_option if f.get("Description") == "Deluxe"),
+                                None
+                            )
+                            
+                            if deluxe:
+                                BookingKeyDeluxe = deluxe.get("BookingKey")
+                                break
                         
                     except:
                         print("không có booking key deluxe chiều_đi")                      
@@ -757,14 +763,19 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                     try:
                         BookingKeyDeluxeArrival = None
 
-                        for i in range(3):  # Chạy lần lượt 2 phần tử đầu của list_departure
-                            fare_option = list_departure[i].get("fareOption", [])
-                            if len(fare_option) > 1 and fare_option[1].get("Description") == "Deluxe":
-                                BookingKeyDeluxeArrival = fare_option[1].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
-                            if len(fare_option) > 1 and fare_option[2].get("Description") == "Deluxe":
-                                BookingKeyDeluxeArrival = fare_option[2].get("BookingKey")
-                                break  # Gặp Deluxe đầu tiên là lấy luôn, dừng
+                        
+
+                        for item in list_arrival:
+                            fare_option = item.get("fareOption", [])
+                            
+                            deluxe = next(
+                                (f for f in fare_option if f.get("Description") == "Deluxe"),
+                                None
+                            )
+                            
+                            if deluxe:
+                                BookingKeyDeluxeArrival = deluxe.get("BookingKey")
+                                break
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe,BookingKeyDeluxeArrival)
                         if giá_hành_lý:
                             print ("lấy được giá hành lý")
