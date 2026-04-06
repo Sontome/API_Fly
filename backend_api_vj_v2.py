@@ -550,11 +550,26 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
         
         if list_departure :
             print("lấy được list chiều_đi")
+            valid_departure = None
+
+            for item in list_departure:
+                if item.get("fareOption"):  # có fareOption != null
+                    valid_departure = item
+                    break
             
-            if list_departure[0]["fareOption"]:
+            if not valid_departure:
+                return {
+                    "status_code": 200,
+                    "trang": "1",
+                    "tổng_trang": "1",
+                    "session_key": "",
+                    "body": [],
+                    "message": "Hết vé chiều_đi"
+                }
+            else:
                 try : 
 
-                    booking_key_chieu_di = list_departure[0]["fareOption"][0].get("BookingKey")
+                    booking_key_chieu_di = valid_departure["fareOption"][0].get("BookingKey")
                     print("có booking key")
                     try:
                         BookingKeyDeluxe = None
@@ -586,17 +601,7 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                 except :
                     print ( "không có booking key ,lấy TravelOptionKey ")
                     return "❌ hết vé chiều_đi"
-            else : 
-                traveloptionkey = list_departure[0]["TravelOptionKey"]
-                print("có traveloptionkey > hết vé chiều_đi")
-                return {
-                    "status_code": 	200,
-                    "trang": "1",
-                    "tổng_trang": "1",
-                    "session_key": "",
-                    "body": [],
-                    "message" : "Hết vé chiều_đi"
-                }
+            
                     
             
 
@@ -686,11 +691,27 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
         
         if list_departure :
             print("lấy được list chiều_đi")
+            valid_departure = None
+
+            for item in list_departure:
+                if item.get("fareOption"):  # có fareOption != null
+                    valid_departure = item
+                    break
             
-            if list_departure[0]["fareOption"]:
+            if not valid_departure:
+                return {
+                    "status_code": 200,
+                    "trang": "1",
+                    "tổng_trang": "1",
+                    "session_key": "",
+                    "body": [],
+                    "message": "Hết vé chiều_đi"
+                }
+            else:
+            
                 try : 
                   
-                    booking_key_chieu_di = list_departure[0]["fareOption"][0].get("BookingKey")
+                    booking_key_chieu_di = valid_departure["fareOption"][0].get("BookingKey")
                     print("có booking key chiều_đi")
                     try:
                         BookingKeyDeluxe = None
@@ -709,23 +730,29 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                 except :
                     print ( "không có booking key chiều_đi ")
                     return "❌ hết vé chiều_đi"
-            else : 
-                
-                print(" hết vé chiều_đi")
+            
+        if list_arrival :
+            print("lấy được list chiều_về")
+            valid_arrival = None
+
+            for item in list_arrival:
+                if item.get("fareOption"):  # có fareOption != null
+                    valid_arrival = item
+                    break
+            
+            if not valid_arrival:
                 return {
                     "status_code": 200,
                     "trang": "1",
                     "tổng_trang": "1",
                     "session_key": "",
                     "body": [],
-                    "message" : "Hết vé chiều_đi"
+                    "message": "Hết vé chiều_về"
                 }
-        if list_arrival :
-            print("lấy được list chiều_về")
+            else:
             
-            if list_arrival[0]["fareOption"]:
                 try : 
-                    booking_key_chieu_ve = list_arrival[0]["fareOption"][0].get("BookingKey")
+                    booking_key_chieu_ve = valid_arrival["fareOption"][0].get("BookingKey")
                     print("có booking key chiều_về")
                     try:
                         BookingKeyDeluxeArrival = None
@@ -757,17 +784,7 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                 except :
                     print ( "không có booking key chiều_về ")
                     return "❌ hết vé chiều_về"
-            else : 
-                
-                print(" hết vé chiều_về")
-                return {
-                    "status_code": 200,
-                    "trang": "1",
-                    "tổng_trang": "1",
-                    "session_key": "",
-                    "body": [],
-                    "message" : "Hết vé chiều_về"
-                }
+           
         
         if booking_key_chieu_ve and booking_key_chieu_di:
             phi_chieu_di = get_tax(token, booking_key_chieu_di, adult_count, child_count, infant_count,booking_key_chieu_ve)
