@@ -598,8 +598,8 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                                 "message" : "Lỗi lấy giá hành lý"
                             }
                         
-                    except:
-                        print("không có booking key deluxe chiều_đi")                    
+                    except Exception as e:
+                        print("❌ Lỗi thật:", e)                 
                     
                 except :
                     print ( "không có booking key ,lấy TravelOptionKey ")
@@ -731,8 +731,8 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                                 BookingKeyDeluxe = deluxe.get("BookingKey")
                                 break
                         
-                    except:
-                        print("không có booking key deluxe chiều_đi")                      
+                    except Exception as e:
+                        print("❌ Lỗi thật:", e)                    
                 except :
                     print ( "không có booking key chiều_đi ")
                     return "❌ hết vé chiều_đi"
@@ -790,8 +790,8 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                             }
                         
 
-                    except:
-                        print("không có booking key deluxe chiều_về")                    
+                    except Exception as e:
+                        print("❌ Lỗi thật:", e)                     
                 except :
                     print ( "không có booking key chiều_về ")
                     return "❌ hết vé chiều_về"
