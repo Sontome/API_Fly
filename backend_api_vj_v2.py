@@ -575,7 +575,7 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                         BookingKeyDeluxe = None
 
                         for item in list_departure:
-                            fare_option = item.get("fareOption", [])
+                            fare_option = item.get("fareOption") or []
                             
                             deluxe = next(
                                 (f for f in fare_option if f.get("Description") == "Deluxe"),
@@ -720,7 +720,7 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                         BookingKeyDeluxe = None
 
                         for item in list_departure:
-                            fare_option = item.get("fareOption", [])
+                            fare_option = item.get("fareOption") or []
                             
                             deluxe = next(
                                 (f for f in fare_option if f.get("Description") == "Deluxe"),
@@ -766,7 +766,7 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                         
 
                         for item in list_arrival:
-                            fare_option = item.get("fareOption", [])
+                            fare_option = item.get("fareOption") or []
                             
                             deluxe = next(
                                 (f for f in fare_option if f.get("Description") == "Deluxe"),
