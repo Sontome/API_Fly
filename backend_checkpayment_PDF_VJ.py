@@ -1,5 +1,6 @@
 import fitz
 import re
+import os 
 from datetime import datetime
 
 # ===== Airport map =====
@@ -65,6 +66,12 @@ def check_payment(pdf_path):
 
     if paymentstatus == "False":
         doc.close()
+        # ===== XÓA FILE PDF =====
+        try:
+            os.remove(pdf_path)
+            print(f"Đã xoá file: {pdf_path}")
+        except Exception as e:
+            print(f"Lỗi khi xoá file: {e}")
         return {
             "paymentstatus": paymentstatus,
             "name": name,
