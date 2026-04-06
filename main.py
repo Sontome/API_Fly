@@ -1605,7 +1605,43 @@ def getphoneemail(
 
         return None
 
+@app.get("/check-ready-ticket")
+def check_ready_ticket(pnrs: str = Query(..., description="Danh sách PNR, cách nhau bởi dấu cách")):
+    pnr_list = pnrs.strip().upper().split()
 
+    try:
+        files = os.listdir(BASE_DIR)
+    except Exception as e:
+        return {"error": str(e)}
+
+    result = {}
+
+    for pnr in pnr_list:
+        matched_files = []
+        airlines = set()
+
+        for f in files:
+            f_upper = f.upper()
+            if pnr in f_upper:
+                matched_files.append(f)
+
+                # ===== LẤY HÃNG =====
+                try:
+                    hang = f_upper.split("-")[0]
+                    airlines.add(hang)
+                except:
+                    pass
+
+        result[pnr] = {
+            "count": len(matched_files),
+            "hang": list(airlines),  # có thể nhiều hãng nếu trùng
+            "files": matched_files
+        }
+
+    return {
+        "total_pnr": len(pnr_list),
+        "data": result
+    }
 
 
 
