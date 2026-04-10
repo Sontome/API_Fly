@@ -1611,8 +1611,29 @@ async def process_events(events):
             # WEBHOOK RCS RESULT
             # ==============================
             elif event_type == "RCS_TPL":
-                # TODO: xử lý webhook RCS sau
-                pass
+                status_code = event.get("statusCode")
+                to_number = event.get("to")
+                
+                rcs = event.get("rcsOptions", {})
+                rcs_template_id = rcs.get("templateId")
+                rcs_variables = rcs.get("variables", {})
+                rcs_pnr= rcs.get("{{PNR}}", {})
+
+                status = "thành công" if status_code == "4000" else "thất bại"
+
+                content = (
+                    f"Thông báo {rcs_pnr} \n"
+                    f"Đã gửi RCS {status}: {to_number}"
+                )
+
+                if rcs_template_id == os.getenv("ID_RCS_DELAY"):
+                    await send_vj_delay(content)
+
+                elif rcs_template_id == os.getenv("ID_RCS_HOLD"):
+                    await send_vj(content)
+
+                else:
+                    print(f"Unknown RCS templateId: {rcs_template_id}")
 
             else:
                 print(f"Bỏ qua event type không hỗ trợ: {event_type}")
