@@ -1562,8 +1562,7 @@ async def process_events(events):
 
                 type_map = {
                     os.getenv("IMAGE_DELAY"): "Delay",
-                    os.getenv("IMAGE_VJ_HOLD"): "Giữ vé",
-                    os.getenv("IMAGE_VJ_TICKET"): "Xuất vé",
+                    os.getenv("IMAGE_VJ"): "Xuất vé"
                 }
 
                 msg_type = type_map.get(template_id, "Không rõ")
@@ -1617,7 +1616,7 @@ async def process_events(events):
                 rcs = event.get("rcsOptions", {})
                 rcs_template_id = rcs.get("templateId")
                 rcs_variables = rcs.get("variables", {})
-                rcs_pnr= rcs.get("{{PNR}}", {})
+                rcs_pnr= rcs_variables.get("{{PNR}}", {})
 
                 status = "thành công" if status_code == "4000" else "thất bại"
 
