@@ -20,6 +20,8 @@ VNA = os.getenv("IMAGE_VNA")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
 BF24H = os.getenv("IMAGE_BF24H")
+ID_RCS_DELAY = os.getenv("ID_RCS_DELAY")
+ID_RCS_HOLD = os.getenv("ID_RCS_HOLD")
 BLACKLIST_PARTIAL = [
     
     "764301092"
@@ -334,6 +336,98 @@ def send_sms_kakao(
     except Exception as e:
         print(f"Lỗi khi lấy số dư solapi: {e}")
     return response.json()
+def send_rcs(
+    to_number: str,
+    pnr: str,
+    time: str = "",
+    trip: str = "",
+    type: str = "",
+    sms: bool = True
+) -> Dict[str, Any]:
+    """Send RCS message"""
+
+    to_number = normalize_phone_number(to_number)
+    auth_header = create_auth_header(API_KEY, API_SECRET)
+
+    # Check blacklist
+    for blocked in BLACKLIST_PARTIAL:
+        if blocked in to_number:
+            print(f"🚫 SĐT chứa blacklist ({blocked}), skip: {to_number}")
+            return {
+                "status": "blocked",
+                "reason": "blacklist_partial",
+                "to": to_number
+            }
+
+    # Map template theo type
+    template_map = {
+        "DELAY": ID_RCS_DELAY,
+        "HOLD": ID_RCS_HOLD
+    }
+
+    template_id = template_map.get(type)
+    if not template_id:
+        print(f"❌ Không tìm thấy template cho type: {type}")
+        return {
+            "status": "error",
+            "reason": "invalid_type",
+            "type": type
+        }
+
+    headers = {
+        "Authorization": auth_header,
+        "Content-Type": "application/json"
+    }
+
+    # Variables truyền vào template
+    variables = {
+        "{{PNR}}": pnr,
+        "{{time}}": time,
+        "{{Trip_detail}}": trip
+    }
+
+    message_data = {
+        "messages": [
+            {
+                "to": to_number,
+                "type": "RCS_TPL",
+                "from": "07040363396",
+                "country": "82",
+                "rcsOptions": {
+                    "brandId": "BR.i790eCMkRP",
+                    "templateId": template_id,
+                    "disableSms":  sms   ,# chuẩn logic,
+                    "variables": variables
+                }
+            }
+        ]
+    }
+
+    response = requests.post(
+        "https://api.solapi.com/messages/v4/send-many/detail",
+        json=message_data,
+        headers=headers
+    )
+
+    print(response.status_code)
+
+    result = response.json()
+
+    try:
+        new_balance = result["groupInfo"]["log"][-1]["newBalance"]
+        print(new_balance)
+
+        if new_balance < 5000:
+            asyncio.run(send_mess(
+                f"Cảnh báo: số dư solapi sắp hết, còn {new_balance} w"
+            ))
+
+        response.raise_for_status()
+
+    except Exception as e:
+        print(f"Lỗi khi lấy số dư solapi: {e}")
+
+    return result
 # if __name__ == "__main__":
 #     result = kakao_delay(
        
