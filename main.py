@@ -30,7 +30,7 @@ from backend_api_vj_v2 import api_vj_rt_v2
 from getinfopnr_vj import checkpnr_vj
 from backen_api_vna import api_vna
 from backend_api_vna_v2 import api_vna_v2,api_vna_rt_v2
-
+from backend_api_kakao import send_rcs
 from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
 from utils_telegram import send_mess as send_vj
 from utils_telegram_delay import send_mess as send_vj_delay
@@ -1548,32 +1548,74 @@ async def process_events(events):
 
     for event in events:
         try:
-            status_code = event.get("statusCode")
-            kakao = event.get("kakaoOptions", {})
-            template_id = kakao.get("templateId")
-            print(template_id)
-            type_map = {
-                os.getenv("IMAGE_DELAY"): "Delay",
-                os.getenv("IMAGE_VJ"): "Giữ vé",
-                os.getenv("IMAGE_VJ"): "Xuất vé",
-            }
-            print(type_map)
-            msg_type = type_map.get(template_id, "Không rõ")
+            event_type = event.get("type")
 
-            variables = kakao.get("variables", {})
-            pnr = variables.get("#{pnr}", "")
+            # ==============================
+            # WEBHOOK KAKAO RESULT
+            # ==============================
+            if event_type == "ATA":
+                status_code = event.get("statusCode")
 
-            status = "thành công" if status_code == "4000" else "thất bại"
-            to = event.get("to")
+                kakao = event.get("kakaoOptions", {})
+                template_id = kakao.get("templateId")
+                variables = kakao.get("variables", {})
 
-            content = f"Thông báo {msg_type} PNR: {pnr}\nĐã gửi kakao {status}: {to}"
+                type_map = {
+                    os.getenv("IMAGE_DELAY"): "Delay",
+                    os.getenv("IMAGE_VJ_HOLD"): "Giữ vé",
+                    os.getenv("IMAGE_VJ_TICKET"): "Xuất vé",
+                }
 
-            # 🔥 await async function
-            if msg_type == "Delay":
-                
-                await send_vj_delay(content)
+                msg_type = type_map.get(template_id, "Không rõ")
+
+                pnr = variables.get("#{pnr}", "")
+                to_number = event.get("to")
+
+                status = "thành công" if status_code == "4000" else "thất bại"
+
+                content = (
+                    f"Thông báo {msg_type} PNR: {pnr}\n"
+                    f"Đã gửi kakao {status}: {to_number}"
+                )
+
+                # Nếu fail thì append log fallback
+                if status_code != "4000":
+                    content += "\n> Try send RCS"
+
+                # Gửi log
+                if msg_type == "Delay":
+                    await send_vj_delay(content)
+                else:
+                    await send_vj(content)
+
+                # ==============================
+                # FALLBACK SEND RCS
+                # ==============================
+                if status_code != "4000":
+                    if msg_type == "Delay":
+                        send_rcs(
+                            to_number=to_number,
+                            pnr=pnr,
+                            time=variables.get("#{new_time}"),
+                            trip=variables.get("#{trip_details}"),
+                            type="DELAY"
+                        )
+                    else:
+                        send_rcs(
+                            to_number=to_number,
+                            pnr=pnr,
+                            type="HOLD"
+                        )
+
+            # ==============================
+            # WEBHOOK RCS RESULT
+            # ==============================
+            elif event_type == "RCS_TPL":
+                # TODO: xử lý webhook RCS sau
+                pass
+
             else:
-                await send_vj(content)
+                print(f"Bỏ qua event type không hỗ trợ: {event_type}")
 
         except Exception as e:
             print("Lỗi xử lý event:", e)
