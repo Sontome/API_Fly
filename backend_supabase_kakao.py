@@ -213,11 +213,14 @@ def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,trip: str = None,o
         print("❌ Lỗi add_sent_delay_pnr:", e)
         return None
 
-def log_no_data_delay(pnr: str, hang: str):
+def log_no_data_delay(pnr: str, hang: str,trip: str = None,oldtime: str = None,newtime: str = None):
     return add_sent_delay_pnr(
         pnr=pnr,
         hang=hang,
         phone=None,
+        trip=trip,
+        oldtime=oldtime,
+        newtime=newtime,
         kakao_status="no_data",
         rcs_status="no_data"
     )
