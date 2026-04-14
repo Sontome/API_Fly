@@ -226,7 +226,8 @@ def kakao_delay(
     hang: str="",
     reason: str="",
     oldtime: str="",
-    newtime: str=""
+    newtime: str="",
+    email: str=""
 ):
     """
     Gửi BMS delay cho tất cả phone theo pnr
@@ -235,7 +236,7 @@ def kakao_delay(
     data_list = get_kakanoti_by_pnr(pnr)
 
     if not data_list:
-        log_no_data_delay(pnr, hang,trip,oldtime,newtime)
+        log_no_data_delay(pnr, hang,trip,oldtime,newtime,email)
         print("⚠️ Không có data để gửi ")
         return
 
@@ -246,7 +247,7 @@ def kakao_delay(
         
         phone = data.get("phone")
         # 👉 insert trước
-        add_sent_delay_pnr(pnr, hang, phone,trip,oldtime,newtime)
+        add_sent_delay_pnr(pnr, hang, phone,trip,oldtime,newtime,email)
         if not phone:
             continue
 
