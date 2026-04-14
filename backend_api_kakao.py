@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any
 from dotenv import load_dotenv
 from utils_telegram import send_mess
-from backend_supabase_kakao import get_kakanoti_by_pnr
+from backend_supabase_kakao import get_kakanoti_by_pnr,log_no_data_delay,update_sent_delay_pnr,add_sent_delay_pnr
 # Load biến môi trường từ .env
 load_dotenv()
 import asyncio
@@ -235,6 +235,7 @@ def kakao_delay(
     data_list = get_kakanoti_by_pnr(pnr)
 
     if not data_list:
+        log_no_data_delay(pnr, hang)
         print("⚠️ Không có data để gửi ")
         return
 
@@ -242,8 +243,10 @@ def kakao_delay(
     fail = 0
 
     for data in data_list:
+        
         phone = data.get("phone")
-
+        # 👉 insert trước
+        add_sent_delay_pnr(pnr, hang, phone)
         if not phone:
             continue
 
