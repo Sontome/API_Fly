@@ -185,13 +185,16 @@ def get_phone_email_from_pnr(pnr):
         return res.data
     else:
         return [] 
-def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,
+def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,trip: str = None,oldtime: str = None,newtime: str = None,
                        kakao_status="pending", rcs_status="pending"):
     try:
         data = {
             "pnr": pnr,
             "hang": hang,
             "phone": phone,
+            "trip": trip,
+            "oldtime": oldtime,
+            "newtime": newtime,
             "kakao_status": kakao_status,
             "rcs_status": rcs_status,
             "timecreate": datetime.utcnow().isoformat()
