@@ -1584,6 +1584,19 @@ async def process_events(events):
                 # Gửi log
                 if msg_type == "Delay":
                     await send_vj_delay(content)
+                    if status_code == "4000":
+                        update_kakao_by_pnr_phone(
+                            pnr,
+                            to_number,
+                            kakao_status="success"
+                        )
+                    else:
+                        update_kakao_by_pnr_phone(
+                            pnr,
+                            to_number,
+                            kakao_status="fail",
+                            error_message="Kakao fail"
+                        )
                 else:
                     await send_vj(content)
 
@@ -1627,6 +1640,11 @@ async def process_events(events):
 
                 if rcs_template_id == os.getenv("ID_RCS_DELAY"):
                     await send_vj_delay(content)
+                    update_rcs_by_pnr_phone(
+                        rcs_pnr,
+                        to_number,
+                        rcs_status="success" if status_code == "4000" else "fail"
+                    )
 
                 elif rcs_template_id == os.getenv("ID_RCS_HOLD"):
                     await send_vj(content)
