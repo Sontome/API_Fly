@@ -167,3 +167,71 @@ def get_phone_email_from_pnr(pnr):
         return res.data
     else:
         return [] 
+def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,
+                       kakao_status="pending", rcs_status="pending"):
+    try:
+        data = {
+            "pnr": pnr,
+            "hang": hang,
+            "phone": phone,
+            "kakao_status": kakao_status,
+            "rcs_status": rcs_status,
+            "timecreate": datetime.utcnow().isoformat()
+        }
+
+        res = supabase.table("sent_delay_pnr").insert(data).execute()
+
+        if res.data:
+            print(f"✅ Insert sent_delay_pnr OK | pnr={pnr} | phone={phone}")
+            return res.data[0]
+        else:
+            print("❌ Insert fail:", res)
+            return None
+
+    except Exception as e:
+        print("❌ Lỗi add_sent_delay_pnr:", e)
+        return None
+def update_sent_delay_pnr(row_id: str,
+                         kakao_status=None,
+                         rcs_status=None,
+                         error_message=None):
+    try:
+        update_data = {
+            "sent_at": datetime.utcnow().isoformat()
+        }
+
+        if kakao_status:
+            update_data["kakao_status"] = kakao_status
+
+        if rcs_status:
+            update_data["rcs_status"] = rcs_status
+
+        if error_message:
+            update_data["error_message"] = error_message
+
+        res = (
+            supabase
+            .table("sent_delay_pnr")
+            .update(update_data)
+            .eq("id", row_id)
+            .execute()
+        )
+
+        if res.data:
+            print(f"✅ Update sent_delay_pnr OK id={row_id}")
+            return res.data[0]
+        else:
+            print("❌ Update fail:", res)
+            return None
+
+    except Exception as e:
+        print("❌ Lỗi update_sent_delay_pnr:", e)
+        return None
+def log_no_data_delay(pnr: str, hang: str):
+    return add_sent_delay_pnr(
+        pnr=pnr,
+        hang=hang,
+        phone=None,
+        kakao_status="no_data",
+        rcs_status="no_data"
+    )
