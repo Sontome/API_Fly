@@ -11,7 +11,25 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 supabase = create_client(url, key)
+def normalize_phone(phone: str):
+    if not phone:
+        return phone
 
+    phone = phone.strip().replace(" ", "")
+
+    # 👉 nếu dạng +84xxx → chuyển thành 0xxx
+    if phone.startswith("+84"):
+        phone = "0" + phone[3:]
+
+    # 👉 nếu dạng 84xxx → chuyển thành 0xxx
+    elif phone.startswith("84"):
+        phone = "0" + phone[2:]
+
+    # 👉 nếu chưa có 0 đầu
+    elif not phone.startswith("0"):
+        phone = "0" + phone
+
+    return phone
 def update_row_sent(row_id: str):
     """
     Cập nhật row_sent = true cho dòng có id tương ứng
@@ -204,6 +222,7 @@ def update_kakao_by_pnr_phone(pnr: str, phone: str,
                              kakao_status: str,
                              error_message=None):
     try:
+        phone = normalize_phone(phone)  # 🔥 normalize ở đây
         update_data = {
             "kakao_status": kakao_status,
             "sent_at": datetime.utcnow().isoformat()
@@ -236,6 +255,7 @@ def update_rcs_by_pnr_phone(pnr: str, phone: str,
                            rcs_status: str,
                            error_message=None):
     try:
+        phone = normalize_phone(phone)  # 🔥 normalize ở đây
         update_data = {
             "rcs_status": rcs_status,
             "sent_at": datetime.utcnow().isoformat()
