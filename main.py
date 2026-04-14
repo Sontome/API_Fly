@@ -96,6 +96,7 @@ class KakaoRequestDelay(BaseModel):
     reason: Optional[str]=""
     oldtime: Optional[str]=""
     newtime: Optional[str]=""
+    email: Optional[str]=""
 class KakaoAddPNRRequest(BaseModel):
     phone: str
     name: str
@@ -1469,7 +1470,8 @@ def send_mess_kakao_delay(req: KakaoRequestDelay):
             hang= req.hang,
             reason= req.reason,
             oldtime= req.oldtime,
-            newtime= req.newtime
+            newtime= req.newtime,
+            email= req.email
         )
         return result
     except Exception as e:
