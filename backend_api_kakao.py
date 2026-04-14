@@ -235,7 +235,7 @@ def kakao_delay(
     data_list = get_kakanoti_by_pnr(pnr)
 
     if not data_list:
-        log_no_data_delay(pnr, hang)
+        log_no_data_delay(pnr, hang,trip,oldtime,newtime)
         print("⚠️ Không có data để gửi ")
         return
 
@@ -246,7 +246,7 @@ def kakao_delay(
         
         phone = data.get("phone")
         # 👉 insert trước
-        add_sent_delay_pnr(pnr, hang, phone)
+        add_sent_delay_pnr(pnr, hang, phone,trip,oldtime,newtime)
         if not phone:
             continue
 
