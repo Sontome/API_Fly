@@ -185,7 +185,7 @@ def get_phone_email_from_pnr(pnr):
         return res.data
     else:
         return [] 
-def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,trip: str = None,oldtime: str = None,newtime: str = None,
+def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,trip: str = None,oldtime: str = None,newtime: str = None,email: str = None,
                        kakao_status="pending", rcs_status="pending"):
     try:
         data = {
@@ -195,6 +195,7 @@ def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,trip: str = None,o
             "trip": trip,
             "oldtime": oldtime,
             "newtime": newtime,
+            "email": email,
             "kakao_status": kakao_status,
             "rcs_status": rcs_status,
             "timecreate": datetime.utcnow().isoformat()
@@ -213,7 +214,7 @@ def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,trip: str = None,o
         print("❌ Lỗi add_sent_delay_pnr:", e)
         return None
 
-def log_no_data_delay(pnr: str, hang: str,trip: str = None,oldtime: str = None,newtime: str = None):
+def log_no_data_delay(pnr: str, hang: str,trip: str = None,oldtime: str = None,newtime: str = None,email: str = None):
     return add_sent_delay_pnr(
         pnr=pnr,
         hang=hang,
@@ -221,6 +222,7 @@ def log_no_data_delay(pnr: str, hang: str,trip: str = None,oldtime: str = None,n
         trip=trip,
         oldtime=oldtime,
         newtime=newtime,
+        email=email,
         kakao_status="no_data",
         rcs_status="no_data"
     )
