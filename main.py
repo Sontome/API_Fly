@@ -49,7 +49,7 @@ from typing import List
 from ocr_gemini import ocr_then_parse
 from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
-from backend_supabase_kakao import add_kakao_pnr,get_phone_email_from_pnr
+from backend_supabase_kakao import add_kakao_pnr,get_phone_email_from_pnr,update_kakao_by_pnr_phone,update_rcs_by_pnr_phone
 from backend_reprice import add_reprice_pnr
 
 load_dotenv()
