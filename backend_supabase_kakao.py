@@ -191,42 +191,7 @@ def add_sent_delay_pnr(pnr: str, hang: str, phone: str = None,
     except Exception as e:
         print("❌ Lỗi add_sent_delay_pnr:", e)
         return None
-def update_sent_delay_pnr(row_id: str,
-                         kakao_status=None,
-                         rcs_status=None,
-                         error_message=None):
-    try:
-        update_data = {
-            "sent_at": datetime.utcnow().isoformat()
-        }
 
-        if kakao_status:
-            update_data["kakao_status"] = kakao_status
-
-        if rcs_status:
-            update_data["rcs_status"] = rcs_status
-
-        if error_message:
-            update_data["error_message"] = error_message
-
-        res = (
-            supabase
-            .table("sent_delay_pnr")
-            .update(update_data)
-            .eq("id", row_id)
-            .execute()
-        )
-
-        if res.data:
-            print(f"✅ Update sent_delay_pnr OK id={row_id}")
-            return res.data[0]
-        else:
-            print("❌ Update fail:", res)
-            return None
-
-    except Exception as e:
-        print("❌ Lỗi update_sent_delay_pnr:", e)
-        return None
 def log_no_data_delay(pnr: str, hang: str):
     return add_sent_delay_pnr(
         pnr=pnr,
@@ -235,3 +200,67 @@ def log_no_data_delay(pnr: str, hang: str):
         kakao_status="no_data",
         rcs_status="no_data"
     )
+def update_kakao_by_pnr_phone(pnr: str, phone: str,
+                             kakao_status: str,
+                             error_message=None):
+    try:
+        update_data = {
+            "kakao_status": kakao_status,
+            "sent_at": datetime.utcnow().isoformat()
+        }
+
+        if error_message:
+            update_data["error_message"] = error_message
+
+        res = (
+            supabase
+            .table("sent_delay_pnr")
+            .update(update_data)
+            .eq("pnr", pnr)
+            .eq("phone", phone)
+            .eq("kakao_status", "pending")   # 🔥 điều kiện quan trọng
+            .execute()
+        )
+
+        if res.data:
+            print(f"✅ Update KAKAO OK pnr={pnr} | phone={phone}")
+        else:
+            print(f"⚠️ Không có record pending để update (KAKAO) pnr={pnr} | phone={phone}")
+
+        return res.data
+
+    except Exception as e:
+        print("❌ Lỗi update_kakao_by_pnr_phone:", e)
+        return None
+def update_rcs_by_pnr_phone(pnr: str, phone: str,
+                           rcs_status: str,
+                           error_message=None):
+    try:
+        update_data = {
+            "rcs_status": rcs_status,
+            "sent_at": datetime.utcnow().isoformat()
+        }
+
+        if error_message:
+            update_data["error_message"] = error_message
+
+        res = (
+            supabase
+            .table("sent_delay_pnr")
+            .update(update_data)
+            .eq("pnr", pnr)
+            .eq("phone", phone)
+            .eq("rcs_status", "pending")   # 🔥 điều kiện quan trọng
+            .execute()
+        )
+
+        if res.data:
+            print(f"✅ Update RCS OK pnr={pnr} | phone={phone}")
+        else:
+            print(f"⚠️ Không có record pending để update (RCS) pnr={pnr} | phone={phone}")
+
+        return res.data
+
+    except Exception as e:
+        print("❌ Lỗi update_rcs_by_pnr_phone:", e)
+        return None        
