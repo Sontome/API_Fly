@@ -236,7 +236,7 @@ async def get_vietjet_flight_options( departure_place,
         f"&adultCount={adult_count}"
         f"&childCount={child_count}"
         f"&infantCount={infant_count}"
-        f"&promoCode="
+        f"&promoCode=VJ20"
         f"&greaterNumberOfStops=0"
     )
 
