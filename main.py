@@ -42,7 +42,7 @@ import asyncio
 from pydantic import BaseModel, Field
 from typing import Optional
 from holdbookingkeyVJ import booking
-from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA,huyveVNA,repricePNR_v2
+from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA,huyveVNA,repricePNR_v2,sendemail1a_multi
 import shutil
 from fastapi.concurrency import run_in_threadpool
 from typing import List
@@ -1106,7 +1106,17 @@ async def sendemail_1a(
         return result
     except Exception as e:
         return (str(e))
-
+@app.get("/sendmailvnamulti")
+async def sendemail_1a_multi(
+    code: str = Query(..., description="code"),
+    ssid: str = Query(..., description="ssidsession")
+):
+    try:
+        result = await sendemail1a_multi(code,ssid)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 @app.get("/sendmail_vj")
 def sendmailvj(
