@@ -1008,7 +1008,7 @@ async def sendemail1a_multi(code, ssid):
                 # ⏱ delay 20s giữa mỗi lần (trừ lần cuối)
                 if i < pax_count:
                     print("⏳ Chờ 20s...")
-                    await asyncio.sleep(20)
+                    await asyncio.sleep(0)
 
         return results
 
