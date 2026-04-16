@@ -370,7 +370,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 cmds = [
                     f"APE-{email}",
                     f"APE-{email}/p1",
-                    "APE-noreply.tkt.vna@gmail.com/p1",
+                    "APE-noreply.tkt.vna@gmail.com",
                     f"APM-{phone}",
                     f"APM-{phone}/p1",
                     f"APN-E+{email}/VI/p1",
