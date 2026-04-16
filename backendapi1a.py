@@ -970,7 +970,52 @@ async def sendemail1a(code, ssid):
 # if __name__ == "__main__":
 #     print(asyncio.run(checksomatveVNA("EN4IGQ","Check")))
 
+async def sendemail1a_multi(code, ssid):
+    try:
+        async with httpx.AsyncClient(http2=False) as client:
+            print("⚡ Gọi send_command lần 1...")
+            ssid, res = await send_command(client, "RT" + str(code), ssid)
 
+            if "NO MATCH FOR RECORD LOCATOR" in res.text:
+                print("⛔ Không tìm thấy PNR:", code)
+                return "None"
+
+            print("✅ Response lần 1:", res.text)
+
+            # 🔥 Đếm số pax qua "FA PAX"
+            pax_count = res.text.count("FA PAX")
+            print(f"👥 Số lượng pax: {pax_count}")
+
+            if pax_count == 0:
+                print("⚠️ Không có PAX nào")
+                return {"message": "No PAX found"}
+
+            results = []
+
+            # 🔥 Loop từng pax
+            for i in range(1, pax_count + 1):
+                command = f"ITR-EML-HANVIETAIR.SERVICE@GMAIL.COM/LP VI/P{i}"
+                print(f"⚡ Gửi email cho P{i}...")
+
+                ssid, res = await send_command(client, command, ssid)
+                print(f"✅ Response P{i}:", res.text)
+
+                try:
+                    results.append(res.json())
+                except:
+                    results.append({"raw": res.text})
+
+                # ⏱ delay 20s giữa mỗi lần (trừ lần cuối)
+                if i < pax_count:
+                    print("⏳ Chờ 20s...")
+                    await asyncio.sleep(20)
+
+        return results
+
+    except Exception as e:
+        print("🚨 Lỗi khi chạy:", e)
+        await send_mess("lỗi api multi 1A")
+        return {"error": str(e)}
 
 async def repricePNR(pnr, doituong):
     try:
