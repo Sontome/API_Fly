@@ -1378,33 +1378,69 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
 
 
 @app.post("/list-pnr-v2")
-def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
-    """Trả về danh sách link các file PDF có chứa chuỗi pnr_key"""
-    pnr_key = data.pnr
+def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
+    """
+    Hỗ trợ nhập nhiều PNR cùng lúc, phân tách bằng dấu space
+    Ví dụ:
+    ABC123 XYZ789 DEF456
+    """
+
     if not os.path.exists(BASE_DIR):
         raise HTTPException(status_code=500, detail="Thư mục files chưa tồn tại")
 
-    # lọc file có chứa pnr_key ở bất kỳ vị trí nào
-    files = [
-        f for f in os.listdir(BASE_DIR)
-        if (
-            pnr_key in f
-            and f.upper().endswith(".PDF")
-            and (
-                f.upper().startswith("VJ")
-                or f.upper().startswith("VNA")
-            )
-        )
-    ]
+    # ===============================
+    # Tách nhiều PNR từ input
+    # ===============================
+    raw_input = data.pnr.upper().strip()
 
-    if not files:
-        raise HTTPException(status_code=404, detail="Không tìm thấy file nào chứa chuỗi này")
-    for filename in files:
+    pnr_list = list({
+        p.strip()
+        for p in raw_input.split()
+        if re.fullmatch(r"[A-Z0-9]{6}", p.strip())
+    })
+
+    if not pnr_list:
+        raise HTTPException(
+            status_code=400,
+            detail="Không có PNR hợp lệ (mỗi PNR gồm 6 ký tự chữ/số)"
+        )
+
+    matched_files = []
+
+    # ===============================
+    # Tìm file theo nhiều PNR
+    # ===============================
+    for filename in os.listdir(BASE_DIR):
+        upper_name = filename.upper()
+
+        if not upper_name.endswith(".PDF"):
+            continue
+
+        if not (
+            upper_name.startswith("VJ")
+            or upper_name.startswith("VNA")
+        ):
+            continue
+
+        # nếu chứa bất kỳ PNR nào
+        if any(pnr in upper_name for pnr in pnr_list):
+            matched_files.append(filename)
+
+    if not matched_files:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy file nào phù hợp"
+        )
+
+    # ===============================
+    # Xử lý file
+    # ===============================
+    for filename in matched_files:
         input_path = os.path.join(BASE_DIR, filename)
         output_path = os.path.join(TEMP_DIR, filename)
 
         try:
-            # ===== LUỒNG VJ =====
+            # ===== VJ =====
             if filename.upper().startswith("VJ"):
                 reformat_VJ(
                     input_path,
@@ -1412,26 +1448,33 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
                     output_path=output_path
                 )
 
-            # ===== LUỒNG VNA (CHƯA HOÀN THIỆN) =====
+            # ===== VNA =====
             elif filename.upper().startswith("VNA"):
-                try:
-                    ngonngu = check_ngon_ngu(input_path)
-                    if ngonngu == "VN":
-                        reformat_VNA_VN(input_path, new_text=data.banner,output_path=output_path, type=0)
-                    if ngonngu == "KR":
-                        reformat_VNA_KR(input_path, new_text=data.banner,output_path=output_path, type=0)
-                    if ngonngu == "EN":
-                        reformat_VNA_EN(input_path, new_text=data.banner,output_path=output_path, type=0)
-                    
-                except Exception as e:
-                    return {"error": str(e)}
-            
-                
-            
-                
+                ngonngu = check_ngon_ngu(input_path)
 
-            else:
-                continue
+                if ngonngu == "VN":
+                    reformat_VNA_VN(
+                        input_path,
+                        new_text=data.banner,
+                        output_path=output_path,
+                        type=0
+                    )
+
+                elif ngonngu == "KR":
+                    reformat_VNA_KR(
+                        input_path,
+                        new_text=data.banner,
+                        output_path=output_path,
+                        type=0
+                    )
+
+                elif ngonngu == "EN":
+                    reformat_VNA_EN(
+                        input_path,
+                        new_text=data.banner,
+                        output_path=output_path,
+                        type=0
+                    )
 
         except Exception as e:
             raise HTTPException(
@@ -1439,13 +1482,25 @@ def list_pnr_files(background_tasks: BackgroundTasks,data: PNRRequest):
                 detail=f"Lỗi xử lý file {filename}: {str(e)}"
             )
 
-        # Xóa file output sau khi gửi xong
+        # Auto xóa file temp sau khi trả về
         background_tasks.add_task(
             lambda p=output_path: os.path.exists(p) and os.remove(p)
         )
-    # Trả về list link đầy đủ để user tải
-    links = [f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}" for f in files]
-    return {"search": pnr_key, "files": links}
+
+    # ===============================
+    # Trả link download
+    # ===============================
+    links = [
+        f"{DOMAIN}/get-pnr/{os.path.splitext(f)[0]}"
+        for f in matched_files
+    ]
+
+    return {
+        "search": pnr_list,
+        "total_pnr": len(pnr_list),
+        "total_files": len(matched_files),
+        "files": links
+    }
 
 @app.post("/kakao-api")
 def send_mess_kakao(req: KakaoRequest):
