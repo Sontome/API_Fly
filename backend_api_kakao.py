@@ -20,6 +20,7 @@ VNA = os.getenv("IMAGE_VNA")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
 BF24H = os.getenv("IMAGE_BF24H")
+AT24H = os.getenv("IMAGE_AT24H")
 ID_RCS_DELAY = os.getenv("ID_RCS_DELAY")
 ID_RCS_HOLD = os.getenv("ID_RCS_HOLD")
 BLACKLIST_PARTIAL = [
@@ -119,6 +120,9 @@ def send_bms_image(
     reason: str="",
     oldtime: str="",
     newtime: str="",
+    name:str="",
+    xungho:str="",
+    url:str="",
     sms=True
 ) -> Dict[str, Any]:
     """Send Kakao BMS IMAGE message"""
@@ -136,7 +140,8 @@ def send_bms_image(
         "DELAY": DELAY,
         "VJ": VJ,
         "VNA": VNA,
-        "BF24H": BF24H
+        "BF24H": BF24H,
+        "AT24H":AT24H
     }
     airline_map = {
         "VJ": "Vietjet Air",
@@ -170,6 +175,12 @@ def send_bms_image(
             "#{Airlines_name}": "\n"+airline_name,
             "#{trip_info}": "\n"+trip,
             "#{url}": f"check/{hang}/{pnr}"
+        },
+        "AT24H": {
+            "#{Pax}": xungho+" "+name,
+            "#{Trip_end}": trip,
+            "#{Pax_title}": xungho,
+            "#{feedback}":{url}
         }
     }
 
