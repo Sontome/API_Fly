@@ -1686,11 +1686,12 @@ async def process_events(events):
                             type="DELAY"
                         )
                     else:
-                        send_rcs(
-                            to_number=to_number,
-                            pnr=pnr,
-                            type="HOLD"
-                        )
+                        if msg_type != "Không rõ": 
+                            send_rcs(
+                                to_number=to_number,
+                                pnr=pnr,
+                                type="HOLD"
+                            )
 
             # ==============================
             # WEBHOOK RCS RESULT
