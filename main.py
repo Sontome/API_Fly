@@ -84,6 +84,9 @@ class KakaoRequest(BaseModel):
     reason: Optional[str]=""
     oldtime: Optional[str]=""
     newtime: Optional[str]=""
+    name: Optional[str]=""
+    xungho: Optional[str]=""
+    url: Optional[str]=""
 class KakaoRequestDelay(BaseModel):
     
     
@@ -1516,7 +1519,10 @@ def send_mess_kakao(req: KakaoRequest):
             hang= req.hang,
             reason= req.reason,
             oldtime= req.oldtime,
-            newtime= req.newtime
+            newtime= req.newtime,
+            name= req.name,
+            xungho= req.xungho,
+            url= req.url
         )
         return result
     except Exception as e:
