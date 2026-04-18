@@ -180,7 +180,7 @@ def send_bms_image(
             "#{Pax}": xungho+" "+name,
             "#{Trip_end}": trip,
             "#{Pax_title}": xungho,
-            "#{feedback}":{url}
+            "#{feedback}":url
         }
     }
 
