@@ -66,7 +66,8 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
-
+class MessageRequest(BaseModel):
+    message: str
 class RepriceRequest(BaseModel):
     pnrs: str
     type: str
@@ -1798,7 +1799,14 @@ def check_ready_ticket(pnrs: str = Query(..., description="Danh sách PNR, cách
     }
 
 
+@app.post("/send")
+async def send_message(data: MessageRequest):
+    await send_vj(data.message)
 
+    return {
+        "status": "success",
+        "message_sent": data.message
+    }
 
 
 
