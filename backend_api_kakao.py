@@ -25,7 +25,9 @@ ID_RCS_DELAY = os.getenv("ID_RCS_DELAY")
 ID_RCS_HOLD = os.getenv("ID_RCS_HOLD")
 BLACKLIST_PARTIAL = [
     
-    "764301092"
+    "764301092",
+    "1035463396",
+    "963407046"
     
 ]
 
