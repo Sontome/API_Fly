@@ -225,8 +225,9 @@ def send_bms_image(
     result = response.json()
     try:
         new_balance = result["groupInfo"]["log"][-1]["newBalance"]
+        newDeposit = result["groupInfo"]["log"][-1]["newDeposit"]
         print(new_balance)
-        if new_balance < 5000:
+        if new_balance < 5000 and newDeposit < 5000:
             asyncio.run(send_mess(f"Cảnh báo : số dư solapi sắp hết, vui lòng nạp tiền: {new_balance} w"))
         response.raise_for_status()
     except Exception as e:
