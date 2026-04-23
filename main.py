@@ -119,7 +119,10 @@ class VnaCheckveRequest_V3(BaseModel):
     activedVia: str = "0,1"
     activedCar:str = ""
     
-    sochieu: str = "RT"    
+    sochieu: str = "RT"   
+    adt : Optional[str] =1
+    chd : Optional[str] =0
+    inf : Optional[str] =0
 class CodeRequest(BaseModel):
     code: List[str]
     ssid: str
@@ -1368,7 +1371,10 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
             activedVia=request.activedVia,
             
             trip=request.sochieu,
-            activedCar=request.activedCar
+            activedCar=request.activedCar,
+            adt = int(request.adt),
+            chd = int(request.chd),
+            inf = int(request.inf)
         )
         
 
