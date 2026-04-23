@@ -117,7 +117,10 @@ class PowerCallClient:
         dep1: str,
         depdate0: str,             # yyyyMMdd
         depdate1: str | None = None,
-        comp: str = "Y"
+        comp: str = "Y",
+        adt: int = 1,
+        chd: int = 0,
+        inf: int = 0
     ):
         is_rt = trip == "RT"
 
@@ -149,9 +152,9 @@ class PowerCallClient:
 
             "val": "",
             "comp":  comp,
-            "adt": "1",
-            "chd": "0",
-            "inf": "0",
+            "adt": str(adt),
+            "chd": str(chd),
+            "inf": str(inf),
             "car": "YY",
             "idt": "ALL",
             "isBfm": "Y",
@@ -220,7 +223,10 @@ class PowerCallClient:
         depdate0: str,
         depdate1: str | None = None,
         activedVia: str = "0",
-        comp: str = "Y"
+        comp: str = "Y",
+        adt: int = 1,
+        chd: int = 0,
+        inf: int = 0
     ):
         is_rt = trip == "RT"
 
@@ -295,9 +301,9 @@ class PowerCallClient:
             "retdate": depdate1 or "",
 
             "comp":  comp,
-            "adt": "1",
-            "chd": "0",
-            "inf": "0",
+            "adt": str(adt),
+            "chd": str(chd),
+            "inf": str(inf),
             "car": "YY",
             "idt": "ALL",
             "isBfm": "Y",
@@ -426,7 +432,10 @@ async def api_checkve_vna_v3(trip:str="RT",
             depdate0:str="",
             depdate1:str="",
             activedCar:str="VN",
-            activedVia:str="0"):
+            activedVia:str="0",
+            adt: int = 1,
+            chd: int = 0,
+            inf: int = 0):
     t0 = time.perf_counter()
     depdate_0 = format_date(depdate0)
     if trip == "RT":
@@ -440,7 +449,10 @@ async def api_checkve_vna_v3(trip:str="RT",
             dep0=dep0,
             dep1=dep1,
             depdate0=depdate_0,
-            depdate1=depdate_1
+            depdate1=depdate_1,
+            adt=adt,
+            chd=chd,
+            inf=inf
         )
         t1 = log_step("getfulllistCA", t1)
         print(ca["status"])
@@ -464,7 +476,10 @@ async def api_checkve_vna_v3(trip:str="RT",
                 dep1=dep1,
                 depdate0=depdate_0,
                 depdate1=depdate_1,
-                activedVia="0")
+                activedVia="0",
+                adt=adt,
+                chd=chd,
+                inf=inf)
             t2 = log_step("getflights VNA bay thẳng", t2) 
                
             print("🔀 Bay thẳng:", flightsVNA_baythang["TOTALFARES"])
@@ -482,7 +497,10 @@ async def api_checkve_vna_v3(trip:str="RT",
             dep1=dep1,
             depdate0=depdate_0,
             depdate1=depdate_1,
-            activedVia="1")
+            activedVia="1",
+            adt=adt,
+            chd=chd,
+            inf=inf)
             t3 = log_step("getflights VNA nối chuyến", t3)
             print("🔀 Nối chuyến:", flightsVNA_noichuyen["TOTALFARES"])
             resultfull.extend(prase_flights(
@@ -500,7 +518,10 @@ async def api_checkve_vna_v3(trip:str="RT",
                 dep1=dep1,
                 depdate0=depdate_0,
                 depdate1=depdate_1,
-                activedVia="0,1")
+                activedVia="0,1",
+                adt=adt,
+                chd=chd,
+                inf=inf)
                 t4 = log_step("getflights hãng khác", t4)
                 print("🔀 Full chuyến hãng khác:", flightsfull_noichuyen["TOTALFARES"])
                 t5 = time.perf_counter()
@@ -520,7 +541,10 @@ async def api_checkve_vna_v3(trip:str="RT",
                     dep1=dep1,
                     depdate0=depdate_0,
                     depdate1=depdate_1,
-                    comp="C"
+                    comp="C",
+                    adt=adt,
+                    chd=chd,
+                    inf=inf
                 )
                 
                 sskey_retry = ca_retry.get("fulllist", {}).get("SessionKey")
@@ -536,7 +560,10 @@ async def api_checkve_vna_v3(trip:str="RT",
                         depdate0=depdate_0,
                         depdate1=depdate_1,
                         activedVia="0",
-                        comp="C"
+                        comp="C",
+                        adt=adt,
+                        chd=chd,
+                        inf=inf
                     )
                     resultfull.extend(prase_flights(
                         data=flightsVNA_thuonggia["FARES"],
@@ -566,4 +593,3 @@ async def api_checkve_vna_v3(trip:str="RT",
             "activedVia" : "0,1",
             "body" : "null"
             }
-
