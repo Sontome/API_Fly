@@ -314,7 +314,7 @@ def fill_customer(page, customers):
         first_name = str(customer.get("firstname", "")).strip().upper()
         last_name = str(customer.get("lastname", "")).strip().upper()
         pax_type = str(customer.get("type", "")).strip().upper()
-        # birthday = str(customer.get("birthday", "")).strip()
+        birthday = str(customer.get("birthday", "")).strip()
         print(
             f"👤 Khách {idx} - TYPE:{pax_type or 'N/A'}, "
             f"GENDER:{gender}, LAST:{last_name}, FIRST:{first_name}"
@@ -347,10 +347,10 @@ def fill_customer(page, customers):
         # page.keyboard.press("Control+A")
         # page.keyboard.press("Backspace")
         page.type(first_name_selector, first_name, delay=1)
-        # page.click(birth_gender_selector)
+        page.click(birth_gender_selector)
         # page.keyboard.press("Control+A")
         # page.keyboard.press("Backspace")
-        # page.type(birth_gender_selector, birthday, delay=1)
+        page.type(birth_gender_selector, birthday, delay=1)
 
     print("✅ Đã điền xong thông tin khách")
 def fill_phone(
