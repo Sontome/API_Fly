@@ -51,6 +51,7 @@ from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr,get_phone_email_from_pnr,update_kakao_by_pnr_phone,update_rcs_by_pnr_phone
 from backend_reprice import add_reprice_pnr
+from booking_other import booking_other
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -150,6 +151,20 @@ class BookingRequest(BaseModel):
     bookingkeychieuve: Optional[str] = Field(None, description="Booking Key chiều về (nếu có)", example="")
     phonekakao: Optional[str] = Field("", description="phonekakao (nếu có)", example="")
     emailkakao: Optional[str] = Field("", description="email (nếu có)", example="")
+class BookingOtherCustomer(BaseModel):
+    type: str = "ADT"
+    gender: str = "NAM"
+    firstname: str = ""
+    lastname: str = ""
+    birthday: Optional[str] = ""
+class BookingOtherRequest(BaseModel):
+    hang: str = "OZ"
+    from_code: str = "HAN"
+    to_code: str = "ICN"
+    dep_date: str = "2026/06/18"
+    arr_date: Optional[str] = ""
+    index: str = ""
+    customer: List[BookingOtherCustomer] = []
 class VjLowFareRequest(BaseModel):
     departure: str  = Field(..., description="Mã sân bay đi (VD: ICN)",example="ICN")
     arrival: str    = Field(..., description="Mã sân bay đến (VD: HAN)", example="HAN")
@@ -686,6 +701,30 @@ async def create_booking(request: BookingRequest):
     result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.iso,request.exten,request.phone,request.email,request.bookingkeychieuve,request.phonekakao,request.emailkakao)
     asyncio.create_task(safe_send_vj(result))
     return result
+async def _run_booking_other_job(request: BookingOtherRequest):
+    try:
+        payload_customer = [item.model_dump() for item in request.customer]
+        await run_in_threadpool(
+            booking_other,
+            request.hang,
+            request.from_code,
+            request.to_code,
+            request.dep_date,
+            request.arr_date,
+            request.index,
+            payload_customer,
+            False
+        )
+    except Exception as e:
+        print(f"❌ Lỗi job booking_other: {e}")
+
+@app.post("/other/booking", summary="Giữ vé Other chạy nền", tags=[" Booking"])
+async def create_other_booking(request: BookingOtherRequest):
+    asyncio.create_task(_run_booking_other_job(request))
+    return {
+        "status_code": 202,
+        "message": "Đã nhận yêu cầu và đang xử lý nền. Vui lòng theo dõi Telegram để xem kết quả."
+    }
 @app.post("/vj/lowfare-v2")
 async def vj_lowfare_v2(request: VjLowFareRequest):
       
@@ -1813,7 +1852,6 @@ async def send_message(data: MessageRequest):
         "status": "success",
         "message_sent": data.message
     }
-
 
 
 
