@@ -166,6 +166,7 @@ class BookingOtherRequest(BaseModel):
     arr_date: Optional[str] = ""
     index: str = ""
     customer: List[BookingOtherCustomer] = []
+    phonekakao: Optional[str] = ""
 class VjLowFareRequest(BaseModel):
     departure: str  = Field(..., description="Mã sân bay đi (VD: ICN)",example="ICN")
     arrival: str    = Field(..., description="Mã sân bay đến (VD: HAN)", example="HAN")
@@ -714,6 +715,7 @@ async def _run_booking_other_job(request: BookingOtherRequest):
             request.arr_date,
             request.index,
             payload_customer,
+            request.phonekakao,
             False
         )
     except Exception as e:
