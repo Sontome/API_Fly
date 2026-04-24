@@ -236,8 +236,8 @@ class PowerCallClient:
             "trip": trip,
 
             "activedCar": activedCar,
-            "activedCLSS1": "I,C,J,D,Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V",
-            "activedCLSS2": "I,C,J,D,Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V",
+            "activedCLSS1": "I,C,J,D,Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V,A,Z",
+            "activedCLSS2": "I,C,J,D,Y,Q,S,B,U,K,M,Q,U,E,L,T,R,H,B,Y,S,N,V,A,Z",
             "activedVia": activedVia,
             "activedStatus": "OK,HL",
             "activedIDT": "ADT,STU,VFR,LBR",
