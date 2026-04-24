@@ -2,6 +2,7 @@
 import asyncio
 from playwright.sync_api import TimeoutError,sync_playwright
 from utils_telegram import send_mess 
+from backend_supabase_kakao import add_kakao_pnr
 
 # =========================
 # CONFIG
@@ -329,7 +330,16 @@ def fill_customer(page, customers):
         # page.type(birth_gender_selector, birthday, delay=1)
 
     print("✅ Đã điền xong thông tin khách")
-def fill_phone(page, phone="010-2451-1790", from_code="", to_code="", dep_date="", arr_date="", customers=None):
+def fill_phone(
+    page,
+    phone="010-2451-1790",
+    from_code="",
+    to_code="",
+    dep_date="",
+    arr_date="",
+    customers=None,
+    phonekakao=""
+):
     print(f"📞 Điền số điện thoại: {phone}")
 
     parts = str(phone).strip().split("-")
@@ -403,6 +413,26 @@ def fill_phone(page, phone="010-2451-1790", from_code="", to_code="", dep_date="
     detail_text = "\n".join(detail_lines)
 
     if booking_code or total_fee:
+        if booking_code and phonekakao:
+            first_customer_name = ""
+            if customers:
+                first_customer = customers[0]
+                first_customer_name = (
+                    f"{str(first_customer.get('lastname', '')).strip().upper()} "
+                    f"{str(first_customer.get('firstname', '')).strip().upper()}"
+                ).strip()
+            try:
+                add_kakao_pnr(
+                    phone=str(phonekakao).strip(),
+                    name=first_customer_name,
+                    pnr=booking_code
+                )
+                print(
+                    f"✅ Đã add_kakao_pnr | phone={phonekakao} | name={first_customer_name} | pnr={booking_code}"
+                )
+            except Exception as e:
+                print(f"❌ Lỗi add_kakao_pnr: {e}")
+
         mess = f"Đã giữ vé {booking_code} thành công"
         if detail_text:
             mess = f"{mess}\n{detail_text}"
@@ -425,7 +455,7 @@ def fill_phone(page, phone="010-2451-1790", from_code="", to_code="", dep_date="
 # =========================
 # MAIN
 # =========================
-def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", customer="", wait_for_manual_close=False):
+def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", customer="", phonekakao="", wait_for_manual_close=False):
     type_order = {"ADT": 0, "CHD": 1, "INF": 2}
     normalized_customer = []
 
@@ -492,7 +522,8 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
             to_code=to_code,
             dep_date=dep_date,
             arr_date=arr_date,
-            customers=sorted_customer
+            customers=sorted_customer,
+            phonekakao=phonekakao
         )
         # chỉ giữ browser mở khi cần debug thủ công
         if wait_for_manual_close:
@@ -501,20 +532,20 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
         browser.close()
 
 
-if __name__ == "__main__":
-    booking_other(
-        hang="7C",
-        from_code="ICN",
-        to_code="HAN",
-        dep_date="2026/08/18",
-        arr_date="2026/08/20",
-        index="16",
-        customer=[
-            {"type": "ADT", "gender": "NAM", "firstname": "VAN A", "lastname": "NGUYEN","birthday" :"20000130"}
+# if __name__ == "__main__":
+#     booking_other(
+#         hang="7C",
+#         from_code="ICN",
+#         to_code="HAN",
+#         dep_date="2026/08/18",
+#         arr_date="2026/08/20",
+#         index="16",
+#         customer=[
+#             {"type": "ADT", "gender": "NAM", "firstname": "VAN A", "lastname": "NGUYEN","birthday" :"20000130"}
             
-            # {"type": "CHD", "gender": "NAM", "firstname": "BE C", "lastname": "LE"},
-            # {"type": "INF", "gender": "NU", "firstname": "BABY D", "lastname": "PHAM"},
-            # {"type": "ADT", "gender": "NAM", "firstname": "THI B", "lastname": "TRAN"}
-        ],
-        wait_for_manual_close=True
-    )
+#             # {"type": "CHD", "gender": "NAM", "firstname": "BE C", "lastname": "LE"},
+#             # {"type": "INF", "gender": "NU", "firstname": "BABY D", "lastname": "PHAM"},
+#             # {"type": "ADT", "gender": "NAM", "firstname": "THI B", "lastname": "TRAN"}
+#         ],
+#         wait_for_manual_close=True
+#     )
