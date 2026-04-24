@@ -391,26 +391,37 @@ def fill_phone(
     page.wait_for_load_state("networkidle")
     wait_loading_finish(page)
 
-    # Site khá cũ, click có thể bị treo dù nút visible/enabled.
-    # Ưu tiên click force + no_wait_after, fallback gọi JS trực tiếp.
-    dialog = None
-    try:
-        with page.expect_event("dialog", timeout=8000) as dialog_info:
-            finish_btn.click(force=True, no_wait_after=True, timeout=8000)
-        dialog = dialog_info.value
-    except Exception as click_err:
-        print(f"⚠️ Click finishPaxInfo lỗi, thử fallback JS: {click_err}")
-        try:
-            with page.expect_event("dialog", timeout=8000) as dialog_info:
-                page.evaluate("finishPaxInfo()")
-            dialog = dialog_info.value
-        except Exception as js_err:
-            print(f"❌ Fallback JS finishPaxInfo lỗi: {js_err}")
-            raise
-
-    if dialog:
+    # Tránh treo ở Locator.click trên site cũ: dùng handler dialog + trigger JS trực tiếp.
+    def _dialog_handler(dialog):
         print(f"📣 Dialog sau khi bấm hoàn tất: {dialog.type} - {dialog.message}")
         dialog.accept()
+
+    page.on("dialog", _dialog_handler)
+    try:
+        triggered = page.evaluate(
+            """
+            () => {
+                const btn = document.querySelector('[onclick="finishPaxInfo();"]');
+                if (btn) {
+                    btn.click();
+                    return "button-clicked";
+                }
+                if (typeof finishPaxInfo === "function") {
+                    finishPaxInfo();
+                    return "function-called";
+                }
+                return "not-found";
+            }
+            """
+        )
+        print(f"ℹ️ Trigger finishPaxInfo: {triggered}")
+        if triggered == "not-found":
+            raise RuntimeError("Không tìm thấy nút/hàm finishPaxInfo để submit.")
+
+        # cho JS submit/dialog xử lý xong
+        page.wait_for_timeout(1200)
+    finally:
+        page.remove_listener("dialog", _dialog_handler)
 
     # Sau khi xác nhận, web chuyển sang màn hình đặt vé thành công.
     page.wait_for_load_state("domcontentloaded")
