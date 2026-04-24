@@ -512,7 +512,7 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=False,
+            headless=True,
             slow_mo=500
         )
 
