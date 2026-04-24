@@ -14,6 +14,20 @@ from utils_telegram import send_mess
 
 STATE_FILE = "statevna.json"
 
+def send_mess_sync_safe(message: str):
+    """
+    Gửi Telegram từ code sync:
+    - Nếu không có event loop hiện tại -> chạy asyncio.run
+    - Nếu đang ở trong event loop -> tạo task để không ném lỗi RuntimeError
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(send_mess(message))
+        return
+
+    loop.create_task(send_mess(message))
+
 # =========================
 # ROUTE
 # =========================
@@ -392,14 +406,14 @@ def fill_phone(page, phone="010-2451-1790", from_code="", to_code="", dep_date="
         mess = f"Đã giữ vé {booking_code} thành công"
         if detail_text:
             mess = f"{mess}\n{detail_text}"
-        asyncio.run(send_mess(mess))
+        send_mess_sync_safe(mess)
         print(f"📨 Đã gửi thông báo: {mess}")
     else:
         mess = "Giữ vé thất bại"
         if detail_text:
             mess = f"{mess}\n{detail_text}"
         print("⚠️ Không lấy được dữ liệu mã giữ chỗ / tổng tiền.")
-        asyncio.run(send_mess(mess))
+        send_mess_sync_safe(mess)
         print(f"📨 Đã gửi thông báo: {mess}")
     print("✅ Đã điền phone, tick 3 điều khoản và bấm hoàn tất")
 # =========================
@@ -481,20 +495,20 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
         browser.close()
 
 
-# if __name__ == "__main__":
-#     booking_other(
-#         hang="OZ",
-#         from_code="HAN",
-#         to_code="ICN",
-#         dep_date="2026/06/18",
-#         arr_date="2026/06/20",
-#         index="17",
-#         customer=[
-#             {"type": "ADT", "gender": "NAM", "firstname": "VAN A", "lastname": "NGUYEN","birthday" :"20000130"}
+if __name__ == "__main__":
+    booking_other(
+        hang="OZ",
+        from_code="HAN",
+        to_code="ICN",
+        dep_date="2026/06/18",
+        arr_date="2026/06/20",
+        index="17",
+        customer=[
+            {"type": "ADT", "gender": "NAM", "firstname": "VAN A", "lastname": "NGUYEN","birthday" :"20000130"}
             
-#             # {"type": "CHD", "gender": "NAM", "firstname": "BE C", "lastname": "LE"},
-#             # {"type": "INF", "gender": "NU", "firstname": "BABY D", "lastname": "PHAM"},
-#             # {"type": "ADT", "gender": "NAM", "firstname": "THI B", "lastname": "TRAN"}
-#         ],
-#         wait_for_manual_close=True
-#     )
+            # {"type": "CHD", "gender": "NAM", "firstname": "BE C", "lastname": "LE"},
+            # {"type": "INF", "gender": "NU", "firstname": "BABY D", "lastname": "PHAM"},
+            # {"type": "ADT", "gender": "NAM", "firstname": "THI B", "lastname": "TRAN"}
+        ],
+        wait_for_manual_close=True
+    )
