@@ -1,7 +1,7 @@
 
-import asyncio
+import os
+import httpx
 from playwright.sync_api import TimeoutError,sync_playwright
-from utils_telegram import send_mess 
 from backend_supabase_kakao import add_kakao_pnr
 
 # =========================
@@ -14,20 +14,43 @@ from backend_supabase_kakao import add_kakao_pnr
 
 
 STATE_FILE = "statevna.json"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "7843918695:AAGnIVDjJV52Citq0mn8zOQ0_Wr0MmD45qA")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-1002520783135")
 
 def send_mess_sync_safe(message: str) -> bool:
     """
-    Gửi Telegram từ code sync:
-    - Nếu không có event loop hiện tại -> chạy asyncio.run
-    - Nếu đang ở trong event loop -> tạo task để không ném lỗi RuntimeError
+    Gửi Telegram trực tiếp từ booking_other.
+    Chỉ trả True khi Telegram trả status 200 và trường `ok=true`.
     """
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(send_mess(message))
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "HTML"
+    }
 
-    loop.create_task(send_mess(message))
-    return True
+    try:
+        with httpx.Client(timeout=20.0) as client:
+            res = client.post(url, json=payload)
+
+        if res.status_code != 200:
+            print(f"❌ Lỗi gửi Telegram HTTP {res.status_code}: {res.text}")
+            return False
+
+        try:
+            body = res.json()
+        except Exception:
+            print(f"❌ Telegram trả dữ liệu không phải JSON: {res.text}")
+            return False
+
+        if not body.get("ok", False):
+            print(f"❌ Telegram API không ok: {body}")
+            return False
+
+        return True
+    except Exception as e:
+        print(f"💥 Exception khi gửi Telegram: {e}")
+        return False
 
 # =========================
 # ROUTE
@@ -476,7 +499,7 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=True,
+            headless=False,
             slow_mo=500
         )
 
