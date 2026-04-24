@@ -14,7 +14,7 @@ from utils_telegram import send_mess
 
 STATE_FILE = "statevna.json"
 
-def send_mess_sync_safe(message: str):
+def send_mess_sync_safe(message: str) -> bool:
     """
     Gửi Telegram từ code sync:
     - Nếu không có event loop hiện tại -> chạy asyncio.run
@@ -23,10 +23,10 @@ def send_mess_sync_safe(message: str):
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        asyncio.run(send_mess(message))
-        return
+        return asyncio.run(send_mess(message))
 
     loop.create_task(send_mess(message))
+    return True
 
 # =========================
 # ROUTE
@@ -406,15 +406,21 @@ def fill_phone(page, phone="010-2451-1790", from_code="", to_code="", dep_date="
         mess = f"Đã giữ vé {booking_code} thành công"
         if detail_text:
             mess = f"{mess}\n{detail_text}"
-        send_mess_sync_safe(mess)
-        print(f"📨 Đã gửi thông báo: {mess}")
+        sent_ok = send_mess_sync_safe(mess)
+        if sent_ok:
+            print(f"📨 Đã gửi thông báo: {mess}")
+        else:
+            print(f"❌ Gửi Telegram thất bại: {mess}")
     else:
         mess = "Giữ vé thất bại"
         if detail_text:
             mess = f"{mess}\n{detail_text}"
         print("⚠️ Không lấy được dữ liệu mã giữ chỗ / tổng tiền.")
-        send_mess_sync_safe(mess)
-        print(f"📨 Đã gửi thông báo: {mess}")
+        sent_ok = send_mess_sync_safe(mess)
+        if sent_ok:
+            print(f"📨 Đã gửi thông báo: {mess}")
+        else:
+            print(f"❌ Gửi Telegram thất bại: {mess}")
     print("✅ Đã điền phone, tick 3 điều khoản và bấm hoàn tất")
 # =========================
 # MAIN
@@ -440,7 +446,7 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=True,
+            headless=False,
             slow_mo=500
         )
 
@@ -497,12 +503,12 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
 
 if __name__ == "__main__":
     booking_other(
-        hang="OZ",
-        from_code="HAN",
-        to_code="ICN",
-        dep_date="2026/06/18",
-        arr_date="2026/06/20",
-        index="17",
+        hang="7C",
+        from_code="ICN",
+        to_code="HAN",
+        dep_date="2026/08/18",
+        arr_date="2026/08/20",
+        index="16",
         customer=[
             {"type": "ADT", "gender": "NAM", "firstname": "VAN A", "lastname": "NGUYEN","birthday" :"20000130"}
             
