@@ -1,13 +1,14 @@
 import httpx
 import json
 import os
+import asyncio
 
 # 👉 Thêm token và chat_id vào config, hoặc gán trực tiếp luôn
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "7843918695:AAGnIVDjJV52Citq0mn8zOQ0_Wr0MmD45qA")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-1002520783135")
 
 
-async def send_mess(message: str):
+async def send_mess(message: str) -> bool:
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
@@ -20,6 +21,25 @@ async def send_mess(message: str):
             res = await client.post(url, json=payload)
             if res.status_code != 200:
                 print(f"❌ Lỗi gửi tin nhắn: {res.text}")
+                return False
+            return True
     except Exception as e:
         print(f"💥 Lỗi gửi message Telegram: {e}")
+        return False
 
+async def test_send_booking_message():
+    """
+    Gửi thử mẫu nội dung thông báo giữ vé.
+    """
+    sample_message = (
+        "Đã giữ vé GP7C6H thành công\n"
+        "HAN-ICN 2026/06/18 - 2026/06/20\n"
+        "NGUYEN VAN A"
+    )
+    return await send_mess(sample_message)
+
+def test_send_booking_message_sync():
+    """
+    Hàm sync để test nhanh từ script thường.
+    """
+    return asyncio.run(test_send_booking_message())
