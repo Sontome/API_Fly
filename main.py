@@ -44,6 +44,7 @@ from typing import Optional
 from holdbookingkeyVJ import booking
 from backendapi1a import checkPNR,checksomatveVNA,code1a,sendemail1a,repricePNR,beginRepricePNR,giu_ve_live_cmd,checkmatvechoVNA,huyveVNA,repricePNR_v2,sendemail1a_multi
 import shutil
+import traceback
 from fastapi.concurrency import run_in_threadpool
 from typing import List
 from ocr_gemini import ocr_then_parse
@@ -716,7 +717,8 @@ async def _run_booking_other_job(request: BookingOtherRequest):
             False
         )
     except Exception as e:
-        print(f"❌ Lỗi job booking_other: {e}")
+        print(f"❌ Lỗi job booking_other: {repr(e)}")
+        print(traceback.format_exc())
 
 @app.post("/other/booking", summary="Giữ vé Other chạy nền", tags=[" Booking"])
 async def create_other_booking(request: BookingOtherRequest):
