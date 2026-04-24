@@ -391,13 +391,26 @@ def fill_phone(
     page.wait_for_load_state("networkidle")
     wait_loading_finish(page)
 
-    # Site dùng JS dialog (alert/confirm). Một số bản Playwright cũ
-    # không có expect_dialog(), nên dùng expect_event("dialog") để tương thích.
-    with page.expect_event("dialog", timeout=10000) as dialog_info:
-        finish_btn.click()
-    dialog = dialog_info.value
-    print(f"📣 Dialog sau khi bấm hoàn tất: {dialog.type} - {dialog.message}")
-    dialog.accept()
+    # Site khá cũ, click có thể bị treo dù nút visible/enabled.
+    # Ưu tiên click force + no_wait_after, fallback gọi JS trực tiếp.
+    dialog = None
+    try:
+        with page.expect_event("dialog", timeout=8000) as dialog_info:
+            finish_btn.click(force=True, no_wait_after=True, timeout=8000)
+        dialog = dialog_info.value
+    except Exception as click_err:
+        print(f"⚠️ Click finishPaxInfo lỗi, thử fallback JS: {click_err}")
+        try:
+            with page.expect_event("dialog", timeout=8000) as dialog_info:
+                page.evaluate("finishPaxInfo()")
+            dialog = dialog_info.value
+        except Exception as js_err:
+            print(f"❌ Fallback JS finishPaxInfo lỗi: {js_err}")
+            raise
+
+    if dialog:
+        print(f"📣 Dialog sau khi bấm hoàn tất: {dialog.type} - {dialog.message}")
+        dialog.accept()
 
     # Sau khi xác nhận, web chuyển sang màn hình đặt vé thành công.
     page.wait_for_load_state("domcontentloaded")
