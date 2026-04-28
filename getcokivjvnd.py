@@ -5,7 +5,8 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 import os
 import time
 import shutil
-
+from dotenv import load_dotenv
+load_dotenv()
 STATE_FILE = "statevnd.json"
 LOGIN_URL = "https://agents2.vietjetair.com/login"
 USERNAME = os.getenv("USERNAME_VJ_VND")
