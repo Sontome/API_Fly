@@ -2,7 +2,8 @@ from playwright.sync_api import sync_playwright
 import json
 import time
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 STATE_FILE = "statevna1A.json"
 USER= os.getenv("USERNAME_1A")
 PASS= os.getenv("PASSWORD_1A")
