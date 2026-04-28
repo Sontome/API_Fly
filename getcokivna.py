@@ -5,6 +5,8 @@ import time
 
 STATE_FILE = "statevna.json"
 
+USER_ID = os.getenv("USERNAME_VNA")
+PASSWORD = os.getenv("PASSWORD_VNA")
 def export_full_state(context, page, path):
     """Lưu đầy đủ cookies + localStorage"""
     cookies = context.cookies()
@@ -27,8 +29,8 @@ def login_and_save(page, context):
     page.goto("https://wholesale.powercallair.com/tm/tmLogin.lts")
 
     page.fill('input[name="user_agt_Code"]', "5253")
-    page.fill('input[name="user_id"]', "HANVIETAIR")
-    page.fill('input[name="user_password"]', "Ha@112233")
+    page.fill('input[name="user_id"]', USER_ID)
+    page.fill('input[name="user_password"]', PASSWORD)
     page.press('input[name="user_password"]', 'Enter')
 
     page.wait_for_load_state("networkidle")
