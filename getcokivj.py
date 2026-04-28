@@ -1,9 +1,10 @@
 # getcokivj_fixed.py
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from dotenv import load_dotenv
 import os
 import time
 import shutil
-
+load_dotenv()
 STATE_FILE = "state.json"
 LOGIN_URL = "https://agents2.vietjetair.com/login"
 USERNAME = os.getenv("USERNAME_VJ")
