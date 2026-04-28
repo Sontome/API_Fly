@@ -6,9 +6,9 @@ import shutil
 
 STATE_FILE = "statesun.json"
 LOGIN_URL = "https://sunportal.com.vn/login"
-AGENCYCODE="00222095"
-USERNAME = "hanvietair.partner@gmail.com"
-PASSWORD = "EOJP7dwj#iCJ"
+AGENCYCODE= os.getenv("AGENCYCODE_SUN")
+USERNAME = os.getenv("USERNAME_SUN")
+PASSWORD = os.getenv("PASSWORD_SUN")
 
 # Thời hạn chờ (ms)
 SHORT_TIMEOUT = 10_000
