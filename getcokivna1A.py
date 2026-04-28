@@ -1,9 +1,11 @@
 from playwright.sync_api import sync_playwright
 import json
 import time
+import os
 
 STATE_FILE = "statevna1A.json"
-
+USER= os.getenv("USERNAME_1A")
+PASS= os.getenv("PASSWORD_1A")
 def export_full_state(context, page, path):
     """Lưu cookies + localStorage thôi, bỏ sessionStorage cho đỡ lỗi"""
     cookies = context.cookies()
@@ -27,11 +29,11 @@ def login_and_save(page, context):
     print("🔐 Đang login...")
     page.goto("https://www.accounts.amadeus.com/LoginService/authorizeAngular?service=ARD_VN_DC&client_id=1ASIXARDVNDC&LANGUAGE=GB&redirect_uri=https%3A%2F%2Ftc345.resdesktop.altea.amadeus.com%2Fapp_ard%2Fapf%2Finit%2Flogin%3FSITE%3DAVNPAIDL%26LANGUAGE%3DGB%26MARKETS%3DARDW_PROD_WBP%26ACTION%3DclpLogin#/login")
 
-    page.fill('input[id="userAliasInput"]', "SEL28AA9")
+    page.fill('input[id="userAliasInput"]', USER)
     page.press('input[id="userAliasInput"]', "Enter")
     time.sleep(1)
 
-    page.fill('input[id="passwordInput"]', "Bkdfasdv@203414@@")
+    page.fill('input[id="passwordInput"]', PASS)
     page.press('input[id="passwordInput"]', "Enter")
     time.sleep(3)
 
