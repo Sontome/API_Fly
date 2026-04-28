@@ -3,7 +3,8 @@ import re, json, xml.etree.ElementTree as ET
 import threading, time
 from queue import Queue
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 USERNAME = os.getenv("USERNAME_1A")
 PASSWORD = os.getenv("PASSWORD_1A")
 
