@@ -338,15 +338,36 @@ def fill_customer(page, customers):
         #     arg=[hidden_gender_selector, gender]
         # )
         print("đã tích chọn gender")
-        page.click(last_name_selector)
-        # page.keyboard.press("Control+A")
-        # page.keyboard.press("Backspace")
-        page.type(last_name_selector, last_name, delay=1)
+        # Dùng set value bằng JS để hạn chế việc web tự nuốt khoảng trắng trong tên.
+        page.evaluate(
+            """
+            ({selector, value}) => {
+                const el = document.querySelector(selector);
+                if (!el) return;
+                el.focus();
+                el.value = value;
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+                el.blur();
+            }
+            """,
+            {"selector": last_name_selector, "value": last_name}
+        )
 
-        page.click(first_name_selector)
-        # page.keyboard.press("Control+A")
-        # page.keyboard.press("Backspace")
-        page.type(first_name_selector, first_name, delay=1)
+        page.evaluate(
+            """
+            ({selector, value}) => {
+                const el = document.querySelector(selector);
+                if (!el) return;
+                el.focus();
+                el.value = value;
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+                el.blur();
+            }
+            """,
+            {"selector": first_name_selector, "value": first_name}
+        )
         page.click(birth_gender_selector)
         # page.keyboard.press("Control+A")
         # page.keyboard.press("Backspace")
@@ -578,7 +599,121 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
 
         browser.close()
 
+def check_pnr_other(pnr):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,   # chạy server nên headless cho đỡ nặng
+            slow_mo=0
+        )
 
+        context = browser.new_context(
+            storage_state=STATE_FILE
+        )
+
+        page = context.new_page()
+        page.set_viewport_size({"width": 1600, "height": 2200})
+
+        try:
+            # vào trang
+            page.goto(
+                "https://wholesale.powercallair.com/tm/re/tmDprsRevList.lts",
+                wait_until="networkidle"
+            )
+
+            # =====================================
+            # click PNR
+            # =====================================
+            pnr_el = page.locator(
+                f"a[href='#none'] span.pcd_trl_hrev_code:text-is('{pnr}')"
+            ).first
+
+            pnr_el.wait_for(timeout=10000)
+            pnr_el.click()
+
+            page.wait_for_load_state("networkidle")
+
+            # =====================================
+            # clear nationality
+            # =====================================
+            for name in [
+                "pndNationalityCode",
+                "pndIssueNationalityCode"
+            ]:
+                selects = page.locator(f"select[name='{name}']")
+                count = selects.count()
+
+                for i in range(count):
+                    try:
+                        selects.nth(i).evaluate("""
+                            el => {
+                                el.selectedIndex = -1;
+                                el.dispatchEvent(
+                                    new Event('change', {bubbles:true})
+                                );
+                            }
+                        """)
+                    except:
+                        pass
+
+            # =====================================
+            # vùng chụp
+            # =====================================
+            start_xpath = "/html/body/div[4]/div/div/div[3]/div/div/div[1]/h5[1]"
+            end_xpath = "/html/body/div[4]/div/div/div[3]/div/div/div[1]/div[6]/div[1]/div/div[2]/div[1]/div/form[1]/div/div[2]/input"
+
+            start_el = page.locator(f"xpath={start_xpath}")
+            end_el = page.locator(f"xpath={end_xpath}")
+
+            start_el.wait_for()
+            end_el.wait_for()
+
+            start_el.scroll_into_view_if_needed()
+            page.wait_for_timeout(700)
+
+            end_el.scroll_into_view_if_needed()
+            page.wait_for_timeout(1200)
+
+            box1 = start_el.bounding_box()
+            box2 = end_el.bounding_box()
+
+            if not box1 or not box2:
+                raise Exception("Không lấy được vùng chụp")
+
+            x = min(box1["x"], box2["x"])
+            y = min(box1["y"], box2["y"])
+
+            right = max(
+                box1["x"] + box1["width"],
+                box2["x"] + box2["width"]
+            )
+
+            bottom = max(
+                box1["y"] + box1["height"],
+                box2["y"] + box2["height"]
+            )
+
+            width = right - x
+            height = bottom - y
+
+            # =====================================
+            # CHỤP VÀ RETURN BYTES
+            # =====================================
+            img_bytes = page.screenshot(
+                type="png",
+                clip={
+                    "x": x,
+                    "y": y,
+                    "width": width,
+                    "height": height
+                }
+            )
+
+            browser.close()
+            return img_bytes
+
+        except Exception as e:
+            browser.close()
+            raise e
 # if __name__ == "__main__":
 #     booking_other(
 #         hang="7C",
@@ -596,3 +731,5 @@ def booking_other(hang,from_code, to_code, dep_date, arr_date="", index="", cust
 #         ],
 #         wait_for_manual_close=True
 #     )
+# if __name__ == "__main__":
+#     check_pnr_other("GQBCN0")
