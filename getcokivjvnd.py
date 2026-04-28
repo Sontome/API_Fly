@@ -8,8 +8,8 @@ import shutil
 
 STATE_FILE = "statevnd.json"
 LOGIN_URL = "https://agents2.vietjetair.com/login"
-USERNAME = "AG410513A44ED9"
-PASSWORD = "Hlfndma@748282"
+USERNAME = os.getenv("USERNAME_VJ_VND")
+PASSWORD = os.getenv("PASSWORD_VJ_VND")
 
 # Thời hạn chờ (ms)
 SHORT_TIMEOUT = 10_000
