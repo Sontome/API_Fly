@@ -659,7 +659,7 @@ def check_pnr_other(pnr):
             # vùng chụp
             # =====================================
             start_xpath = "/html/body/div[4]/div/div/div[3]/div/div/div[1]/h5[1]"
-            end_xpath = "/html/body/div[4]/div/div/div[3]/div/div/div[1]/div[6]/div[1]/div/div[2]/div[1]/div/form[1]/div/div[2]/input"
+            end_xpath = "/html/body/div[4]/div/div/div[3]/div/div/div[1]/div[6]/div[1]/div/div[2]/div[1]/div/form[1]/div/div[1]/ul"
 
             start_el = page.locator(f"xpath={start_xpath}")
             end_el = page.locator(f"xpath={end_xpath}")
