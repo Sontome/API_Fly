@@ -52,7 +52,7 @@ from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr,get_phone_email_from_pnr,update_kakao_by_pnr_phone,update_rcs_by_pnr_phone
 from backend_reprice import add_reprice_pnr
-from booking_other import booking_other
+from booking_other import booking_other,check_pnr_other
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -1857,7 +1857,24 @@ async def send_message(data: MessageRequest):
         "message_sent": data.message
     }
 
+@app.get("/checkpnrother/{code}")
+async def get_pnr(code: str):
+    try:
+        img = await run_in_threadpool(
+            check_pnr_other,
+            code.upper().strip()
+        )
 
+        return Response(
+            content=img,
+            media_type="image/png"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 
 
