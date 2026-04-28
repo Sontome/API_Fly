@@ -2,10 +2,10 @@ from playwright.sync_api import sync_playwright, TimeoutError
 import re, json, xml.etree.ElementTree as ET
 import threading, time
 from queue import Queue
+import os
 
-
-USERNAME = "SEL28AA10"
-PASSWORD = "Bkdfasdv@203414@@@"
+USERNAME = os.getenv("USERNAME_1A")
+PASSWORD = os.getenv("PASSWORD_1A")
 
 unlock_queue = Queue()
 
