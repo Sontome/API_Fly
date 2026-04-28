@@ -2,7 +2,8 @@ from playwright.sync_api import sync_playwright
 import os
 import json
 import time
-
+from dotenv import load_dotenv
+load_dotenv()
 STATE_FILE = "statevna.json"
 
 USER_ID = os.getenv("USERNAME_VNA")
