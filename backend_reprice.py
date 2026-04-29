@@ -146,3 +146,19 @@ def update_reprice_pnr(
     else:
         print("❌ Update fail  gì đó:", res)
         return None
+def add_inbound_email(sender_name, sender_email, subject,
+                      file_name, file_path, file_size, mime_type):
+
+    data = {
+        "sender_name": sender_name,
+        "sender_email": sender_email,
+        "subject": subject,
+        "file_name": file_name,
+        "file_path": file_path,
+        "file_size": file_size,
+        "mime_type": mime_type,
+        "status": "NEW"
+    }
+
+    res = supabase.table("inbound_email").insert(data).execute()
+    return res.data
