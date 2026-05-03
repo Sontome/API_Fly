@@ -374,6 +374,8 @@ def prase_flights(data,trip):
             result.append(flight_info)
     else :
         for item in data:
+            if item.get("OC"):
+                continue
             flight_info = { 
                 "chiều_đi":{
                 
