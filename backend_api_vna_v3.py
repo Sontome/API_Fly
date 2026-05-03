@@ -337,8 +337,7 @@ def prase_flights(data,trip):
     #print(data)
     if trip == "OW":
         for item in data:
-            # 👉 bỏ qua chặng liên kết 2 hãng
-            if "OC" in item:
+            if item.get("OC"):
                 continue
             flight_info = { 
                 "chiều_đi":{
