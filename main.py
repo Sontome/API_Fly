@@ -1880,8 +1880,8 @@ async def get_pnr(code: str):
 
 
 @app.post("/vj/booking-v2", summary="Tạo giữ vé", tags=[" Booking"])
-async def create_booking-v2(request: BookingRequest):
-    def preprocess-v2(khach: HanhKhach):
+async def create_booking_v2(request: BookingRequest):
+    def preprocess_v2(khach: HanhKhach):
         return {
             "Họ": khach.Họ,
             "Tên": khach.Tên,
@@ -1891,9 +1891,9 @@ async def create_booking-v2(request: BookingRequest):
         }
 
     ds_khach = {
-        "nguoilon": [preprocess-v2(x) for x in request.ds_khach.người_lớn],
-        "treem": [preprocess-v2(x) for x in request.ds_khach.trẻ_em],
-        "embe": [preprocess-v2(x) for x in request.ds_khach.em_bé]
+        "nguoilon": [preprocess_v2(x) for x in request.ds_khach.người_lớn],
+        "treem": [preprocess_v2(x) for x in request.ds_khach.trẻ_em],
+        "embe": [preprocess_v2(x) for x in request.ds_khach.em_bé]
     }
 
     # Bọc hàm sync thành bất đồng bộ
