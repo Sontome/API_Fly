@@ -97,9 +97,14 @@ class BookingVNARequest(BaseModel):
     phone: str
     email: str
 
-def format_date(date_str: str) -> str:
-    # "16/10/2026" -> "16OCT"
+def format_date(date_str: str, is_dob: bool = False) -> str:
     dt = datetime.strptime(date_str, "%d/%m/%Y")
+    
+    if is_dob:
+        # "30/10/2025" -> "30OCT25"
+        return dt.strftime("%d%b%y").upper()
+    
+    # "16/10/2026" -> "16OCT"
     return dt.strftime("%d%b").upper()
 
 
@@ -115,27 +120,28 @@ def gender_title(gender: str, is_child=False):
 
 def build_vna_passengers(pax: PassengerGroupVNA) -> List[str]:
     result = []
-
     infants = pax.infants.copy()
 
     for idx, adt in enumerate(pax.adults):
         title = gender_title(adt.gender)
         base = f"{adt.first_name}/{adt.last_name},{title}(ADT)"
 
-        # ghép INF theo thứ tự
         if idx < len(infants):
             inf = infants[idx]
             inf_title = gender_title(inf.gender, is_child=True)
 
-            inf_str = f"(INF{inf.first_name}/{inf.last_name},{inf_title}/{inf.dob})"
+            inf_dob = format_date(inf.dob, is_dob=True)
+
+            inf_str = f"(INF{inf.first_name}/{inf.last_name},{inf_title}/{inf_dob})"
             base += inf_str
 
         result.append(base)
 
-    # children (CHD)
     for chd in pax.children:
         title = gender_title(chd.gender, is_child=True)
-        chd_str = f"{chd.first_name}/{chd.last_name},{title}(CHD/{chd.dob})"
+        chd_dob = format_date(chd.dob, is_dob=True)
+
+        chd_str = f"{chd.first_name}/{chd.last_name},{title}(CHD/{chd_dob})"
         result.append(chd_str)
 
     return result
