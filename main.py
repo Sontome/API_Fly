@@ -128,6 +128,29 @@ class VnaCheckveRequest_V3(BaseModel):
 class CodeRequest(BaseModel):
     code: List[str]
     ssid: str
+class Passenger(BaseModel):
+    first_name: str
+    last_name: str
+    passport: str
+    gender: str  = Field(..., description="M or F")
+    nationality: str = Field(..., description="VN or KR....")
+
+
+class PassengerList(BaseModel):
+    adults: List[Passenger] = []
+    children: List[Passenger] = []
+    infants: List[Passenger] = []
+
+
+class BookingRequestVJ(BaseModel):
+    passengers: PassengerList
+    booking_key: str = Field(..., description="Outbound booking key")
+    trip_type: str = Field(..., description="OW or RT")
+    departure_airport: Optional[str] = None
+    return_booking_key: Optional[str] = None
+
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
 class HanhKhach(BaseModel):
     Họ: str = Field(..., example="Nguyen")
     Tên: str = Field(..., example="An")
@@ -1879,27 +1902,52 @@ async def get_pnr(code: str):
 
 
 
-@app.post("/vj/booking-v2", summary="Tạo giữ vé", tags=[" Booking"])
-async def create_booking_v2(request: BookingRequest):
-    def preprocess_v2(khach: HanhKhach):
+
+@app.post("/vj/booking-v2", summary="Create booking", tags=["Booking"])
+async def create_booking_v2(request: BookingRequestVJ):
+
+    def map_passenger(p: Passenger):
+        # map ngược về format cũ backend đang xài
         return {
-            "Họ": khach.Họ,
-            "Tên": khach.Tên,
-            "Hộ_chiếu": khach.Hộ_chiếu,
-            "Giới_tính": khach.Giới_tính,
-            "Quốc_tịch": khach.Quốc_tịch
+            "Họ": p.first_name,
+            "Tên": p.last_name,
+            "Hộ_chiếu": p.passport,
+            "Giới_tính": "nam" if p.gender and p.gender.upper() == "M" else "nu",
+            "Quốc_tịch": p.nationality
         }
 
     ds_khach = {
-        "nguoilon": [preprocess_v2(x) for x in request.ds_khach.người_lớn],
-        "treem": [preprocess_v2(x) for x in request.ds_khach.trẻ_em],
-        "embe": [preprocess_v2(x) for x in request.ds_khach.em_bé]
+        "nguoilon": [map_passenger(x) for x in request.passengers.adults],
+        "treem": [map_passenger(x) for x in request.passengers.children],
+        "embe": [map_passenger(x) for x in request.passengers.infants]
     }
 
-    # Bọc hàm sync thành bất đồng bộ
+    # default cứng
+    DEFAULT_ISO = "KR"
+    DEFAULT_EXTEN = "82"
+    DEFAULT_PHONE = "1035463396"
+    DEFAULT_EMAIL = "hanvietair247@gmail.com"
+
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.iso,request.exten,request.phone,request.email,request.bookingkeychieuve,request.phonekakao,request.emailkakao)
+
+    result = await loop.run_in_executor(
+        None,
+        booking,
+        ds_khach,
+        request.booking_key,
+        request.trip_type.upper(),
+        request.departure_airport.upper(),
+        DEFAULT_ISO,
+        DEFAULT_EXTEN,
+        DEFAULT_PHONE,
+        DEFAULT_EMAIL,
+        request.return_booking_key,
+        request.phone,
+        request.email
+    )
+
     asyncio.create_task(safe_send_vj(result))
+
     return result
 
 
