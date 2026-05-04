@@ -149,8 +149,8 @@ class BookingRequestVJ(BaseModel):
     departure_airport: Optional[str] = None
     return_booking_key: Optional[str] = None
 
-    phone: Optional[str] = ""
-    email: Optional[str] = ""
+    phone: str
+    email: str
 class HanhKhach(BaseModel):
     Họ: str = Field(..., example="Nguyen")
     Tên: str = Field(..., example="An")
