@@ -1879,7 +1879,28 @@ async def get_pnr(code: str):
 
 
 
+@app.post("/vj/booking-v2", summary="Tạo giữ vé", tags=[" Booking"])
+async def create_booking-v2(request: BookingRequest):
+    def preprocess-v2(khach: HanhKhach):
+        return {
+            "Họ": khach.Họ,
+            "Tên": khach.Tên,
+            "Hộ_chiếu": khach.Hộ_chiếu,
+            "Giới_tính": khach.Giới_tính,
+            "Quốc_tịch": khach.Quốc_tịch
+        }
 
+    ds_khach = {
+        "nguoilon": [preprocess-v2(x) for x in request.ds_khach.người_lớn],
+        "treem": [preprocess-v2(x) for x in request.ds_khach.trẻ_em],
+        "embe": [preprocess-v2(x) for x in request.ds_khach.em_bé]
+    }
+
+    # Bọc hàm sync thành bất đồng bộ
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, booking, ds_khach, request.bookingkey, request.sochieu,request.sanbaydi, request.iso,request.exten,request.phone,request.email,request.bookingkeychieuve,request.phonekakao,request.emailkakao)
+    asyncio.create_task(safe_send_vj(result))
+    return result
 
 
 
