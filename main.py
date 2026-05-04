@@ -68,6 +68,77 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
+class PassengerVNA(BaseModel):
+    first_name: str
+    last_name: str
+    gender: str   # M / F
+    dob: Optional[str] = None  # dùng cho CHD + INF
+
+
+class PassengerGroupVNA(BaseModel):
+    adults: List[PassengerVNA] = []
+    children: List[PassengerVNA] = []
+    infants: List[PassengerVNA] = []
+
+
+class BookingVNARequest(BaseModel):
+    passengers: PassengerGroupVNA
+
+    dep: str
+    arr: str
+    dep_date: str   # "16/10/2026"
+    dep_time: str   # "10:05"
+
+    arr_date: Optional[str] = None
+    arr_time: Optional[str] = None
+
+    fare_type: str = "VFR"
+
+    phone: str
+    email: str
+
+def format_date(date_str: str) -> str:
+    # "16/10/2026" -> "16OCT"
+    dt = datetime.strptime(date_str, "%d/%m/%Y")
+    return dt.strftime("%d%b").upper()
+
+
+def format_time(time_str: str) -> str:
+    # "10:05" -> "1005"
+    return time_str.replace(":", "")
+def gender_title(gender: str, is_child=False):
+    g = gender.upper()
+    if is_child:
+        return "MSTR" if g == "M" else "MISS"
+    return "MR" if g == "M" else "MS"
+
+
+def build_vna_passengers(pax: PassengerGroupVNA) -> List[str]:
+    result = []
+
+    infants = pax.infants.copy()
+
+    for idx, adt in enumerate(pax.adults):
+        title = gender_title(adt.gender)
+        base = f"{adt.first_name}/{adt.last_name},{title}(ADT)"
+
+        # ghép INF theo thứ tự
+        if idx < len(infants):
+            inf = infants[idx]
+            inf_title = gender_title(inf.gender, is_child=True)
+
+            inf_str = f"(INF{inf.first_name}/{inf.last_name},{inf_title}/{inf.dob})"
+            base += inf_str
+
+        result.append(base)
+
+    # children (CHD)
+    for chd in pax.children:
+        title = gender_title(chd.gender, is_child=True)
+        chd_str = f"{chd.first_name}/{chd.last_name},{title}(CHD/{chd.dob})"
+        result.append(chd_str)
+
+    return result
 class MessageRequest(BaseModel):
     message: str
 class RepriceRequest(BaseModel):
@@ -1950,7 +2021,31 @@ async def create_booking_v2(request: BookingRequestVJ):
 
     return result
 
+@app.post("/vna/booking-v2", summary="Create booking", tags=["Booking"])
+async def create_booking_vna_v2(request: BookingVNARequest):
+    try:
+        hanhkhach = build_vna_passengers(request.passengers)
 
+        result = await giu_ve_live_cmd(
+            hanhkhach=hanhkhach,
+            dep=request.dep,
+            arr=request.arr,
+            depdate=format_date(request.dep_date),
+            deptime=format_time(request.dep_time),
+            arrdate=format_date(request.arr_date) if request.arr_date else None,
+            arrtime=format_time(request.arr_time) if request.arr_time else None,
+            doituong=request.fare_type,
+            email=None,
+            phone=None,
+            phonekakao=request.phone,
+            emailkakao=request.email,
+            id_f2=None
+        )
+
+        return result
+
+    except Exception as e:
+        return str(e)
 
 
 
