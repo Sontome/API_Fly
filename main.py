@@ -146,7 +146,7 @@ class BookingRequestVJ(BaseModel):
     passengers: PassengerList
     booking_key: str = Field(..., description="Outbound booking key")
     trip_type: str = Field(..., description="OW or RT")
-    departure_airport: Optional[str] = None
+    departure_airport: str
     return_booking_key: Optional[str] = None
 
     phone: str
