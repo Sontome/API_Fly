@@ -217,10 +217,10 @@ def get_company(bear,retry=False):
         return None
 async def get_vietjet_flight_options( departure_place, 
     return_place,  departure_date, 
-    adult_count, child_count,infant_count, company,auth_token, return_date= "", retry=False):
+    adult_count, child_count,infant_count, company,auth_token, return_date= "",  promo_code="",retry=False):
     global token
     
-    
+    promo_param = f"&promoCode={promo_code}" if promo_code else ""
     
     url = (
         f"https://agentapi.vietjetair.com/api/v13/Booking/findtraveloptions?"
@@ -236,7 +236,7 @@ async def get_vietjet_flight_options( departure_place,
         f"&adultCount={adult_count}"
         f"&childCount={child_count}"
         f"&infantCount={infant_count}"
-        f"&promoCode=SALE55"
+        f"{promo_param}"
         f"&greaterNumberOfStops=0"
     )
 
@@ -264,7 +264,7 @@ async def get_vietjet_flight_options( departure_place,
                         return await get_vietjet_flight_options(
                             departure_place, return_place, departure_date,
                             adult_count, child_count, infant_count,
-                            new_token, return_date, retry=True
+                            new_token, return_date, promo_code=promo_code, retry=True
                         )
                 except Exception as e:
                     print("❌ Lỗi khi chạy getcokivj.py:", e)
@@ -533,13 +533,29 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
     company = url_encode(com['data'][1]['company']['key'])
     #print(company)
     token = get_app_access_token_from_state()
-    result_data = await get_vietjet_flight_options(
-        departure_place,
-        return_place,
-        departure_date,
-        adult_count, child_count, infant_count,company, token,return_date
-    )
+    promo_codes = ["SALE55", "SALE55DLX"]
+    all_departure = []
+    all_arrival = []
+    for promo in promo_codes:
+        result_data = await get_vietjet_flight_options(
+            departure_place,
+            return_place,
+            departure_date,
+            adult_count, child_count, infant_count,
+            company, token,
+            return_date,
+            promo_code=promo
+        )
 
+        if not result_data:
+            continue
+
+        dep = result_data.get("data", {}).get("list_Travel_Options_Departure", [])
+        #arr = result_data.get("data", {}).get("list_Travel_Options_Arrival", [])
+
+        all_departure.extend(dep)
+        #all_arrival.extend(arr)
+    result_data["data"]["list_Travel_Options_Departure"] = all_departure
     if not result_data:
         return "❌ Không tải được danh sách chuyến bay"
 
@@ -673,14 +689,30 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
     company = url_encode(com['data'][1]['company']['key'])
     #print(company)
     token = get_app_access_token_from_state()
-    result_data = await get_vietjet_flight_options(
-        departure_place,
-        return_place,
-        departure_date,
-        
-        adult_count, child_count, infant_count,company, token,return_date
-    )
+    promo_codes = ["SALE55", "SALE55DLX"]
+    all_departure = []
+    all_arrival = []
+    for promo in promo_codes:
+        result_data = await get_vietjet_flight_options(
+            departure_place,
+            return_place,
+            departure_date,
+            adult_count, child_count, infant_count,
+            company, token,
+            return_date,
+            promo_code=promo
+        )
 
+        if not result_data:
+            continue
+
+        dep = result_data.get("data", {}).get("list_Travel_Options_Departure", [])
+        arr = result_data.get("data", {}).get("list_Travel_Options_Arrival", [])
+
+        all_departure.extend(dep)
+        all_arrival.extend(arr)
+    result_data["data"]["list_Travel_Options_Departure"] = all_departure
+    result_data["data"]["list_Travel_Options_Arrival"] = all_arrival
     if not result_data:
         return "❌ Không tải được danh sách chuyến bay"
     
@@ -874,5 +906,4 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
 
 
     return result
-
 
