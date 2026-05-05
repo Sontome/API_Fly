@@ -107,7 +107,23 @@ def format_date(date_str: str, is_dob: bool = False) -> str:
     # "16/10/2026" -> "16OCT"
     return dt.strftime("%d%b").upper()
 
+def build_success_response(result: dict):
+    # check có pnr không
+    pnr = result.get("pnr")
 
+    if not pnr:
+        return result  # fail thì trả nguyên
+
+    # cộng 5 tiếng
+    expire_time = datetime.now() + timedelta(hours=5)
+
+    formatted_time = expire_time.strftime("%H:%M %d/%m/%Y")
+
+    return {
+        "mã_giữ_vé": pnr,
+        "hạn_thanh_toán": formatted_time,
+        "mess": f"Giữ vé VNA thành công! PNR: {pnr}"
+    }
 def format_time(time_str: str) -> str:
     # "10:05" -> "1005"
     return time_str.replace(":", "")
@@ -2048,7 +2064,7 @@ async def create_booking_vna_v2(request: BookingVNARequest):
             id_f2=None
         )
 
-        return result
+        return build_success_response(result)
 
     except Exception as e:
         return str(e)
