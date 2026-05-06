@@ -368,7 +368,7 @@ async def rate_limit_thuhongtour(request: Request, call_next):
     ip = request.client.host
 
     # chỉ limit domain thuhongtour
-    if "thuhongtour.com" in host:
+    if any(d in host for d in ["thuhongtour.com", "apiapp.hanvietair.com"]):
 
         if path in ["/vj/check-ve-v2", "/vna/check-ve-v2"]:
 
