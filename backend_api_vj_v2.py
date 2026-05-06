@@ -603,10 +603,18 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                                 break
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe)
                         freebag = {
-                          "chiều_đi": false,
-                          "chiều_về": false
+                          "chiều_đi": False,
+                          "chiều_về": False
                         }
-
+                        try:
+                            if giá_hành_lý.get("chiều_đi", {}).get("HANH_LY_ECO") == 0:
+                                freebag["chiều_đi"] = True
+                        
+                            if giá_hành_lý.get("chiều_về", {}).get("HANH_LY_ECO") == 0:
+                                freebag["chiều_về"] = True
+                        
+                        except Exception as e:
+                            print("lỗi check freebag:", e)
                         if giá_hành_lý:
                             print ("lấy được giá hành lý")
                         else :
@@ -685,7 +693,8 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
         "session_key": "",
         "body": ket_qua
     }
-
+    if freebag:
+        result["freebag"] = freebag
     return result
 async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date, adult_count=1, child_count=0, infant_count=0, sochieu=2):
     global token
@@ -814,6 +823,19 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
                                 BookingKeyDeluxeArrival = deluxe.get("BookingKey")
                                 break
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe,BookingKeyDeluxeArrival)
+                        freebag = {
+                          "chiều_đi": False,
+                          "chiều_về": False
+                        }
+                        try:
+                            if giá_hành_lý.get("chiều_đi", {}).get("HANH_LY_ECO") == 0:
+                                freebag["chiều_đi"] = True
+                        
+                            if giá_hành_lý.get("chiều_về", {}).get("HANH_LY_ECO") == 0:
+                                freebag["chiều_về"] = True
+                        
+                        except Exception as e:
+                            print("lỗi check freebag:", e) 
                         if giá_hành_lý:
                             print ("lấy được giá hành lý")
                         else :
@@ -908,7 +930,8 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
         "session_key": "",
         "body": ket_qua
     }
-
+    if freebag:
+        result["freebag"] = freebag
 
     return result
 
