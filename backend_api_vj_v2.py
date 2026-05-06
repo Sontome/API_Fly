@@ -602,6 +602,11 @@ async def api_vj_v2(departure_place, return_place, departure_date ,return_date, 
                                 BookingKeyDeluxe = deluxe.get("BookingKey")
                                 break
                         giá_hành_lý = get_ancillary_options(token,BookingKeyDeluxe)
+                        freebag = {
+                          "chiều_đi": false,
+                          "chiều_về": false
+                        }
+
                         if giá_hành_lý:
                             print ("lấy được giá hành lý")
                         else :
