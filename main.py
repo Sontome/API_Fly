@@ -1608,7 +1608,7 @@ def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
     for filename in matched_files:
         input_path = os.path.join(BASE_DIR, filename)
         output_path = os.path.join(TEMP_DIR, filename)
-
+        output_path_asiana = os.path.join(FILES_DIR, filename)
         try:
             # ===== VJ =====
             if filename.upper().startswith("VJ"):
@@ -1650,7 +1650,7 @@ def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
 
                 shutil.copy2(
                     input_path,
-                    output_path
+                    output_path_asiana
                 )
 
         except Exception as e:
