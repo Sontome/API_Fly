@@ -301,7 +301,7 @@ def main():
         text = get_page_text(page)
 
         print("\n========== PAGE TEXT ==========\n")
-        print(text)
+        # print(text)
 
         # =========================
         # PNR
