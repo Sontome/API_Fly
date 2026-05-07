@@ -1588,6 +1588,7 @@ def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
         if not (
             upper_name.startswith("VJ")
             or upper_name.startswith("VNA")
+            or upper_name.startswith("ASIANA")
         ):
             continue
 
@@ -1644,6 +1645,13 @@ def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
                         output_path=output_path,
                         type=0
                     )
+            # ===== ASIANA =====
+            elif filename.upper().startswith("ASIANA"):
+
+                shutil.copy2(
+                    input_path,
+                    output_path
+                )
 
         except Exception as e:
             raise HTTPException(
