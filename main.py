@@ -69,6 +69,8 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
+class AsianaRequest(BaseModel):
+    url: str
 class PassengerVNA(BaseModel):
     first_name: str
     last_name: str
@@ -935,7 +937,22 @@ async def process_pdf_VNA(
         filename=file.filename,
         media_type="application/pdf"
     )
+@app.post("/check-payment-asiana")
+def check_payment_asiana_api(
+    data: AsianaRequest,
+    background_tasks: BackgroundTasks
+):
 
+    background_tasks.add_task(
+        check_payment_asiana,
+        data.url
+    )
+
+    return {
+        "success": True,
+        "message": "Đang xử lý ASIANA",
+        "url": data.url
+    }
 @app.post("/check-payment-vj/")
 async def check_payment_VJ(
     
