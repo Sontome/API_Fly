@@ -277,13 +277,13 @@ def capture_receipt_pdf(
 # =========================
 # Main
 # =========================
-def main():
+def check_payment_asiana(url):
 
-    url = (
-        "https://flyasiana.com/I/kr/ko/ViewItineraryReceipt.do"
-        "?infoData=X5L/JZBRIn5EkMfkvND8XJxidS0zGG95M8NviF7D6PuwKaSf3EpILJNAS5wdSkw9tCOu2sAdmetm/3MKUgiT+w=="
-        "&bizType=REV"
-    )
+    # url = (
+    #     "https://flyasiana.com/I/kr/ko/ViewItineraryReceipt.do"
+    #     "?infoData=X5L/JZBRIn5EkMfkvND8XJxidS0zGG95M8NviF7D6PuwKaSf3EpILJNAS5wdSkw9tCOu2sAdmetm/3MKUgiT+w=="
+    #     "&bizType=REV"
+    # )
 
     with sync_playwright() as p:
 
@@ -322,5 +322,5 @@ def main():
         browser.close()
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
