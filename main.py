@@ -8,6 +8,7 @@ from backend_read_PDF_VJ import reformat_VJ
 from backend_api_kakao import send_bms_image,kakao_delay
 from backend_checkpayment_PDF_VJ import check_payment
 from backend_checkpayment_PDF_VNA import check_payment_vna
+from backend_checkpayment_PDF_ASIANA import check_payment_asiana
 from checkdate_VJ import checkdate_VJ
 from checkdate_VNA import checkdate_VNA
 from backend_read_PDF_VNA import check_ngon_ngu
