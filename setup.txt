@@ -208,6 +208,9 @@ chmod +x ~/update_api.sh
 
 
 ~/update_api.sh
+------------
+xem log server  ctrl +C out
+journalctl -u uvicorn -f
 
 #fix lỗi vj ko ra vé 
 
