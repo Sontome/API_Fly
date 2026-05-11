@@ -75,12 +75,12 @@ try:
             "status": "NEW"
         }).execute()
         with open(ACCESS_LOG, "a") as f:
-        f.write(
-            f"{datetime.now()} | "
-            f"{sender_email} | "
-            f"{subject} | "
-            f"{filename}\n"
-        )
+            f.write(
+                f"{datetime.now()} | "
+                f"{sender_email} | "
+                f"{subject} | "
+                f"{filename}\n"
+            )
 
 except Exception as e:
 
