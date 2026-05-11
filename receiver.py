@@ -91,10 +91,38 @@ try:
     raw_subject = msg.get("Subject", "")
 
     subject = decode_mime_header(raw_subject)
+    body = ""
 
+    if msg.is_multipart():
+    
+        for part in msg.walk():
+    
+            content_type = part.get_content_type()
+            disposition = str(part.get("Content-Disposition"))
+    
+            if content_type == "text/plain" and "attachment" not in disposition:
+    
+                charset = part.get_content_charset() or "utf-8"
+    
+                try:
+                    body = part.get_payload(decode=True).decode(charset, errors="ignore")
+                except:
+                    pass
+    
+                break
+    
+    else:
+    
+        charset = msg.get_content_charset() or "utf-8"
+    
+        try:
+            body = msg.get_payload(decode=True).decode(charset, errors="ignore")
+        except:
+            pass
+            
     write_log(DEBUG_LOG, f"SENDER RAW = {sender}")
     write_log(DEBUG_LOG, f"SUBJECT = {subject}")
-
+    write_log(DEBUG_LOG, f"BODY = {body[:500]}")
     m = re.match(r'(.*)<(.+)>', sender)
 
     if m:
@@ -197,13 +225,23 @@ try:
     # =========================
 
     if attachment_count == 0:
-
+        payload = {
+            "sender_name": sender_name,
+            "sender_email": sender_email,
+            "subject": subject,
+            "file_name": None,
+            "file_path": None,
+            "status": "NO_ATTACHMENT"
+        }
+    
+        supabase.table("inbound_email").insert(payload).execute()
+    
         write_log(
             ACCESS_LOG,
             f"{sender_email} | {subject} | NO ATTACHMENT"
         )
-
-        write_log(DEBUG_LOG, "NO ATTACHMENT FOUND")
+    
+        write_log(DEBUG_LOG, f"BODY = {body[:1000]}")
 
     write_log(DEBUG_LOG, "MAIL PROCESS DONE")
 
