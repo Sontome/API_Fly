@@ -194,6 +194,27 @@ chmod +x /root/API_Fly/run_login1A.sh
 
 #  updategithub
 
+-----------------------------------  email VPS---------------------------------------
+/API_Fly/
+ ├── receiver.py
+
+
+/data/
+ ├── inbound_mail/
+ └── inbound_logs/
+
+---- Check log nhanh--
+tail -f /data/inbound_logs/mail_error.log
+
+hoặc:
+
+tail -f /data/inbound_logs/mail_access.log
+
+
+-------------------------------------------------------------------------------------
+
+
+
 nano ~/update_api.sh
 ------------------------
 #!/bin/bash
@@ -209,6 +230,7 @@ chmod +x ~/update_api.sh
 
 ~/update_api.sh
 ------------
+
 xem log server  ctrl +C out
 journalctl -u uvicorn -f
 
