@@ -8,10 +8,15 @@ import traceback
 import email
 
 from email import policy
+from email.header import decode_header
 from datetime import datetime
 
 from dotenv import load_dotenv
 from supabase import create_client
+
+# =========================
+# ENV
+# =========================
 
 load_dotenv("/opt/mail_receiver/.env")
 
@@ -20,22 +25,75 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# =========================
+# PATHS
+# =========================
+
 today = datetime.now()
 
 SAVE_DIR = f"/data/inbound_mail/{today:%Y/%m/%d}"
 
-os.makedirs(SAVE_DIR, exist_ok=True)
+LOG_DIR = "/data/inbound_logs"
 
-LOG_FILE = "/data/inbound_logs/mail_error.log"
-ACCESS_LOG = "/data/inbound_logs/mail_access.log"
+ACCESS_LOG = f"{LOG_DIR}/mail_access.log"
+ERROR_LOG = f"{LOG_DIR}/mail_error.log"
+DEBUG_LOG = f"{LOG_DIR}/mail_debug.log"
+
+os.makedirs(SAVE_DIR, exist_ok=True)
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# =========================
+# HELPERS
+# =========================
+
+def write_log(path, message):
+    with open(path, "a") as f:
+        f.write(f"{datetime.now()} | {message}\n")
+
+
+def decode_mime_header(value):
+    if not value:
+        return ""
+
+    decoded = decode_header(value)
+
+    result = ""
+
+    for part, encoding in decoded:
+
+        if isinstance(part, bytes):
+            result += part.decode(encoding or "utf-8", errors="ignore")
+        else:
+            result += part
+
+    return result.strip()
+
+
+# =========================
+# START
+# =========================
+
 try:
+
+    write_log(DEBUG_LOG, "========== NEW MAIL ==========")
 
     raw = sys.stdin.buffer.read()
 
+    write_log(DEBUG_LOG, f"RAW SIZE = {len(raw)} bytes")
+
     msg = email.message_from_bytes(raw, policy=policy.default)
 
+    # =========================
+    # HEADER
+    # =========================
+
     sender = msg.get("From", "")
-    subject = msg.get("Subject", "")
+    raw_subject = msg.get("Subject", "")
+
+    subject = decode_mime_header(raw_subject)
+
+    write_log(DEBUG_LOG, f"SENDER RAW = {sender}")
+    write_log(DEBUG_LOG, f"SUBJECT = {subject}")
 
     m = re.match(r'(.*)<(.+)>', sender)
 
@@ -46,46 +104,115 @@ try:
         sender_name = sender
         sender_email = sender
 
+    sender_name = decode_mime_header(sender_name)
+
+    write_log(DEBUG_LOG, f"SENDER NAME = {sender_name}")
+    write_log(DEBUG_LOG, f"SENDER EMAIL = {sender_email}")
+
+    attachment_count = 0
+
+    # =========================
+    # ATTACHMENTS
+    # =========================
+
     for part in msg.iter_attachments():
 
         filename = part.get_filename()
 
         if not filename:
+            write_log(DEBUG_LOG, "SKIP attachment no filename")
             continue
 
+        filename = decode_mime_header(filename)
+
+        filename = os.path.basename(filename)
+
+        write_log(DEBUG_LOG, f"FOUND ATTACHMENT = {filename}")
+
         data = part.get_payload(decode=True)
+
+        if not data:
+            write_log(DEBUG_LOG, f"SKIP empty attachment = {filename}")
+            continue
+
+        size_kb = round(len(data) / 1024, 2)
 
         ext = os.path.splitext(filename)[1]
 
         new_name = f"{uuid.uuid4()}{ext}"
 
-        path = os.path.join(SAVE_DIR, new_name)
+        save_path = os.path.join(SAVE_DIR, new_name)
 
-        with open(path, "wb") as f:
+        # save file
+        with open(save_path, "wb") as f:
             f.write(data)
 
-        relative_path = path.replace("/data/inbound_mail/", "")
+        relative_path = save_path.replace("/data/inbound_mail/", "")
 
-        supabase.table("inbound_email").insert({
+        write_log(
+            DEBUG_LOG,
+            f"SAVED = {filename} -> {save_path} ({size_kb} KB)"
+        )
+
+        # =========================
+        # INSERT SUPABASE
+        # =========================
+
+        payload = {
             "sender_name": sender_name,
             "sender_email": sender_email,
             "subject": subject,
             "file_name": filename,
             "file_path": relative_path,
             "status": "NEW"
-        }).execute()
-        with open(ACCESS_LOG, "a") as f:
-            f.write(
-                f"{datetime.now()} | "
-                f"{sender_email} | "
-                f"{subject} | "
-                f"{filename}\n"
-            )
+        }
+
+        write_log(DEBUG_LOG, f"INSERT DB = {payload}")
+
+        res = (
+            supabase
+            .table("inbound_email")
+            .insert(payload)
+            .execute()
+        )
+
+        write_log(DEBUG_LOG, f"SUPABASE RESPONSE = {res}")
+
+        # =========================
+        # ACCESS LOG
+        # =========================
+
+        write_log(
+            ACCESS_LOG,
+            f"{sender_email} | "
+            f"{subject} | "
+            f"{filename} | "
+            f"{size_kb} KB"
+        )
+
+        attachment_count += 1
+
+    # =========================
+    # NO ATTACHMENT
+    # =========================
+
+    if attachment_count == 0:
+
+        write_log(
+            ACCESS_LOG,
+            f"{sender_email} | {subject} | NO ATTACHMENT"
+        )
+
+        write_log(DEBUG_LOG, "NO ATTACHMENT FOUND")
+
+    write_log(DEBUG_LOG, "MAIL PROCESS DONE")
+
+# =========================
+# ERROR
+# =========================
 
 except Exception as e:
 
-    with open(LOG_FILE, "a") as f:
-        f.write("\n====================\n")
-        f.write(str(datetime.now()) + "\n")
-        f.write(str(e) + "\n")
-        f.write(traceback.format_exc())
+    write_log(ERROR_LOG, "========== ERROR ==========")
+    write_log(ERROR_LOG, str(e))
+    write_log(ERROR_LOG, traceback.format_exc())
