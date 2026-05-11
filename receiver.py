@@ -122,7 +122,7 @@ try:
             
     write_log(DEBUG_LOG, f"SENDER RAW = {sender}")
     write_log(DEBUG_LOG, f"SUBJECT = {subject}")
-    write_log(DEBUG_LOG, f"BODY = {body[:500]}")
+    write_log(DEBUG_LOG, f"BODY = {body}")
     m = re.match(r'(.*)<(.+)>', sender)
 
     if m:
