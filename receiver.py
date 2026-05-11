@@ -13,7 +13,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from supabase import create_client
 
-load_dotenv("/API_Fly/.env")
+load_dotenv("/opt/mail_receiver/.env")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
