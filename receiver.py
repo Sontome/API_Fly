@@ -6,7 +6,7 @@ import re
 import uuid
 import traceback
 import email
-
+import mimetypes
 from email import policy
 from email.header import decode_header
 from datetime import datetime
@@ -143,49 +143,54 @@ try:
     # ATTACHMENTS
     # =========================
 
-    for part in msg.iter_attachments():
+    for part in msg.walk():
 
+        content_disposition = str(part.get("Content-Disposition", ""))
+    
         filename = part.get_filename()
-
-        if not filename:
-            write_log(DEBUG_LOG, "SKIP attachment no filename")
+    
+        # skip body
+        if part.get_content_maintype() == "multipart":
             continue
-
-        filename = decode_mime_header(filename)
-
-        filename = os.path.basename(filename)
-
+    
+        # skip text thường
+        if not filename and "attachment" not in content_disposition.lower():
+            continue
+    
+        # decode filename
+        if filename:
+            filename = decode_mime_header(filename)
+            filename = os.path.basename(filename)
+        else:
+            ext = mimetypes.guess_extension(part.get_content_type()) or ".bin"
+            filename = f"unknown{ext}"
+    
         write_log(DEBUG_LOG, f"FOUND ATTACHMENT = {filename}")
-
+    
         data = part.get_payload(decode=True)
-
+    
         if not data:
-            write_log(DEBUG_LOG, f"SKIP empty attachment = {filename}")
+            write_log(DEBUG_LOG, f"EMPTY DATA = {filename}")
             continue
-
+    
         size_kb = round(len(data) / 1024, 2)
-
+    
         ext = os.path.splitext(filename)[1]
-
+    
         new_name = f"{uuid.uuid4()}{ext}"
-
+    
         save_path = os.path.join(SAVE_DIR, new_name)
-
-        # save file
+    
         with open(save_path, "wb") as f:
             f.write(data)
-
+    
         relative_path = save_path.replace("/data/inbound_mail/", "")
-
+    
         write_log(
             DEBUG_LOG,
             f"SAVED = {filename} -> {save_path} ({size_kb} KB)"
         )
-
-        # =========================
-        # INSERT SUPABASE
-        # =========================
-
+    
         payload = {
             "sender_name": sender_name,
             "sender_email": sender_email,
@@ -194,30 +199,21 @@ try:
             "file_path": relative_path,
             "status": "NEW"
         }
-
-        write_log(DEBUG_LOG, f"INSERT DB = {payload}")
-
+    
         res = (
             supabase
             .table("inbound_email")
             .insert(payload)
             .execute()
         )
-
+    
         write_log(DEBUG_LOG, f"SUPABASE RESPONSE = {res}")
-
-        # =========================
-        # ACCESS LOG
-        # =========================
-
+    
         write_log(
             ACCESS_LOG,
-            f"{sender_email} | "
-            f"{subject} | "
-            f"{filename} | "
-            f"{size_kb} KB"
+            f"{sender_email} | {subject} | {filename} | {size_kb} KB"
         )
-
+    
         attachment_count += 1
 
     # =========================
