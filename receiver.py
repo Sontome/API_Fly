@@ -63,27 +63,62 @@ def generate_custom_filename(sender_email, subject, original_filename):
     # ===== Vietnam Airlines =====
     elif sender_email == "no-reply@service.vietnamairlines.com":
 
+        booking_code = None
+        passenger_name = None
+    
+        # =========================
+        # CASE 1:
         # Đặt chỗ vào 02JUN - EIBORC cho LE/HUNG
-
-        
+        # Travel Reservation on 11JUN - FUIS8S for DAO/VAN HAO
+        # =========================
+    
         match = re.search(
             r"-\s*([A-Z0-9]+)\s+(?:cho|for)\s+(.+)",
             subject,
             re.I
         )
-
+    
         if match:
-
+    
             booking_code = match.group(1).upper()
-
+    
             passenger_name = match.group(2).strip()
-
-            # LE/HUNG -> LE HUNG
+    
+        else:
+    
+            # =========================
+            # CASE 2:
+            # LEE/SUYEON 님을 위해 24JUN - F6VL3Q 에 예약
+            # =========================
+    
+            match = re.search(
+                r"(.+?)\s+님을\s+위해.*?-\s*([A-Z0-9]+)",
+                subject,
+                re.I
+            )
+    
+            if match:
+    
+                passenger_name = match.group(1).strip()
+    
+                booking_code = match.group(2).upper()
+    
+        # =========================
+        # BUILD FILE NAME
+        # =========================
+    
+        if booking_code and passenger_name:
+    
             passenger_name = passenger_name.replace("/", " ")
-
-            # remove ký tự bậy nếu có
-            passenger_name = re.sub(r'[\\/:*?"<>|]', '', passenger_name)
-
+    
+            passenger_name = re.sub(r"\s+", " ", passenger_name).strip()
+    
+            passenger_name = re.sub(
+                r'[\\/:*?"<>|]',
+                '',
+                passenger_name
+            )
+    
             return f"VNA-{booking_code}-{passenger_name}.pdf"
 
     # ===== default =====
