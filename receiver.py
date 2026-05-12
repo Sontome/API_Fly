@@ -65,8 +65,9 @@ def generate_custom_filename(sender_email, subject, original_filename):
 
         # Đặt chỗ vào 02JUN - EIBORC cho LE/HUNG
 
+        
         match = re.search(
-            r"-\s*([A-Z0-9]+)\s+cho\s+(.+)",
+            r"-\s*([A-Z0-9]+)\s+(?:cho|for)\s+(.+)",
             subject,
             re.I
         )
