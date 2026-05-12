@@ -45,7 +45,48 @@ os.makedirs(LOG_DIR, exist_ok=True)
 # =========================
 # HELPERS
 # =========================
+def generate_custom_filename(sender_email, subject, original_filename):
 
+    sender_email = sender_email.lower().strip()
+
+    # ===== VietJet =====
+    if sender_email == "noreply.itinerary@vietjetair.com":
+
+        # Itinerary-JADTAG.pdf
+        match = re.match(r"Itinerary-([A-Z0-9]+)\.pdf", original_filename, re.I)
+
+        if match:
+            booking_code = match.group(1).upper()
+
+            return f"VJ-{booking_code}.pdf"
+
+    # ===== Vietnam Airlines =====
+    elif sender_email == "no-reply@service.vietnamairlines.com":
+
+        # Đặt chỗ vào 02JUN - EIBORC cho LE/HUNG
+
+        match = re.search(
+            r"-\s*([A-Z0-9]+)\s+cho\s+(.+)",
+            subject,
+            re.I
+        )
+
+        if match:
+
+            booking_code = match.group(1).upper()
+
+            passenger_name = match.group(2).strip()
+
+            # LE/HUNG -> LE HUNG
+            passenger_name = passenger_name.replace("/", " ")
+
+            # remove ký tự bậy nếu có
+            passenger_name = re.sub(r'[\\/:*?"<>|]', '', passenger_name)
+
+            return f"VNA-{booking_code}-{passenger_name}.pdf"
+
+    # ===== default =====
+    return original_filename
 def write_log(path, message):
     with open(path, "a") as f:
         f.write(f"{datetime.now()} | {message}\n")
@@ -175,11 +216,21 @@ try:
     
         size_kb = round(len(data) / 1024, 2)
     
-        ext = os.path.splitext(filename)[1]
-    
-        new_name = f"{uuid.uuid4()}{ext}"
-    
-        save_path = os.path.join(SAVE_DIR, new_name)
+        # custom filename
+        final_filename = generate_custom_filename(
+            sender_email=sender_email,
+            subject=subject,
+            original_filename=filename
+        )
+        
+        # sanitize filename
+        final_filename = re.sub(
+            r'[\\/:*?"<>|]',
+            '',
+            final_filename
+        )
+        
+        save_path = os.path.join(SAVE_DIR, final_filename)
     
         with open(save_path, "wb") as f:
             f.write(data)
@@ -195,7 +246,7 @@ try:
             "sender_name": sender_name,
             "sender_email": sender_email,
             "subject": subject,
-            "file_name": filename,
+            "file_name": final_filename,
             "file_path": relative_path,
             "status": "NEW"
         }
