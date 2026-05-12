@@ -49,80 +49,104 @@ def generate_custom_filename(sender_email, subject, original_filename):
 
     sender_email = sender_email.lower().strip()
 
-    # ===== VietJet =====
+    result = {
+        "file_name": original_filename,
+        "type": None,
+        "pnr": None,
+        "name": None
+    }
+
+    # =========================
+    # VietJet
+    # =========================
+
     if sender_email == "noreply.itinerary@vietjetair.com":
 
-        # Itinerary-JADTAG.pdf
-        match = re.match(r"Itinerary-([A-Z0-9]+)\.pdf", original_filename, re.I)
+        match = re.match(
+            r"Itinerary-([A-Z0-9]+)\.pdf",
+            original_filename,
+            re.I
+        )
 
         if match:
+
             booking_code = match.group(1).upper()
 
-            return f"VJ-{booking_code}.pdf"
+            result["file_name"] = f"VJ-{booking_code}.pdf"
+            result["type"] = "VJ"
+            result["pnr"] = booking_code
 
-    # ===== Vietnam Airlines =====
+            return result
+
+    # =========================
+    # Vietnam Airlines
+    # =========================
+
     elif sender_email == "no-reply@service.vietnamairlines.com":
 
         booking_code = None
         passenger_name = None
-    
-        # =========================
-        # CASE 1:
-        # Đặt chỗ vào 02JUN - EIBORC cho LE/HUNG
-        # Travel Reservation on 11JUN - FUIS8S for DAO/VAN HAO
-        # =========================
-    
+
+        # CASE 1
         match = re.search(
             r"-\s*([A-Z0-9]+)\s+(?:cho|for)\s+(.+)",
             subject,
             re.I
         )
-    
+
         if match:
-    
+
             booking_code = match.group(1).upper()
-    
+
             passenger_name = match.group(2).strip()
-    
+
         else:
-    
-            # =========================
-            # CASE 2:
-            # LEE/SUYEON 님을 위해 24JUN - F6VL3Q 에 예약
-            # =========================
-    
+
+            # CASE 2 Korean
             match = re.search(
                 r"(.+?)\s+님을\s+위해.*?-\s*([A-Z0-9]+)",
                 subject,
                 re.I
             )
-    
+
             if match:
-    
+
                 passenger_name = match.group(1).strip()
-    
+
                 booking_code = match.group(2).upper()
-    
-        # =========================
-        # BUILD FILE NAME
-        # =========================
-    
-        if booking_code and passenger_name:
-    
+
+        if booking_code:
+
+            result["type"] = "VNA"
+            result["pnr"] = booking_code
+
+        if passenger_name:
+
             passenger_name = passenger_name.replace("/", " ")
-    
-            passenger_name = re.sub(r"\s+", " ", passenger_name).strip()
-    
+
+            passenger_name = re.sub(
+                r"\s+",
+                " ",
+                passenger_name
+            ).strip()
+
             passenger_name = re.sub(
                 r'[\\/:*?"<>|]',
                 '',
                 passenger_name
             )
-    
-            return f"VNA-{booking_code}-{passenger_name}.pdf"
 
-    # ===== default =====
-    return original_filename
+            result["name"] = passenger_name
+
+        if booking_code and passenger_name:
+
+            result["file_name"] = (
+                f"VNA-{booking_code}-{passenger_name}.pdf"
+            )
+
+            return result
+
+    return result
 def write_log(path, message):
     with open(path, "a") as f:
         f.write(f"{datetime.now()} | {message}\n")
@@ -253,13 +277,14 @@ try:
         size_kb = round(len(data) / 1024, 2)
     
         # custom filename
-        final_filename = generate_custom_filename(
+        file_info = generate_custom_filename(
             sender_email=sender_email,
             subject=subject,
             original_filename=filename
         )
         
-        # sanitize filename
+        final_filename = file_info["file_name"]
+        
         final_filename = re.sub(
             r'[\\/:*?"<>|]',
             '',
@@ -284,6 +309,9 @@ try:
             "subject": subject,
             "file_name": final_filename,
             "file_path": relative_path,
+            "hang": file_info["type"],
+            "pnr": file_info["pnr"],
+            "customer": file_info["name"],
             "status": "NEW"
         }
     
