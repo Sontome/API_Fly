@@ -3,9 +3,9 @@ import json
 import re
 import xml.etree.ElementTree as ET
 import subprocess
+from utils_telegram import send_mess
 file_path = "login1A.py"
-USERNAME = "SEL28AA8"
-PASSWORD = "Bkdfasdv@203414"
+
 def createNewSession(
     session_log_file="session_log.json",
     cookie_file="cookie1a.json"
@@ -112,9 +112,12 @@ def createNewSession(
             re.DOTALL
         )
         match_cryptic = pattern.search(resp_login.text)
-        if match_cryptic==None:
-            print("🔐 Token hết hạn.  cần chạy lại `login1A.py` để làm mới token.")
+        if match_cryptic == None:
+            msg = "🔐 Session 1A treo . cần chạy lại  ~/fix1a.sh  để làm mới token."
             
+            print(msg)
+            send_mess(msg)
+        
             return None
 
         cryptic_data = None
