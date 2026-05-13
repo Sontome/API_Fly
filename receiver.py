@@ -7,6 +7,7 @@ import uuid
 import traceback
 import email
 import mimetypes
+import requests
 from email import policy
 from email.header import decode_header
 from datetime import datetime
@@ -45,6 +46,60 @@ os.makedirs(LOG_DIR, exist_ok=True)
 # =========================
 # HELPERS
 # =========================
+def check_payment_api(hang, file_path):
+
+    try:
+
+        endpoint = None
+
+        if hang == "VJ":
+            endpoint = "http://127.0.0.1:8000/check-payment-vj/"
+
+        elif hang == "VNA":
+            endpoint = "http://127.0.0.1:8000/check-payment-vna/"
+
+        else:
+            return None
+
+        with open(file_path, "rb") as f:
+
+            files = {
+                "file": (
+                    os.path.basename(file_path),
+                    f,
+                    "application/pdf"
+                )
+            }
+
+            response = requests.post(
+                endpoint,
+                files=files,
+                timeout=120
+            )
+
+        write_log(
+            DEBUG_LOG,
+            f"PAYMENT API RESPONSE = {response.text}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    except Exception as e:
+
+        write_log(
+            ERROR_LOG,
+            f"CHECK PAYMENT ERROR = {str(e)}"
+        )
+
+        write_log(
+            ERROR_LOG,
+            traceback.format_exc()
+        )
+
+        return None
 def generate_custom_filename(sender_email, subject, original_filename):
 
     sender_email = sender_email.lower().strip()
@@ -323,7 +378,72 @@ try:
         )
     
         write_log(DEBUG_LOG, f"SUPABASE RESPONSE = {res}")
-    
+        # CHECK PAYMENT
+        # =========================
+        
+        if file_info["type"] in ["VJ", "VNA"]:
+        
+            payment_result = check_payment_api(
+                hang=file_info["type"],
+                file_path=save_path
+            )
+        
+            if payment_result:
+        
+                payment_status = (
+                    str(payment_result.get("paymentstatus"))
+                    .lower()
+                    == "true"
+                )
+        
+                if payment_status:
+        
+                    result_data = payment_result.get("result", {})
+        
+                    ticket_payload = {
+        
+                        "pnr": file_info["pnr"],
+        
+                        "hang": file_info["type"],
+        
+                        # VNA ưu tiên name cũ
+                        "name": (
+                            file_info["name"]
+                            or payment_result.get("name")
+                        ),
+        
+                        "paymentstatus": True,
+        
+                        "trip1": result_data.get("trip1"),
+                        "day1": result_data.get("day1"),
+                        "time1": result_data.get("time1"),
+        
+                        "trip2": result_data.get("trip2"),
+                        "day2": result_data.get("day2"),
+                        "time2": result_data.get("time2"),
+        
+                        "trip3": result_data.get("trip3"),
+                        "day3": result_data.get("day3"),
+                        "time3": result_data.get("time3"),
+        
+                        "trip4": result_data.get("trip4"),
+                        "day4": result_data.get("day4"),
+                        "time4": result_data.get("time4"),
+        
+                        "file_path": relative_path
+                    }
+        
+                    ticket_res = (
+                        supabase
+                        .table("ticket_log")
+                        .insert(ticket_payload)
+                        .execute()
+                    )
+        
+                    write_log(
+                        DEBUG_LOG,
+                        f"TICKET LOG INSERT = {ticket_res}"
+                    )
         write_log(
             ACCESS_LOG,
             f"{sender_email} | {subject} | {filename} | {size_kb} KB"
