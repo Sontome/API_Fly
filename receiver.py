@@ -46,6 +46,34 @@ os.makedirs(LOG_DIR, exist_ok=True)
 # =========================
 # HELPERS
 # =========================
+def send_notification(message):
+
+    try:
+
+        response = requests.post(
+            "http://127.0.0.1:8000/send",
+            json={
+                "message": message
+            },
+            timeout=30
+        )
+
+        write_log(
+            DEBUG_LOG,
+            f"SEND NOTIFY RESPONSE = {response.text}"
+        )
+
+    except Exception as e:
+
+        write_log(
+            ERROR_LOG,
+            f"SEND NOTIFY ERROR = {str(e)}"
+        )
+
+        write_log(
+            ERROR_LOG,
+            traceback.format_exc()
+        )
 def check_payment_api(hang, file_path):
 
     try:
@@ -444,6 +472,14 @@ try:
                         DEBUG_LOG,
                         f"TICKET LOG INSERT = {ticket_res}"
                     )
+                    # SEND NOTIFICATION
+                    # =========================
+                    
+                    notify_message = (
+                        f"Đã có mặt vé  PNR: {file_info['pnr']}"
+                    )
+                    
+                    send_notification(notify_message)
         write_log(
             ACCESS_LOG,
             f"{sender_email} | {subject} | {filename} | {size_kb} KB"
