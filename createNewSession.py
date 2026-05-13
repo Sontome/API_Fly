@@ -3,6 +3,7 @@ import json
 import re
 import xml.etree.ElementTree as ET
 import subprocess
+import asyncio
 from utils_telegram import send_mess
 file_path = "login1A.py"
 
@@ -113,13 +114,16 @@ def createNewSession(
         )
         match_cryptic = pattern.search(resp_login.text)
         if match_cryptic == None:
-            msg = "🔐 Session 1A treo . cần chạy lại  ~/fix1a.sh  để làm mới token."
-            
+            msg = "🔐 Token hết hạn. cần chạy lại `login1A.py` để làm mới token."
+        
             print(msg)
-            send_mess(msg)
+        
+            try:
+                asyncio.run(send_mess(msg))
+            except Exception as e:
+                print(f"Lỗi gửi telegram: {e}")
         
             return None
-
         cryptic_data = None
         if match_cryptic:
             cdata_content = match_cryptic.group(1)
