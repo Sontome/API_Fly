@@ -2101,12 +2101,37 @@ async def create_booking_vna_v2(request: BookingVNARequest):
 @app.post("/process-pdf-pnr-v2/")
 async def process_pdf_pnr_v2(
     background_tasks: BackgroundTasks,
-    pnr_list: list[str] = Form(...),
+    pnr_list: str = Form(...),
     option: str = Form(""),
     type: int = Form(0)
 ):
     try:
-
+        pnr_list = [
+            x.strip().upper()
+            for x in pnr_list.split(",")
+            if x.strip()
+        ]
+        
+        # =====================================================
+        # VALIDATE PNR
+        # =====================================================
+        
+        invalid_pnrs = []
+        
+        for pnr in pnr_list:
+        
+            if len(pnr) != 6:
+                invalid_pnrs.append(pnr)
+        
+        if invalid_pnrs:
+        
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": "PNR phải đúng 6 ký tự",
+                    "invalid_pnrs": invalid_pnrs
+                }
+            )
         all_input_files = []
 
         # =====================================================
@@ -2129,7 +2154,7 @@ async def process_pdf_pnr_v2(
             return JSONResponse(
                 status_code=404,
                 content={
-                    "error": "Một số PNR không tồn tại",
+                    "error": "Một số PNR chưa có mặt vé gốc",
                     "missing_pnrs": missing_pnrs
                 }
             )
