@@ -54,6 +54,8 @@ from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr,get_phone_email_from_pnr,update_kakao_by_pnr_phone,update_rcs_by_pnr_phone
 from backend_reprice import add_reprice_pnr
 from booking_other import booking_other,check_pnr_other
+import zipfile
+from glob import glob
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -2096,7 +2098,165 @@ async def create_booking_vna_v2(request: BookingVNARequest):
         return str(e)
 
 
+@app.post("/process-pdf-pnr-v2/")
+async def process_pdf_pnr_v2(
+    background_tasks: BackgroundTasks,
+    pnr_list: list[str] = Form(...),
+    option: str = Form(""),
+    type: int = Form(0)
+):
+    try:
 
+        all_input_files = []
+
+        # =====================================================
+        # CHECK TOÀN BỘ PNR PHẢI TỒN TẠI
+        # =====================================================
+        missing_pnrs = []
+
+        for pnr in pnr_list:
+
+            matched_files = glob(
+                os.path.join(BASE_DIR, f"*{pnr}*.pdf")
+            )
+
+            if not matched_files:
+                missing_pnrs.append(pnr)
+            else:
+                all_input_files.extend(matched_files)
+
+        if missing_pnrs:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "error": "Một số PNR không tồn tại",
+                    "missing_pnrs": missing_pnrs
+                }
+            )
+
+        # =====================================================
+        # PROCESS FILE
+        # =====================================================
+        output_files = []
+
+        for input_path in all_input_files:
+
+            filename = os.path.basename(input_path)
+            filename_upper = filename.upper()
+
+            output_path = os.path.join(
+                TEMP_DIR,
+                f"output_{filename}"
+            )
+
+            # =================================================
+            # ROUTER THEO PREFIX FILE
+            # =================================================
+
+            # ===== VJ =====
+            if filename_upper.startswith("VJ"):
+
+                reformat_VJ(
+                    input_path,
+                    new_text=option,
+                    output_path=output_path
+                )
+
+            # ===== VNA =====
+            elif filename_upper.startswith("VNA"):
+
+                ngonngu = check_ngon_ngu(input_path)
+
+                if ngonngu == "VN":
+
+                    reformat_VNA_VN(
+                        input_path,
+                        new_text=option,
+                        output_path=output_path,
+                        type=type
+                    )
+
+                elif ngonngu == "KR":
+
+                    reformat_VNA_KR(
+                        input_path,
+                        new_text=option,
+                        output_path=output_path,
+                        type=type
+                    )
+
+                elif ngonngu == "EN":
+
+                    reformat_VNA_EN(
+                        input_path,
+                        new_text=option,
+                        output_path=output_path,
+                        type=type
+                    )
+
+                else:
+                    raise Exception(
+                        f"Không xác định ngôn ngữ file: {filename}"
+                    )
+
+            # ===== UNKNOWN =====
+            else:
+
+                raise Exception(
+                    f"Không hỗ trợ loại file: {filename}"
+                )
+
+            output_files.append(output_path)
+
+        # =====================================================
+        # ZIP OUTPUT
+        # =====================================================
+        zip_name = "_".join(pnr_list)
+
+        zip_path = os.path.join(
+            TEMP_DIR,
+            f"{zip_name}_output.zip"
+        )
+
+        with zipfile.ZipFile(zip_path, "w") as zipf:
+
+            for file_path in output_files:
+
+                zipf.write(
+                    file_path,
+                    arcname=os.path.basename(file_path)
+                )
+
+        # =====================================================
+        # CLEANUP
+        # =====================================================
+        def cleanup():
+
+            for f in output_files:
+
+                if os.path.exists(f):
+                    os.remove(f)
+
+            if os.path.exists(zip_path):
+                os.remove(zip_path)
+
+        background_tasks.add_task(cleanup)
+
+        # =====================================================
+        # RESPONSE
+        # =====================================================
+        return FileResponse(
+            path=zip_path,
+            filename=os.path.basename(zip_path),
+            media_type="application/zip"
+        )
+
+    except Exception as e:
+
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
 
 
 
