@@ -56,6 +56,8 @@ from backend_reprice import add_reprice_pnr
 from booking_other import booking_other,check_pnr_other
 import zipfile
 from glob import glob
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -2098,6 +2100,85 @@ async def create_booking_vna_v2(request: BookingVNARequest):
         return str(e)
 
 
+# =========================================================
+# PROCESS 1 PDF
+# =========================================================
+def process_single_pdf(input_path, option, type):
+
+    filename = os.path.basename(input_path)
+    filename_upper = filename.upper()
+
+    output_path = os.path.join(
+        TEMP_DIR,
+        f"output_{filename}"
+    )
+
+    # =====================================================
+    # VJ
+    # =====================================================
+    if filename_upper.startswith("VJ"):
+
+        reformat_VJ(
+            input_path,
+            new_text=option,
+            output_path=output_path
+        )
+
+    # =====================================================
+    # VNA
+    # =====================================================
+    elif filename_upper.startswith("VNA"):
+
+        ngonngu = check_ngon_ngu(input_path)
+
+        if ngonngu == "VN":
+
+            reformat_VNA_VN(
+                input_path,
+                new_text=option,
+                output_path=output_path,
+                type=type
+            )
+
+        elif ngonngu == "KR":
+
+            reformat_VNA_KR(
+                input_path,
+                new_text=option,
+                output_path=output_path,
+                type=type
+            )
+
+        elif ngonngu == "EN":
+
+            reformat_VNA_EN(
+                input_path,
+                new_text=option,
+                output_path=output_path,
+                type=type
+            )
+
+        else:
+
+            raise Exception(
+                f"Không xác định ngôn ngữ file: {filename}"
+            )
+
+    # =====================================================
+    # UNKNOWN
+    # =====================================================
+    else:
+
+        raise Exception(
+            f"Không hỗ trợ loại file: {filename}"
+        )
+
+    return output_path
+
+
+# =========================================================
+# API
+# =========================================================
 @app.post("/process-pdf-pnr-v2/")
 async def process_pdf_pnr_v2(
     background_tasks: BackgroundTasks,
@@ -2105,38 +2186,57 @@ async def process_pdf_pnr_v2(
     option: str = Form(""),
     type: int = Form(0)
 ):
+
     try:
+
+        # =================================================
+        # PARSE PNR
+        # =================================================
         pnr_list = [
             x.strip().upper()
             for x in pnr_list.split(",")
             if x.strip()
         ]
-        
-        # =====================================================
-        # VALIDATE PNR
-        # =====================================================
-        
-        invalid_pnrs = []
-        
-        for pnr in pnr_list:
-        
-            if len(pnr) != 6:
-                invalid_pnrs.append(pnr)
-        
-        if invalid_pnrs:
-        
+
+        # =================================================
+        # REMOVE DUPLICATE PNR
+        # =================================================
+        pnr_list = list(dict.fromkeys(pnr_list))
+
+        if not pnr_list:
+
             return JSONResponse(
                 status_code=400,
                 content={
-                    "error": "PNR phải đúng 6 ký tự",
+                    "error": "Danh sách PNR rỗng"
+                }
+            )
+
+        # =================================================
+        # VALIDATE PNR
+        # =================================================
+        invalid_pnrs = []
+
+        for pnr in pnr_list:
+
+            if not re.fullmatch(r"[A-Z0-9]{6}", pnr):
+
+                invalid_pnrs.append(pnr)
+
+        if invalid_pnrs:
+
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": "PNR phải đúng 6 ký tự A-Z hoặc 0-9",
                     "invalid_pnrs": invalid_pnrs
                 }
             )
-        all_input_files = []
 
-        # =====================================================
-        # CHECK TOÀN BỘ PNR PHẢI TỒN TẠI
-        # =====================================================
+        # =================================================
+        # CHECK FILE TỒN TẠI
+        # =================================================
+        all_input_files = []
         missing_pnrs = []
 
         for pnr in pnr_list:
@@ -2146,11 +2246,18 @@ async def process_pdf_pnr_v2(
             )
 
             if not matched_files:
+
                 missing_pnrs.append(pnr)
+
             else:
+
                 all_input_files.extend(matched_files)
 
+        # =================================================
+        # THIẾU FILE
+        # =================================================
         if missing_pnrs:
+
             return JSONResponse(
                 status_code=404,
                 content={
@@ -2159,83 +2266,41 @@ async def process_pdf_pnr_v2(
                 }
             )
 
-        # =====================================================
-        # PROCESS FILE
-        # =====================================================
+        # =================================================
+        # MULTITHREAD PROCESS PDF
+        # =================================================
         output_files = []
 
-        for input_path in all_input_files:
+        max_workers = min(
+            8,
+            max(1, len(all_input_files))
+        )
 
-            filename = os.path.basename(input_path)
-            filename_upper = filename.upper()
+        with ThreadPoolExecutor(
+            max_workers=max_workers
+        ) as executor:
 
-            output_path = os.path.join(
-                TEMP_DIR,
-                f"output_{filename}"
-            )
+            futures = [
 
-            # =================================================
-            # ROUTER THEO PREFIX FILE
-            # =================================================
-
-            # ===== VJ =====
-            if filename_upper.startswith("VJ"):
-
-                reformat_VJ(
+                executor.submit(
+                    process_single_pdf,
                     input_path,
-                    new_text=option,
-                    output_path=output_path
+                    option,
+                    type
                 )
 
-            # ===== VNA =====
-            elif filename_upper.startswith("VNA"):
+                for input_path in all_input_files
+            ]
 
-                ngonngu = check_ngon_ngu(input_path)
+            for future in as_completed(futures):
 
-                if ngonngu == "VN":
+                output_path = future.result()
 
-                    reformat_VNA_VN(
-                        input_path,
-                        new_text=option,
-                        output_path=output_path,
-                        type=type
-                    )
+                output_files.append(output_path)
 
-                elif ngonngu == "KR":
-
-                    reformat_VNA_KR(
-                        input_path,
-                        new_text=option,
-                        output_path=output_path,
-                        type=type
-                    )
-
-                elif ngonngu == "EN":
-
-                    reformat_VNA_EN(
-                        input_path,
-                        new_text=option,
-                        output_path=output_path,
-                        type=type
-                    )
-
-                else:
-                    raise Exception(
-                        f"Không xác định ngôn ngữ file: {filename}"
-                    )
-
-            # ===== UNKNOWN =====
-            else:
-
-                raise Exception(
-                    f"Không hỗ trợ loại file: {filename}"
-                )
-
-            output_files.append(output_path)
-
-        # =====================================================
+        # =================================================
         # ZIP OUTPUT
-        # =====================================================
+        # =================================================
         zip_name = "_".join(pnr_list)
 
         zip_path = os.path.join(
@@ -2243,7 +2308,11 @@ async def process_pdf_pnr_v2(
             f"{zip_name}_output.zip"
         )
 
-        with zipfile.ZipFile(zip_path, "w") as zipf:
+        with zipfile.ZipFile(
+            zip_path,
+            "w",
+            zipfile.ZIP_DEFLATED
+        ) as zipf:
 
             for file_path in output_files:
 
@@ -2252,24 +2321,34 @@ async def process_pdf_pnr_v2(
                     arcname=os.path.basename(file_path)
                 )
 
-        # =====================================================
+        # =================================================
         # CLEANUP
-        # =====================================================
+        # =================================================
         def cleanup():
 
             for f in output_files:
 
-                if os.path.exists(f):
-                    os.remove(f)
+                try:
 
-            if os.path.exists(zip_path):
-                os.remove(zip_path)
+                    if os.path.exists(f):
+                        os.remove(f)
+
+                except:
+                    pass
+
+            try:
+
+                if os.path.exists(zip_path):
+                    os.remove(zip_path)
+
+            except:
+                pass
 
         background_tasks.add_task(cleanup)
 
-        # =====================================================
+        # =================================================
         # RESPONSE
-        # =====================================================
+        # =================================================
         return FileResponse(
             path=zip_path,
             filename=os.path.basename(zip_path),
@@ -2280,20 +2359,10 @@ async def process_pdf_pnr_v2(
 
         return JSONResponse(
             status_code=500,
-            content={"error": str(e)}
+            content={
+                "error": str(e)
+            }
         )
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
