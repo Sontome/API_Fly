@@ -2133,7 +2133,7 @@ def process_single_pdf(input_path, option, type):
     if filename_upper.startswith("VJ"):
 
         reformat_VJ(
-            input_path=input_path,
+            input_path,
             new_text=option,
             output_path=output_path
         )
