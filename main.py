@@ -2108,72 +2108,76 @@ def process_single_pdf(input_path, option, type):
     filename = os.path.basename(input_path)
     filename_upper = filename.upper()
 
+    # =====================================================
+    # UNIQUE OUTPUT FILE
+    # =====================================================
+
+    output_filename = (
+        f"output_{uuid.uuid4().hex}_{filename}"
+    )
+
     output_path = os.path.join(
         TEMP_DIR,
-        f"output_{filename}"
+        output_filename
     )
+
+    print(f"PROCESS FILE: {filename}")
+    print(f"OUTPUT PATH: {output_path}")
 
     # =====================================================
     # VJ
     # =====================================================
+
     if filename_upper.startswith("VJ"):
 
         reformat_VJ(
-            input_path,
+            input_path=input_path,
             new_text=option,
             output_path=output_path
         )
 
+        return output_path
+
     # =====================================================
     # VNA
     # =====================================================
-    elif filename_upper.startswith("VNA"):
+
+    if filename_upper.startswith("VNA"):
 
         ngonngu = check_ngon_ngu(input_path)
 
-        if ngonngu == "VN":
+        print(f"LANGUAGE DETECTED: {ngonngu}")
 
-            reformat_VNA_VN(
-                input_path,
-                new_text=option,
-                output_path=output_path,
-                type=type
-            )
+        language_handlers = {
+            "VN": reformat_VNA_VN,
+            "KR": reformat_VNA_KR,
+            "EN": reformat_VNA_EN
+        }
 
-        elif ngonngu == "KR":
+        handler = language_handlers.get(ngonngu)
 
-            reformat_VNA_KR(
-                input_path,
-                new_text=option,
-                output_path=output_path,
-                type=type
-            )
-
-        elif ngonngu == "EN":
-
-            reformat_VNA_EN(
-                input_path,
-                new_text=option,
-                output_path=output_path,
-                type=type
-            )
-
-        else:
+        if not handler:
 
             raise Exception(
                 f"Không xác định ngôn ngữ file: {filename}"
             )
 
-    # =====================================================
-    # UNKNOWN
-    # =====================================================
-    else:
-
-        raise Exception(
-            f"Không hỗ trợ loại file: {filename}"
+        handler(
+            input_path=input_path,
+            new_text=option,
+            output_path=output_path,
+            type=type
         )
 
-    return output_path
+        return output_path
+
+    # =====================================================
+    # UNKNOWN FILE
+    # =====================================================
+
+    raise Exception(
+        f"Không hỗ trợ loại file: {filename}"
+    )
 
 
 # =========================================================
