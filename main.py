@@ -2185,6 +2185,41 @@ def process_single_pdf(input_path, option, type):
 # =========================================================
 # API
 # =========================================================
+def get_flight_title(file_path):
+
+    filename = os.path.basename(
+        file_path
+    ).upper()
+
+    try:
+
+        # =================================================
+        # VJ
+        # =================================================
+
+        if "VJ" in filename:
+
+            return checkdate_VJ(
+                file_path
+            )
+
+        # =================================================
+        # VNA
+        # =================================================
+
+        elif "VNA" in filename:
+
+            return checkdate_VNA(
+                file_path
+            )
+
+        return "UNKNOWN"
+
+    except Exception as e:
+
+        print(f"GET TITLE ERROR: {str(e)}")
+
+        return "UNKNOWN"
 @app.post("/process-pdf-pnr-v2/")
 async def process_pdf_pnr_v2(
     background_tasks: BackgroundTasks,
