@@ -2199,8 +2199,12 @@ def get_flight_title(file_path):
 
         if "VJ" in filename:
 
-            return checkdate_VJ(
+            result = checkdate_VJ(
                 file_path
+            )
+
+            return (
+                f"VietJet Air - {result}"
             )
 
         # =================================================
@@ -2209,8 +2213,12 @@ def get_flight_title(file_path):
 
         elif "VNA" in filename:
 
-            return checkdate_VNA(
+            result = checkdate_VNA(
                 file_path
+            )
+
+            return (
+                f"Vietnam Airlines - {result}"
             )
 
         return "UNKNOWN"
