@@ -7,12 +7,11 @@ load_dotenv()
 
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-# print(url)
-# print(key)
+
 supabase = create_client(url, key)
 
-TABLE_MAIL_QUEUE = "mail_queue"
-TABLE_LOG = "pnr_email_logs"
+TABLE_NAME = "mail_queue"
+
 
 class MailQueueService:
 
@@ -24,6 +23,7 @@ class MailQueueService:
         customer_name: str = None,
         salutation: str = None,
         banner: str = None,
+        type: int = 1,
     ):
 
         data = {
@@ -37,10 +37,11 @@ class MailQueueService:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "banner": banner,
+            "type": type,
         }
 
         response = (
-            supabase.table(TABLE_MAIL_QUEUE)
+            supabase.table(TABLE_NAME)
             .insert(data)
             .execute()
         )
@@ -50,11 +51,11 @@ class MailQueueService:
     @staticmethod
     def get_by_status(
         status: str,
-        limit: int = 100
+        limit: int = 20
     ):
 
         response = (
-            supabase.table(TABLE_MAIL_QUEUE)
+            supabase.table(TABLE_NAME)
             .select("*")
             .eq("status", status)
             .order("created_at", desc=True)
@@ -68,7 +69,7 @@ class MailQueueService:
     def get_all():
 
         response = (
-            supabase.table(TABLE_MAIL_QUEUE)
+            supabase.table(TABLE_NAME)
             .select("*")
             .order("created_at", desc=True)
             .execute()
@@ -81,7 +82,7 @@ class MailQueueService:
     def get_by_id(queue_id: str):
 
         response = (
-            supabase.table(TABLE_MAIL_QUEUE)
+            supabase.table(TABLE_NAME)
             .select("*")
             .eq("id", queue_id)
             .single()
@@ -102,7 +103,7 @@ class MailQueueService:
         ).isoformat()
 
         response = (
-            supabase.table(TABLE_MAIL_QUEUE)
+            supabase.table(TABLE_NAME)
             .update(data)
             .eq("id", queue_id)
             .execute()
@@ -115,46 +116,9 @@ class MailQueueService:
     def delete(queue_id: str):
 
         response = (
-            supabase.table(TABLE_MAIL_QUEUE)
+            supabase.table(TABLE_NAME)
             .delete()
             .eq("id", queue_id)
-            .execute()
-        )
-
-        return response.data
-class PnrEmailLogsService:
-
-    # CREATE
-    @staticmethod
-    def create(
-        pnr: str,
-        email: str,
-        customer_name: str = None,
-        salutation: str = None,
-        mail_type: str = "ticket",
-    ):
-
-        now = datetime.now(
-            timezone.utc
-        ).isoformat()
-
-        data = {
-            "pnr": pnr,
-            "email": email,
-            "customer_name": customer_name,
-            "salutation": salutation,
-            "mail_type": mail_type,
-            "first_sent_at": now,
-            "last_sent_at": now,
-            "send_count": 1,
-        }
-
-        response = (
-            supabase.table(TABLE_LOG)
-            .upsert(
-                data,
-                on_conflict="pnr,email,mail_type"
-            )
             .execute()
         )
 
@@ -169,10 +133,3 @@ class PnrEmailLogsService:
 #     "pending"
 # )
 # print(queues)
-# PnrEmailLogsService.create(
-#     pnr="ABC123",
-#     email="test@gmail.com",
-#     customer_name="Sơn",
-#     salutation="Anh",
-#     mail_type="ticket"
-# )
