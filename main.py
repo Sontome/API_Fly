@@ -2342,11 +2342,34 @@ async def process_pdf_pnr_v2(
         # =================================================
         # ZIP OUTPUT
         # =================================================
-        zip_name = "_".join(pnr_list)
-
+        # =================================================
+        # ZIP OUTPUT NAME
+        # =================================================
+        
+        first_input_file = all_input_files[0]
+        
+        flight_title = get_flight_title(
+            first_input_file
+        )
+        
+        # clean ký tự lỗi filename
+        flight_title = re.sub(
+            r'[\\/:*?"<>|]',
+            "_",
+            str(flight_title)
+        )
+        
+        print(f"FLIGHT TITLE: {flight_title}")
+        
+        zip_name = flight_title.strip()
+        
+        if not zip_name:
+        
+            zip_name = "_".join(pnr_list)
+        
         zip_path = os.path.join(
             TEMP_DIR,
-            f"{zip_name}_output.zip"
+            f"{zip_name}.zip"
         )
 
         with zipfile.ZipFile(
