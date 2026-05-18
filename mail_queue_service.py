@@ -76,7 +76,24 @@ class MailQueueService:
         )
 
         return response.data
+    # READ BY STATUS AND missing_pnrs AND retry_count
+    @staticmethod
+    def get_pending_with_missing_pnrs(
+        limit: int = 20
+    ):
+        response = (
+            supabase.table(TABLE_NAME)
+            .select("*")
+            .eq("status", "pending")
+            .lt("retry_count", 10)
+            .not_.is_("missing_pnrs", None)
+            .not_.eq("missing_pnrs", "[]")
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
 
+        return response.data
     # READ BY ID
     @staticmethod
     def get_by_id(queue_id: str):
@@ -133,3 +150,4 @@ class MailQueueService:
 #     "pending"
 # )
 # print(queues)
+print(MailQueueService.get_pending_with_missing_pnrs())
