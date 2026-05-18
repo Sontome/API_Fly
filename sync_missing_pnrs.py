@@ -52,11 +52,17 @@ def process_missing_pnrs():
         for row in rows:
             current_retry = row.get("retry_count", 0)
 
+            update_data = {
+                "retry_count": current_retry + 1
+            }
+            
+            # nếu retry >= 9 thì chuyển timeout
+            if current_retry >= 9:
+                update_data["status"] = "timeout"
+            
             MailQueueService.update(
                 queue_id=row["id"],
-                data={
-                    "retry_count": current_retry + 1
-                }
+                data=update_data
             )
 
         print(f"Đã update retry_count cho {len(rows)} rows")
