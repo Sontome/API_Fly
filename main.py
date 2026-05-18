@@ -2441,7 +2441,41 @@ async def process_pdf_pnr_v2(
 
 
 
+@app.get("/call-ticket-all")
+async def call_ticket_all(
+    pnr_list: str,
+    background_tasks: BackgroundTasks
+):
+    # tách bằng dấu phẩy, space, ;
+    raw_pnrs = re.split(r"[,\s;]+", pnr_list.strip())
 
+    # lọc pnr hợp lệ 6 ký tự + upper + remove duplicate
+    pnrs = list({
+        pnr.strip().upper()
+        for pnr in raw_pnrs
+        if len(pnr.strip()) == 6
+    })
+
+    async def process_pnrs():
+        for pnr in pnrs:
+            try:
+                result = sendmail_vj(pnr)
+
+                if result != "VJ":
+                    await sendemail1a(pnr,"call_ticket_all")
+
+            except Exception as e:
+                print(f"ERROR {pnr}: {e}")
+
+    # chạy background
+    background_tasks.add_task(process_pnrs)
+
+    return {
+        "success": True,
+        "message": "Đã đưa vào hàng chờ xử lý",
+        "total": len(pnrs),
+        "pnrs": pnrs
+    }
 
 
 
