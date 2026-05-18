@@ -58,7 +58,7 @@ import zipfile
 from glob import glob
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
-
+from sync_missing_pnrs import process_missing_pnrs
 
 
 load_dotenv()
@@ -2478,7 +2478,13 @@ async def call_ticket_all(
     }
 
 
-
+@app.get("/sync-missing-pnrs")
+def sync_missing_pnrs():
+    try:
+        process_missing_pnrs()
+    except Exception as e:
+        print(e)
+    
 
 
 
