@@ -234,6 +234,10 @@ chmod +x ~/update_api.sh
 xem log server  ctrl +C out
 journalctl -u uvicorn -f
 
+
+log sync gọi mặt vé missing 
+tail -f /var/log/api_fly/sync_missing_pnrs.log
+
 #fix lỗi vj ko ra vé 
 
 ~/fix.sh
