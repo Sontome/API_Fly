@@ -65,5 +65,5 @@ def process_missing_pnrs():
         print("Lỗi call API:", str(e))
 
 
-# if __name__ == "__main__":
-#     process_missing_pnrs()
+if __name__ == "__main__":
+    process_missing_pnrs()
