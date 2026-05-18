@@ -1,6 +1,6 @@
 import requests
 
-from mail_queue_service import MailQueueService
+from services_mail.mail_queue_service import MailQueueService
 
 
 API_URL = "http://localhost:8000/call-ticket-all"
