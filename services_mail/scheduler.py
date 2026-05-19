@@ -42,7 +42,7 @@ class MailScheduler:
             self.timer = None
 
         try:
-            self.process_mail_queue()
+            process_mail_queue()
 
         finally:
             with self.lock:
