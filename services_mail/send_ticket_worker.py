@@ -3,10 +3,10 @@ import shutil
 import zipfile
 import tempfile
 import requests
-from mail_queue_service import MailQueueService
-from send_email_ticket import send_email_ticket
+from .mail_queue_service import MailQueueService
+from .send_email_ticket import send_email_ticket
 from urllib.parse import unquote
-from log_mail_queue_service import LogMailQueueService
+from .log_mail_queue_service import LogMailQueueService
 # =========================
 # DEBUG MODE
 # =========================
