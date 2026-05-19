@@ -59,7 +59,7 @@ from glob import glob
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 from sync_missing_pnrs import process_missing_pnrs
-
+from services_mail.scheduler import MailScheduler
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -75,6 +75,8 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
+mail_scheduler = MailScheduler(delay=10)
+
 class AsianaRequest(BaseModel):
     url: str
 class PassengerVNA(BaseModel):
@@ -2487,7 +2489,13 @@ def sync_missing_pnrs():
     
 
 
+@app.post("/mail-trigger")
+def trigger_scheduler():
+    mail_scheduler.trigger()
 
+    return {
+        "status": "triggered"
+    }
 
 
 
