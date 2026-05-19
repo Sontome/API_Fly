@@ -75,7 +75,7 @@ os.makedirs(F2_DIR, exist_ok=True)
 tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
 day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
-mail_scheduler = MailScheduler(delay=10)
+# mail_scheduler = MailScheduler(delay=10)
 
 class AsianaRequest(BaseModel):
     url: str
@@ -2489,13 +2489,13 @@ def sync_missing_pnrs():
     
 
 
-@app.post("/mail-trigger")
-def trigger_scheduler():
-    mail_scheduler.trigger()
+# @app.post("/mail-trigger")
+# def trigger_scheduler():
+#     mail_scheduler.trigger()
 
-    return {
-        "status": "triggered"
-    }
+#     return {
+#         "status": "triggered"
+#     }
 
 
 
