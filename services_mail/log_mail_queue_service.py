@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
-from pnr_trip_info_service import (
+from .pnr_trip_info_service import (
     PnrTripInfoService
 )
 
