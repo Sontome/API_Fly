@@ -1,6 +1,6 @@
 import threading
 import time
-from send_ticket_worker import process_mail_queue
+from .send_ticket_worker import process_mail_queue
 
 class MailScheduler:
     def __init__(self, delay=10):
