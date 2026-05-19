@@ -59,7 +59,7 @@ from glob import glob
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 from sync_missing_pnrs import process_missing_pnrs
-from services_mail.scheduler import MailScheduler
+# from services_mail.scheduler import MailScheduler
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
