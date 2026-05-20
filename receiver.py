@@ -401,170 +401,175 @@ try:
             
             break
     attachment_count = 0
-
+    allowed_attachment_senders = [
+    
+        "noreply.itinerary@vietjetair.com",
+    
+        "no-reply@service.vietnamairlines.com"
+    ]
     # =========================
     # ATTACHMENTS
     # =========================
-
-    for part in msg.walk():
-
-        content_disposition = str(part.get("Content-Disposition", ""))
+    if sender_email.lower().strip() in allowed_attachment_senders:
+        for part in msg.walk():
     
-        filename = part.get_filename()
-    
-        # skip body
-        if part.get_content_maintype() == "multipart":
-            continue
-    
-        # skip text thường
-        if not filename and "attachment" not in content_disposition.lower():
-            continue
-    
-        # decode filename
-        if filename:
-            filename = decode_mime_header(filename)
-            filename = os.path.basename(filename)
-        else:
-            ext = mimetypes.guess_extension(part.get_content_type()) or ".bin"
-            filename = f"unknown{ext}"
-    
-        write_log(DEBUG_LOG, f"FOUND ATTACHMENT = {filename}")
-    
-        data = part.get_payload(decode=True)
-    
-        if not data:
-            write_log(DEBUG_LOG, f"EMPTY DATA = {filename}")
-            continue
-    
-        size_kb = round(len(data) / 1024, 2)
-    
-        # custom filename
-        file_info = generate_custom_filename(
-            sender_email=sender_email,
-            subject=subject,
-            original_filename=filename
-        )
+            content_disposition = str(part.get("Content-Disposition", ""))
         
-        final_filename = file_info["file_name"]
+            filename = part.get_filename()
         
-        final_filename = re.sub(
-            r'[\\/:*?"<>|]',
-            '',
-            final_filename
-        )
+            # skip body
+            if part.get_content_maintype() == "multipart":
+                continue
         
-        save_path = os.path.join(SAVE_DIR, final_filename)
-    
-        with open(save_path, "wb") as f:
-            f.write(data)
-    
-        relative_path = save_path.replace("/data/inbound_mail/", "")
-    
-        write_log(
-            DEBUG_LOG,
-            f"SAVED = {filename} -> {save_path} ({size_kb} KB)"
-        )
-    
-        payload = {
-            "sender_name": sender_name,
-            "sender_email": sender_email,
-            "subject": subject,
-            "file_name": final_filename,
-            "file_path": relative_path,
-            "hang": file_info["type"],
-            "pnr": file_info["pnr"],
-            "customer": file_info["name"],
-            "status": "NEW"
-        }
-    
-        res = (
-            supabase
-            .table("inbound_email")
-            .insert(payload)
-            .execute()
-        )
-    
-        write_log(DEBUG_LOG, f"SUPABASE RESPONSE = {res}")
-        # CHECK PAYMENT
-        # =========================
+            # skip text thường
+            if not filename and "attachment" not in content_disposition.lower():
+                continue
         
-        if file_info["type"] in ["VJ", "VNA"]:
+            # decode filename
+            if filename:
+                filename = decode_mime_header(filename)
+                filename = os.path.basename(filename)
+            else:
+                ext = mimetypes.guess_extension(part.get_content_type()) or ".bin"
+                filename = f"unknown{ext}"
         
-            payment_result = check_payment_api(
-                hang=file_info["type"],
-                file_path=save_path
+            write_log(DEBUG_LOG, f"FOUND ATTACHMENT = {filename}")
+        
+            data = part.get_payload(decode=True)
+        
+            if not data:
+                write_log(DEBUG_LOG, f"EMPTY DATA = {filename}")
+                continue
+        
+            size_kb = round(len(data) / 1024, 2)
+        
+            # custom filename
+            file_info = generate_custom_filename(
+                sender_email=sender_email,
+                subject=subject,
+                original_filename=filename
+            )
+            
+            final_filename = file_info["file_name"]
+            
+            final_filename = re.sub(
+                r'[\\/:*?"<>|]',
+                '',
+                final_filename
+            )
+            
+            save_path = os.path.join(SAVE_DIR, final_filename)
+        
+            with open(save_path, "wb") as f:
+                f.write(data)
+        
+            relative_path = save_path.replace("/data/inbound_mail/", "")
+        
+            write_log(
+                DEBUG_LOG,
+                f"SAVED = {filename} -> {save_path} ({size_kb} KB)"
             )
         
-            if payment_result:
+            payload = {
+                "sender_name": sender_name,
+                "sender_email": sender_email,
+                "subject": subject,
+                "file_name": final_filename,
+                "file_path": relative_path,
+                "hang": file_info["type"],
+                "pnr": file_info["pnr"],
+                "customer": file_info["name"],
+                "status": "NEW"
+            }
         
-                payment_status = (
-                    str(payment_result.get("paymentstatus"))
-                    .lower()
-                    == "true"
+            res = (
+                supabase
+                .table("inbound_email")
+                .insert(payload)
+                .execute()
+            )
+        
+            write_log(DEBUG_LOG, f"SUPABASE RESPONSE = {res}")
+            # CHECK PAYMENT
+            # =========================
+            
+            if file_info["type"] in ["VJ", "VNA"]:
+            
+                payment_result = check_payment_api(
+                    hang=file_info["type"],
+                    file_path=save_path
                 )
-        
-                if payment_status:
-        
-                    result_data = payment_result.get("result", {})
-        
-                    ticket_payload = {
-        
-                        "pnr": file_info["pnr"],
-        
-                        "hang": file_info["type"],
-        
-                        # VNA ưu tiên name cũ
-                        "name": (
-                            file_info["name"]
-                            or payment_result.get("name")
-                        ),
-        
-                        "paymentstatus": True,
-        
-                        "trip1": result_data.get("trip1"),
-                        "day1": result_data.get("day1"),
-                        "time1": result_data.get("time1"),
-        
-                        "trip2": result_data.get("trip2"),
-                        "day2": result_data.get("day2"),
-                        "time2": result_data.get("time2"),
-        
-                        "trip3": result_data.get("trip3"),
-                        "day3": result_data.get("day3"),
-                        "time3": result_data.get("time3"),
-        
-                        "trip4": result_data.get("trip4"),
-                        "day4": result_data.get("day4"),
-                        "time4": result_data.get("time4"),
-        
-                        "file_path": relative_path
-                    }
-        
-                    ticket_res = (
-                        supabase
-                        .table("ticket_log")
-                        .insert(ticket_payload)
-                        .execute()
+            
+                if payment_result:
+            
+                    payment_status = (
+                        str(payment_result.get("paymentstatus"))
+                        .lower()
+                        == "true"
                     )
+            
+                    if payment_status:
+            
+                        result_data = payment_result.get("result", {})
+            
+                        ticket_payload = {
+            
+                            "pnr": file_info["pnr"],
+            
+                            "hang": file_info["type"],
+            
+                            # VNA ưu tiên name cũ
+                            "name": (
+                                file_info["name"]
+                                or payment_result.get("name")
+                            ),
+            
+                            "paymentstatus": True,
+            
+                            "trip1": result_data.get("trip1"),
+                            "day1": result_data.get("day1"),
+                            "time1": result_data.get("time1"),
+            
+                            "trip2": result_data.get("trip2"),
+                            "day2": result_data.get("day2"),
+                            "time2": result_data.get("time2"),
+            
+                            "trip3": result_data.get("trip3"),
+                            "day3": result_data.get("day3"),
+                            "time3": result_data.get("time3"),
+            
+                            "trip4": result_data.get("trip4"),
+                            "day4": result_data.get("day4"),
+                            "time4": result_data.get("time4"),
+            
+                            "file_path": relative_path
+                        }
+            
+                        ticket_res = (
+                            supabase
+                            .table("ticket_log")
+                            .insert(ticket_payload)
+                            .execute()
+                        )
+            
+                        write_log(
+                            DEBUG_LOG,
+                            f"TICKET LOG INSERT = {ticket_res}"
+                        )
+                        # SEND NOTIFICATION
+                        # =========================
+                        
+                        notify_message = (
+                            f"Đã có mặt vé  PNR: {file_info['pnr']}"
+                        )
+                        
+                        send_notification(notify_message)
+            write_log(
+                ACCESS_LOG,
+                f"{sender_email} | {subject} | {filename} | {size_kb} KB"
+            )
         
-                    write_log(
-                        DEBUG_LOG,
-                        f"TICKET LOG INSERT = {ticket_res}"
-                    )
-                    # SEND NOTIFICATION
-                    # =========================
-                    
-                    notify_message = (
-                        f"Đã có mặt vé  PNR: {file_info['pnr']}"
-                    )
-                    
-                    send_notification(notify_message)
-        write_log(
-            ACCESS_LOG,
-            f"{sender_email} | {subject} | {filename} | {size_kb} KB"
-        )
-    
-        attachment_count += 1
+            attachment_count += 1
 
     # =========================
     # NO ATTACHMENT
