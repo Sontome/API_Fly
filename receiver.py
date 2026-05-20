@@ -327,7 +327,8 @@ try:
     flight_change_rules = [
     
         {
-            "sender": "noreply.19001886@ses.vietjetair.com",
+            # "sender": "noreply.19001886@ses.vietjetair.com",
+            "sender": "devilrauxanhk17@gmail.com",
             "subject": "Thông báo lịch bay thay đổi",
             "hang": "VJ"
         },
