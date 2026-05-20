@@ -340,12 +340,31 @@ try:
         }
     ]
     
+    is_flight_change = False
+
+    normalized_subject = re.sub(
+        r"\s+",
+        " ",
+        subject
+    ).strip().lower()
+    write_log(
+                DEBUG_LOG,
+                f"FLIGHT CHANGE MATCHED = {sender_email} | {subject}"
+            )
     for rule in flight_change_rules:
     
+        expected_subject = re.sub(
+            r"\s+",
+            " ",
+            rule["subject"]
+        ).strip().lower()
+    
         if (
-            sender_email.lower() == rule["sender"].lower()
-            and rule["subject"].lower() in subject.lower()
+            sender_email.lower().strip() == rule["sender"].lower().strip()
+            and expected_subject in normalized_subject
         ):
+    
+            is_flight_change = True
     
             payload = {
     
@@ -378,11 +397,8 @@ try:
                 f"FLIGHT CHANGE INSERT = {res}"
             )
     
-            write_log(
-                ACCESS_LOG,
-                f"FLIGHT CHANGE | {rule['hang']} | {sender_email} | {subject}"
-            )
-    
+            
+            
             break
     attachment_count = 0
 
@@ -554,7 +570,7 @@ try:
     # NO ATTACHMENT
     # =========================
 
-    if attachment_count == 0:
+    if attachment_count == 0 and not is_flight_change:
         payload = {
             "sender_name": sender_name,
             "sender_email": sender_email,
