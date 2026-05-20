@@ -320,7 +320,69 @@ try:
 
     write_log(DEBUG_LOG, f"SENDER NAME = {sender_name}")
     write_log(DEBUG_LOG, f"SENDER EMAIL = {sender_email}")
-
+    # =========================
+    # FLIGHT CHANGE DETECTION
+    # =========================
+    
+    flight_change_rules = [
+    
+        {
+            "sender": "noreply.19001886@ses.vietjetair.com",
+            "subject": "Thông báo lịch bay thay đổi",
+            "hang": "VJ"
+        },
+    
+        {
+            "sender": "sc@info.vietnamairlines.com",
+            "subject": "THÔNG BÁO THAY ĐỔI LỊCH BAY",
+            "hang": "VNA"
+        }
+    ]
+    
+    for rule in flight_change_rules:
+    
+        if (
+            sender_email.lower() == rule["sender"].lower()
+            and rule["subject"].lower() in subject.lower()
+        ):
+    
+            payload = {
+    
+                "sender_name": sender_name,
+    
+                "sender_email": sender_email,
+    
+                "subject": subject,
+    
+                "body": body,
+    
+                "hang": rule["hang"],
+    
+                "status": "FLIGHT_CHANGE",
+    
+                "file_name": None,
+    
+                "file_path": None
+            }
+    
+            res = (
+                supabase
+                .table("inbound_email")
+                .insert(payload)
+                .execute()
+            )
+    
+            write_log(
+                DEBUG_LOG,
+                f"FLIGHT CHANGE INSERT = {res}"
+            )
+    
+            write_log(
+                ACCESS_LOG,
+                f"FLIGHT CHANGE | {rule['hang']} | {sender_email} | {subject}"
+            )
+    
+            break
     attachment_count = 0
 
     # =========================
