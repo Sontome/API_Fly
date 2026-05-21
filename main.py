@@ -60,7 +60,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 from sync_missing_pnrs import process_missing_pnrs
 from services_mail.scheduler import MailScheduler
-
+from change_pnr import pre_change_pnr,change_pnr
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
 request_limit_cache = {}
@@ -77,6 +77,20 @@ day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
 mail_scheduler = MailScheduler(delay=10)
 
+class PreChangePNRRequest(BaseModel):
+    pnr: str
+
+class ChangePNRRequest(BaseModel):
+    pnr: str
+    dep: str
+    arr: str
+    depdate: str
+    deptime: str
+    seg_del: str
+    # optional
+    
+    arrdate: Optional[str] = None
+    arrtime: Optional[str] = None
 class AsianaRequest(BaseModel):
     url: str
 class PassengerVNA(BaseModel):
@@ -2499,7 +2513,30 @@ def trigger_scheduler():
 
 
 
+@app.post("/change-pnr")
+async def change_pnr_api(data: ChangePNRRequest):
+    result = await change_pnr(
+        pnr=data.pnr,
+        dep=data.dep,
+        arr=data.arr,
+        depdate=data.depdate,
+        deptime=data.deptime,
+       
+        seg_del=data.seg_del,
+        arrdate=data.arrdate,
+        arrtime=data.arrtime
+    )
 
+    return result
+
+
+@app.post("/pre-change-pnr")
+async def pre_change_pnr_api(data: PreChangePNRRequest):
+    result = await pre_change_pnr(
+        pnr=data.pnr
+    )
+
+    return result
 
 
 
