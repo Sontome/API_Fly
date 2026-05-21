@@ -66,7 +66,22 @@ class SegmentStatusResolver:
 
 
 class SegmentParser:
-
+    PASSENGER_PATTERN = re.compile(
+        r"""
+        \b
+        (\d+)
+        \.
+        [A-Z]+
+        /
+        [A-Z\s\-]+
+        \s+
+        (MR|MS|MRS|MISS|CHD|INF)
+        \(
+        (ADT|CNN|CHD|INF)
+        \)?
+        """,
+        re.VERBOSE
+    )
     SEGMENT_PATTERN = re.compile(
         r"""
         ^\s*
@@ -91,7 +106,14 @@ class SegmentParser:
         """,
         re.VERBOSE
     )
+    @staticmethod
+    def get_number_person(raw_text: str) -> int:
 
+        matches = SegmentParser.PASSENGER_PATTERN.findall(
+            raw_text.upper()
+        )
+
+        return len(matches)
     @classmethod
     def parse(cls, raw_text: str) -> List[Segment]:
 
