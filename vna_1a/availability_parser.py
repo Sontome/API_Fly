@@ -72,29 +72,29 @@ class AvailabilityParser:
     )
 
     FLIGHT_START_PATTERN = re.compile(
-        r"^\s*\d+\s+[A-Z0-9]{2}\s+\d+"
+        r"^\s*\d+\s*(?:[A-Z0-9]{2}:)?[A-Z0-9]{2}\s*\d+",
+        re.IGNORECASE
     )
 
     MAIN_FLIGHT_PATTERN = re.compile(
         r"""
         ^\s*
-
-        (\d+)                              # index
+        (\d+)
 
         \s*
 
         (?:
-            ([A-Z0-9]{2})\:               # operating carrier
+            ([A-Z0-9]{2})
+            :
         )?
 
         \s*
 
-        ([A-Z0-9]{2})                     # carrier
+        ([A-Z0-9]{2})
 
         \s*
 
-        (\d+)                             # flight number
-
+        (\d+)
         """,
         re.VERBOSE
     )
@@ -411,12 +411,10 @@ class AvailabilityParser:
 # TEST
 # =========================
 
-raw ="ANVN17JULICNHAN1005*18JUL1020\n** VIETNAM AIRLINES - AN ** HAN HANOI.VN                      58 FR 17JUL 1005\nPASSPORT INFORMATION REQUIRED\n 1   VN 417  J9 C9 D9 I5 Y9 B9 M9 /ICN 1 HAN 2  1005    1235  E0/787       4:30\n             S9 H9 K7 L9 Q9 N9 R9 T9\n 2   VN 415  J9 C9 D9 I9 Y9 B9 M9 /ICN 1 HAN 2  1805    2035  E0/359       4:30\n             S9 H9 K6 L9 Q9 N9 R9 T9\n 3KE:VN3411  J9 C9 D9 Y9 B9 M9 S9 /ICN 2 HAN 2  1855    2135  E0/781       4:40\n             H9 KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n\n\n** VIETNAM AIRLINES - AN ** ICN INCHEON INTERNA.KR            59 SA 18JUL 1020\nPASSPORT INFORMATION REQUIRED\n11   VN 414  J9 C9 D9 I7 Y9 B9 M9 /HAN 2 ICN 1  1020    1635  E0/787       4:15\n             S9 H9 K6 L9 Q9 N9 R9 T9\n12   VN 416  J9 C9 D6 I5 Y9 B9 M9 /HAN 2 ICN 1  2335    0550+1E0/787       4:15\n             S9 H9 K7 L9 Q9 N9 R9 T5\n13KE:VN3412  J6 C6 D6 Y9 B9 M9 S9 /HAN 2 ICN 2  1205    1835  E0/32Q       4:30\n             H9 KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n>"
+raw ="ANVN16JULICNHAN1005*20JUL1635\n** VIETNAM AIRLINES - AN ** HAN HANOI.VN                      56 TH 16JUL 1005\nPASSPORT INFORMATION REQUIRED\n 1   VN 417  J6 C5 DL Y9 B9 M9 S9 /ICN 1 HAN 2  1005    1235  E0/787       4:30\n             H9 K7 L9 Q9 N9 R9 T7\n 2   VN 415  J9 C9 D2 I2 Y9 B9 M9 /ICN 1 HAN 2  1805    2035  E0/359       4:30\n             S9 H9 K6 L9 Q9 N9 R9\n 3KE:VN3411  J3 C3 D3 Y9 B9 ML SL /ICN 2 HAN 2  1855    2135  E0/781       4:40\n             HL KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n\n\n** VIETNAM AIRLINES - AN ** ICN INCHEON INTERNA.KR            60 MO 20JUL 1635\nPASSPORT INFORMATION REQUIRED\n11   VN 416  J9 C9 D9 I5 Y9 B9 M9 /HAN 2 ICN 1  2335    0550+1E0/787       4:15\n             S9 H9 K7 L9 Q9 N9 R9\n12KE:VN3410  J9 C9 D9 Y9 B9 M9 S9 /HAN 2 ICN 2  2310    0525+1E0/781       4:15\n             H9 KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n>"
 
-groups = AvailabilityParser.parse(raw)
+# groups = AvailabilityParser.parse(raw)
 
-for group in groups:
-    group.flights = group.flights[:1]
-    print("=" * 80)
 
-    print(group.to_dict())
+
+# print(groups)
