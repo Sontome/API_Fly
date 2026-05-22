@@ -86,11 +86,13 @@ class ChangePNRRequest(BaseModel):
     arr: str
     depdate: str
     deptime: str
+    deptimedone: str
     seg_del: str
     # optional
     
     arrdate: Optional[str] = None
     arrtime: Optional[str] = None
+    arrtimedone: Optional[str] = None
 class AsianaRequest(BaseModel):
     url: str
 class PassengerVNA(BaseModel):
@@ -2521,10 +2523,11 @@ async def change_pnr_api(data: ChangePNRRequest):
         arr=data.arr,
         depdate=data.depdate,
         deptime=data.deptime,
-       
+        deptimedone=data.deptimedone,   
         seg_del=data.seg_del,
         arrdate=data.arrdate,
-        arrtime=data.arrtime
+        arrtime=data.arrtime,
+        arrtimedone=data.arrtimedone
     )
 
     return result
