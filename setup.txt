@@ -1,10 +1,4 @@
-Main IP: 103.149.28.32
 
-Port: 22
-
-Username: root
-
-Password: gT5dC7!!
 
 Bkdfasdv@2034141 thêm 1 
 --- Log clear matvegoc thu muc --------------------------------
