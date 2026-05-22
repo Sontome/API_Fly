@@ -40,37 +40,29 @@ def build_search_new_trip(
     return command
 
 def get_price_new(raw):
-    # =========================
-    # CASE 1: Có dòng TOTAL
-    # =========================
+
     total_match = re.search(
-        r"TOTAL\s+(\d+)\s+(\d+)\s+\d+\s+(\d+)",
+        r"TOTAL\s+(-?\d+)\s+(-?\d+)\s+\d+\s+(-?\d+)",
         raw
     )
 
     if total_match:
         penalty_total = int(total_match.group(1))
-        grd_total = int(total_match.group(3))
-
+        total = int(total_match.group(3))
+        grd_total = total -penalty_total
         return {
             "penalty_total": penalty_total,
             "GRD_TOTAL": grd_total,
             "total_new": penalty_total + grd_total
         }
 
-    # =========================
-    # CASE 2: Không có TOTAL
-    # =========================
-
-    # Lấy TICKET DIFFERENCE
     grd_match = re.search(
-        r"TICKET DIFFERENCE\s+KRW\s+(\d+)",
+        r"TICKET DIFFERENCE\s+KRW\s+(-?\d+)",
         raw
     )
 
-    # Lấy PENALTY
     penalty_match = re.search(
-        r"PENALTY\s+KRW\s+(\d+)",
+        r"PENALTY\s+KRW\s+(-?\d+)",
         raw
     )
 
