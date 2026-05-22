@@ -20,7 +20,7 @@ class FlightOption:
 
     from_airport: str = ""
     to_airport: str = ""
-
+    stops: List[str] = field(default_factory=list)
     departure_time: str = ""
     arrival_time: str = ""
 
@@ -65,7 +65,19 @@ class AvailabilityGroup:
 # =========================================================
 
 class AvailabilityParser:
-
+    CONTINUATION_PATTERN = re.compile(
+        r"""
+        ^\s*
+        ([A-Z0-9]{2})
+        \s*
+        (\d+)
+        .*?
+        /([A-Z]{3})
+        \s+\d+\s+
+        ([A-Z]{3})
+        """,
+        re.VERBOSE
+    )
     HEADER_PATTERN = re.compile(
         r"\*\* .*? \*\* ([A-Z]{3}) .*? (\d{2}[A-Z]{3})",
         re.IGNORECASE
@@ -99,7 +111,8 @@ class AvailabilityParser:
         re.VERBOSE
     )
     ROUTE_PATTERN = re.compile(
-        r"/([A-Z]{3})\s+\d+\s+([A-Z]{3})"
+        r"/([A-Z]{3})\s+(?:\d+\s+)?([A-Z]{3})",
+        re.IGNORECASE
     )
 
     TIME_PATTERN = re.compile(
@@ -117,7 +130,26 @@ class AvailabilityParser:
     BOOKING_CLASS_PATTERN = re.compile(
         r"\b([A-Z])([0-9L])\b"
     )
+    @classmethod
+    def intersect_booking_classes(
+        cls,
+        class_maps: List[Dict[str, str]]
+    ) -> Dict[str, str]:
 
+        if not class_maps:
+            return {}
+
+        result = dict(class_maps[0])
+
+        for cmap in class_maps[1:]:
+
+            result = {
+                k: v
+                for k, v in result.items()
+                if k in cmap
+            }
+
+        return result
     # =====================================================
     # MAIN PARSE
     # =====================================================
@@ -255,7 +287,7 @@ class AvailabilityParser:
 
         from_airport = ""
         to_airport = ""
-
+        stops = ""
         if route_match:
 
             from_airport = route_match.group(1)
@@ -282,7 +314,40 @@ class AvailabilityParser:
             arrival_plus_day = (
                 time_match.group(3) is not None
             )
+        for extra_line in chunk_lines[1:]:
 
+            cont_match = cls.CONTINUATION_PATTERN.search(
+                extra_line
+            )
+
+            if not cont_match:
+                continue
+
+            (
+                seg_carrier,
+                seg_flight,
+                seg_from,
+                seg_to
+            ) = cont_match.groups()
+
+            # stop point
+            stops=seg_from
+
+            # final destination
+            to_airport = seg_to
+
+            # arrival time from last segment
+            time_match = cls.TIME_PATTERN.search(
+                extra_line
+            )
+
+            if time_match:
+
+                arrival_time = time_match.group(2)
+
+                arrival_plus_day = (
+                    time_match.group(3) is not None
+                )
         # =====================================================
         # AIRCRAFT
         # =====================================================
@@ -313,15 +378,43 @@ class AvailabilityParser:
         # BOOKING CLASSES
         # =====================================================
 
-        booking_classes = {}
+        segment_class_maps = []
+
+        current_classes = None
 
         for line in chunk_lines:
 
-            line_classes = cls.parse_booking_classes(
-                line
-            )
+            # new segment
+            if (
+                cls.is_flight_start(line)
+                or cls.CONTINUATION_PATTERN.search(line)
+            ):
 
-            booking_classes.update(line_classes)
+                if current_classes:
+                    segment_class_maps.append(
+                        current_classes
+                    )
+
+                current_classes = {}
+
+                continue
+
+            # booking class line
+            if current_classes is not None:
+
+                line_classes = cls.parse_booking_classes(
+                    line
+                )
+
+                current_classes.update(line_classes)
+
+        # append last segment
+        if current_classes:
+            segment_class_maps.append(current_classes)
+
+        booking_classes = cls.intersect_booking_classes(
+            segment_class_maps
+        )
 
         # =====================================================
         # OPERATED BY
@@ -367,7 +460,7 @@ class AvailabilityParser:
             booking_classes=booking_classes,
 
             operated_by=operated_by,
-
+            stops=stops,
             codeshare=is_codeshare,
 
             #raw_lines=chunk_lines
@@ -411,7 +504,8 @@ class AvailabilityParser:
 # TEST
 # =========================
 
-raw ="ANVN16JULICNHAN1005*20JUL1635\n** VIETNAM AIRLINES - AN ** HAN HANOI.VN                      56 TH 16JUL 1005\nPASSPORT INFORMATION REQUIRED\n 1   VN 417  J6 C5 DL Y9 B9 M9 S9 /ICN 1 HAN 2  1005    1235  E0/787       4:30\n             H9 K7 L9 Q9 N9 R9 T7\n 2   VN 415  J9 C9 D2 I2 Y9 B9 M9 /ICN 1 HAN 2  1805    2035  E0/359       4:30\n             S9 H9 K6 L9 Q9 N9 R9\n 3KE:VN3411  J3 C3 D3 Y9 B9 ML SL /ICN 2 HAN 2  1855    2135  E0/781       4:40\n             HL KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n\n\n** VIETNAM AIRLINES - AN ** ICN INCHEON INTERNA.KR            60 MO 20JUL 1635\nPASSPORT INFORMATION REQUIRED\n11   VN 416  J9 C9 D9 I5 Y9 B9 M9 /HAN 2 ICN 1  2335    0550+1E0/787       4:15\n             S9 H9 K7 L9 Q9 N9 R9\n12KE:VN3410  J9 C9 D9 Y9 B9 M9 S9 /HAN 2 ICN 2  2310    0525+1E0/781       4:15\n             H9 KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n>"
+# raw ="ANVN16JULICNHAN1005*20JUL1635\n** VIETNAM AIRLINES - AN ** HAN HANOI.VN                      56 TH 16JUL 1005\nPASSPORT INFORMATION REQUIRED\n 1   VN 417  J6 C5 DL Y9 B9 M9 S9 /ICN 1 HAN 2  1005    1235  E0/787       4:30\n             H9 K7 L9 Q9 N9 R9 T7\n 2   VN 415  J9 C9 D2 I2 Y9 B9 M9 /ICN 1 HAN 2  1805    2035  E0/359       4:30\n             S9 H9 K6 L9 Q9 N9 R9\n 3KE:VN3411  J3 C3 D3 Y9 B9 ML SL /ICN 2 HAN 2  1855    2135  E0/781       4:40\n             HL KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n\n\n** VIETNAM AIRLINES - AN ** ICN INCHEON INTERNA.KR            60 MO 20JUL 1635\nPASSPORT INFORMATION REQUIRED\n11   VN 416  J9 C9 D9 I5 Y9 B9 M9 /HAN 2 ICN 1  2335    0550+1E0/787       4:15\n             S9 H9 K7 L9 Q9 N9 R9\n12KE:VN3410  J9 C9 D9 Y9 B9 M9 S9 /HAN 2 ICN 2  2310    0525+1E0/781       4:15\n             H9 KL LL QL NL RL TL\n             OPERATED BY KOREAN AIR\n>"
+# raw = "ANVN17JULVIIICN1850\n** VIETNAM AIRLINES - AN ** ICN INCHEON INTERNA.KR            56 FR 17JUL 1850\nPASSPORT INFORMATION REQUIRED\n 1   VN1718  J8 C8 D1 I3 W9 Z9 U9 /VII   HAN 1  1850    1945  E0/321\n             Y9 B9 M9 S9 H9 K9 L9 Q9 N9 R9 TL\n     VN 416  J8 C8 D1 I3 Y9 B9 M9 /HAN 2 ICN 1  2335    0550+1E0/787       9:00\n             S9 H9 K9 L9 Q9 N9 R9\n 2   VN1281  J9 C9 D3 I3 W9 Z9 U9 /VII   SGN 3  2345    0135+1E0/321\n             Y9 B9 M9 S9 H9 K9 L9 Q9 N9 R9 T9 E9 P9 A9\n     VN 402  J9 C9 D3 I3 Y9 B9 M9 /SGN 2 ICN 1  0905+1  1625+1E0/321      14:40\n             S9 H9 K9 L9 Q9 N9 R9 T9 A9 E9 P9\n 3   VN1269  J9 C9 D3 I3 W9 Z9 U9 /VII   SGN 3  2120    2310  E0/321\n             Y9 B9 M9 S9 H9 K9 L9 Q9 N9 R9 T9 E9 P9 A9\n     VN 402  J9 C9 D3 I3 Y9 B9 M9 /SGN 2 ICN 1  0905+1  1625+1E0/321      17:05\n             S9 H9 K9 L9 Q9 N9 R9 T9 A9 E9 P9\n 4   VN1718  J8 C8 D3 I3 W9 Z9 U9 /VII   HAN 1  1850    1945  E0/321\n             Y9 B9 M9 S9 H9 K9 L9 Q9 N9 R9 T9 E9 P9 A9\n     VN 414  J8 C8 D3 I3 Y9 B9 M9 /HAN 2 ICN 1  1020+1  1635+1E0/787      19:45\n             S9 H9 K9 L9 Q9 N9 R9 T9 A9 E9 P9\n>"
 
 # groups = AvailabilityParser.parse(raw)
 
