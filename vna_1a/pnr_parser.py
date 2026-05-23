@@ -128,6 +128,12 @@ class SegmentParser:
 
         lines = raw_text.splitlines()
 
+        # =========================================
+        # PASS 1: FHE
+        # =========================================
+
+        found_fhe = False
+
         for line in lines:
 
             line = line.strip().upper()
@@ -139,6 +145,8 @@ class SegmentParser:
 
             if not match:
                 continue
+
+            found_fhe = True
 
             line_no, pax_type = match.groups()
 
@@ -153,7 +161,41 @@ class SegmentParser:
             elif pax_type == "INF":
                 result["INF"].add(line_no)
 
-        # convert set -> sorted list
+        # =========================================
+        # PASS 2: fallback FA
+        # =========================================
+
+        if not found_fhe:
+
+            for line in lines:
+
+                line = line.strip().upper()
+
+                match = re.search(
+                    r"^(\d+)\s+FA\s+(PAX|CHD|INF)\b",
+                    line
+                )
+
+                if not match:
+                    continue
+
+                line_no, pax_type = match.groups()
+
+                line_no = int(line_no)
+
+                if pax_type == "PAX":
+                    result["ADT"].add(line_no)
+
+                elif pax_type == "CHD":
+                    result["CHD"].add(line_no)
+
+                elif pax_type == "INF":
+                    result["INF"].add(line_no)
+
+        # =========================================
+        # RESULT
+        # =========================================
+
         return {
             "ADT": sorted(result["ADT"]),
             "CHD": sorted(result["CHD"]),
@@ -268,11 +310,12 @@ class SegmentParser:
 
 #raw = "--- TST RLR MSC ---\nRP/SELVN28AA/SELVN28AA            WS/SU  21MAY26/1351Z   E8J6L3\n  1.LUONG/THI THU PHUONG(ADT)   2.MOON/GOEUN(CHD/03MAY19)\n  3  VN 417 R 23JUL 4*ICNHAN HK2  1005 1235  23JUL  E  VN/E8J6L3\n  4  VN1717 R 23JUL 4*HANVII HK2  1720 1815  23JUL  E  VN/E8J6L3\n  5  VN1718 R 15AUG 6*VIIHAN HK2  1850 1945  15AUG  E  VN/E8J6L3\n  6  VN 416 R 15AUG 6*HANICN HK2  2335 0550  16AUG  E  VN/E8J6L3\n  7 APE LETHIPHUONGTHUY2212@GMAIL.COM\n  8 APE LETHIPHUONGTHUY2212@GMAIL.COM/P1\n  9 APM +84 914360360\n 10 APM +84 914360360/P1\n 11 APN M+84914360360/VI/P1\n 12 APN E+LETHIPHUONGTHUY2212@GMAIL.COM/VI/P1\n 13 TK PAX OK21MAY/SELVN28AA//ETVN/S3-6/P1-2\n 14 SSR CHLD VN HK1 03MAY19/P2\n 15 FA PAX 738-2321092706/ETVN/21MAY26/SELVN28AA/17915015\n       /S3-6/P1\n 16 FA PAX 738-2321092707/ETVN/21MAY26/SELVN28AA/17915015\n       /S3-6/P2\n 17 FB PAX 0000000000 TTP/T1-2/T-VN/ITR-EMLA/LA-VI OK ETICKET\n       /S3-6/P1\n 18 FB PAX 0000000001 TTP/T1-2/T-VN/ITR-EMLA/LA-VI OK ETICKET\n       /S3-6/P2\n)>"
 #raw ="TICKET REVALIDATION/REISSUE IS RECOMMENDED\n--- TST RLR ---\nRP/SELVN28AA/SELVN28AA            WS/SU   5MAY26/0419Z   ETZAHK\n  1.DO/HUU LAM MR(ADT)   2.NGUYEN/THI KIEU PHUONG MS(ADT)\n  3 AP HCMC 01035463396\n  4 APE HANVIETAIR.SERVICE@GMAIL.COM\n  5 APE HANVIETAIR.SERVICE@GMAIL.COM/P1\n  6 APE HANVIETAIR247@GMAIL.COM/P1\n  7 APM +82 1035463396\n  8 APM +82 1035463396/P1\n  9 APM +82 1021511790/P1\n 10 APN E+HANVIETAIR.SERVICE@GMAIL.COM/VI/P1\n 11 FHE PAX 738-2320659730/P2\n 12 FHE PAX 738-2320659731/P1\n>"
+# raw ="--- TST RLR ---\nRP/SELVN28AA/SELVN28AA            WS/SU  22MAY26/1313Z   EP5TR6\n  1.DO/MIJIN MS(ADT)\n  2  VN 428 R 17NOV 2 HANPUS HK1  0030 0610  17NOV  E  VN/EP5TR6\n  3 AP HCMC 01035463396\n  4 APE HANVIETAIR.SERVICE@GMAIL.COM\n  5 APE HANVIETAIR.SERVICE@GMAIL.COM\n  6 APE HANVIETAIR247@GMAIL.COM\n  7 APM +82 1035463396\n  8 APM +82 1035463396\n  9 APM +82 1021511790\n 10 APN E+HANVIETAIR.SERVICE@GMAIL.COM/VI\n 11 TK OK22MAY/SELVN28AA//ETVN\n 12 FA PAX 738-2321092723/ETVN/22MAY26/SELVN28AA/17915015/S2\n 13 FB PAX 0000000000 TTP/T2/T-VN/ITR-EMLA/LA-VI OK ETICKET/S2\n 14 FE PAX NON-END.RESTRICT MAY APPLYCONTACT B4 DEPT FOR CHANGE\n       /S2\n 15 FM PAX *F*0.00/S2\n 16 FP PAX BT/87XXXXXXXXXX5015*626CD79B682B41C7AC9071A9772876EC\n       /S2\n 17 FV PAX *F*VN/S2\n>"
 
-#segments = SegmentParser.parse(raw)
-# segments = SegmentParser.get_class_seg(raw,"3")
+# #segments = SegmentParser.parse(raw)
+# # segments = SegmentParser.get_class_seg(raw,"3")
 # segments = SegmentParser.get_pax_FHE(raw)
-#print(segments)
-# # for seg in segments:
+# print(segments)
+# # # for seg in segments:
     
-#     print(seg.to_dict())
+# #     print(seg.to_dict())
