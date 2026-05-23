@@ -259,7 +259,7 @@ def get_newseg(segs, pax_total, doituong=""):
     # mapping suffix
     pax_mapping = {
         "ADT": "",
-        "CHD": "-CHD",
+        "CHD": "-CH",
         "INF": "-INF"
     }
 
