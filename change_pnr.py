@@ -482,22 +482,28 @@ async def pre_change_pnr(
     1. RT PNR
     2. IG
     """
-    async with httpx.AsyncClient(http2=False, timeout=60) as client:
-        # load pnr
-        ssid, res = await send_command(client,"IG", "change_pnr")
-        print(res)
-        ssid, resRt = await send_command(client,"RT" + pnr, "change_pnr")
-        res_Rt =resRt.json()["model"]["output"]["crypticResponse"]["response"]
-        if "INVALID RECORD LOCATOR" in res_Rt.upper():
+    try:
+        async with httpx.AsyncClient(http2=False, timeout=60) as client:
+            # load pnr
+            ssid, res = await send_command(client,"IG", "change_pnr")
+            print(res)
+            ssid, resRt = await send_command(client,"RT" + pnr, "change_pnr")
+            res_Rt =resRt.json()["model"]["output"]["crypticResponse"]["response"]
+            if "INVALID RECORD LOCATOR" in res_Rt.upper():
+                ssid, res = await send_command(client,"IG", "change_pnr")
+                return {
+                    "status": "mã PNR ko tồn tại"
+                }
+            seg=SegmentParser.parse(res_Rt)
             ssid, res = await send_command(client,"IG", "change_pnr")
             return {
-                "status": "mã PNR ko tồn tại"
-            }
-        seg=SegmentParser.parse(res_Rt)
-        ssid, res = await send_command(client,"IG", "change_pnr")
-        return {
-                "seg": seg
-            }
+                    "seg": seg
+                }
+    except Exception as e:
+            print(e)
+            return {
+                    e
+                }
 
 
 
