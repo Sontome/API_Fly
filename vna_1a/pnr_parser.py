@@ -75,10 +75,11 @@ class SegmentParser:
         /
         [A-Z\s\-]+
         \s+
-        (MR|MS|MRS|MISS|CHD|INF)
+        (MR|MS|MRS|MISS|MSTR|CHD|INF)
         \(
         (ADT|CNN|CHD|INF)
-        \)?
+        (?:/[0-9A-Z]+)?
+        \)
         """,
         re.VERBOSE
     )
