@@ -1,533 +1,428 @@
-from datetime import datetime
-from math import e
-from backendapi1a import send_command,checkmatvechoVNA
-import httpx
-from vna_1a.pnr_parser import SegmentParser
-from vna_1a.availability_parser import AvailabilityParser
 import re
+from enum import Enum
+from dataclasses import dataclass, asdict
+from typing import List, Optional
 
 
-def build_search_new_trip(
-    dep,
-    arr,
-    depdate,
-    deptime,
-    arrdate=None,
-    arrtime=None
-):
-    """
-    Build command dạng:
+class SegmentStatus(Enum):
+    FLOWN = "FLOWN"
+    TICKETED = "TICKETED"
+    HOLDING = "HOLDING"
+    CONFIRMED = "CONFIRMED"
+    WAITLIST = "WAITLIST"
+    UNKNOWN = "UNKNOWN"
 
-    Có arrdate + arrtime:
-    anvn17JULICN HAN1005*19JUL1635
 
-    Không có:
-    anvn17JULICN HAN1005
-    """
+@dataclass
+class Segment:
+    seg_no: int
+    carrier: str
+    flight_number: str
+    booking_class: str
+    day: str
+    dow: str
+    trip: str
+    from_airport: str
+    to_airport: str
 
-    dep_dt = datetime.strptime(depdate, "%Y-%m-%d")
-    dep_str = dep_dt.strftime("%d%b").upper()
+    status_code: str
+    status: SegmentStatus
 
-    command = f"anvn{dep_str}{dep} {arr}{deptime}"
+    departure_time: Optional[str] = None
+    arrival_time: Optional[str] = None
+    arrival_day: Optional[str] = None
 
-    # Nếu có đủ arrdate + arrtime thì append thêm
-    if arrdate and arrtime:
-        arr_dt = datetime.strptime(arrdate, "%Y-%m-%d")
-        arr_str = arr_dt.strftime("%d%b").upper()
+    ticketed: bool = False
+    flown: bool = False
+    holding: bool = False
 
-        command += f"*{arr_str}{arrtime}"
+    def to_dict(self):
+        data = asdict(self)
+        data["status"] = self.status.value
+        return data
 
-    return command
 
-def get_price_new(raw):
+class SegmentStatusResolver:
 
-    total_match = re.search(
-        r"TOTAL\s+(-?\d+)\s+(-?\d+)\s+\d+\s+(-?\d+)",
-        raw
+    @staticmethod
+    def resolve(status_code: str) -> SegmentStatus:
+
+        if status_code == "FLWN":
+            return SegmentStatus.FLOWN
+
+        if status_code.startswith("TK"):
+            return SegmentStatus.TICKETED
+
+        if status_code.startswith("DK"):
+            return SegmentStatus.HOLDING
+
+        if status_code.startswith("HK"):
+            return SegmentStatus.CONFIRMED
+
+        if status_code.startswith("HL"):
+            return SegmentStatus.WAITLIST
+
+        return SegmentStatus.UNKNOWN
+
+
+class SegmentParser:
+    PASSENGER_PATTERN = re.compile(
+        r"""
+        \b
+        (\d+)
+        \.
+        [A-Z]+
+        /
+        [A-Z\s\-]+
+        \s+
+        (MR|MS|MRS|MISS|MSTR|CHD|INF)
+        \(
+        (ADT|CNN|CHD|INF)
+        (?:/[0-9A-Z]+)?
+        \)
+        """,
+        re.VERBOSE
     )
+    PASSENGER_PATTERN_NAME = re.compile(
+        r"""
+        \b
+        (\d+)                                      # pax no
+        \.
+        
+        (
+            [A-Z]+
+            /
+            [A-Z\s\-]+?
+        )                                          # full name
+        
+        \s+
+        
+        (MR|MS|MRS|MISS|MSTR|CHD|INF)              # title
+        
+        \(
+        (ADT|CNN|CHD|INF)
+        (?:/[0-9A-Z]+)?
+        \)
 
-    if total_match:
-        penalty_total = int(total_match.group(1))
-        total = int(total_match.group(3))
-        grd_total = total -penalty_total
-        return {
-            "penalty_total": penalty_total,
-            "GRD_TOTAL": grd_total,
-            "total_new": penalty_total + grd_total
-        }
-
-    grd_match = re.search(
-        r"GRAND TOTAL\s+KRW\s+(-?\d+)",
-        raw
+        (                                          
+            \(
+            INF[^)]*
+            \)
+        )?                                         # optional infant block
+        """,
+        re.VERBOSE
     )
-
-    penalty_match = re.search(
-        r"PENALTY\s+KRW\s+(-?\d+)",
-        raw
+    SEGMENT_PATTERN = re.compile(
+        r"""
+        ^\s*
+        (\d+)                             # seg no
+        \s+
+        
+        ([A-Z0-9]{2})                    # carrier
+        \s*                              # optional space
+        
+        (\d{1,4})                        # flight number
+        
+        \s+
+        ([A-Z])                          # booking class
+        
+        \s+
+        (\d{2}[A-Z]{3})                  # departure day
+        
+        \s+
+        (\d)                             # dow
+        
+        (?:\*|\s)?                       # optional * or space
+        
+        ([A-Z]{6})                       # route
+        
+        \s+
+        
+        (FLWN|[A-Z]{2}\d+)               # status
+        
+        (?:\s+(\d{4}))?                  # dep time
+        (?:\s+(\d{4}))?                  # arr time
+        (?:\s+(\d{2}[A-Z]{3}))?          # arr day
+        
+        """,
+        re.VERBOSE
     )
+    @staticmethod
+    def get_person_name(raw_text: str) -> List[str]:
 
-    if grd_match and penalty_match:
-        total = int(grd_match.group(1))
-        penalty_total = int(penalty_match.group(1))
-        grd_total = total -penalty_total
-        return {
-            "penalty_total": penalty_total,
-            "GRD_TOTAL": grd_total,
-            "total_new": penalty_total + grd_total
-        }
+        result = []
 
-    return None
-def get_lowest_trip(
-    groups,
-    num,
-    class_lowest,
-    deptime,
-    deptimedone,
-    arrtime=None,
-    arrtimedone=None
-):
-    """
-    Return:
-    SS2T1*T11
+        matches = SegmentParser.PASSENGER_PATTERN_NAME.findall(
+            raw_text.upper()
+        )
 
-    Logic:
-    - group đầu: SS đầy đủ
-    - group sau: chỉ {class}{index}
-    - lấy hạng thấp nhất còn đủ ghế
-    - nhưng không thấp hơn class_lowest
+        for match in matches:
 
-    Chọn đúng segment theo:
-    - chiều đi:
-        departure_time == deptime
-        arrival_time   == deptimedone
+            full_name = match[1].strip()
+            type=match[3].strip()
+            infant_block = match[4]
 
-    - chiều về:
-        departure_time == arrtime
-        arrival_time   == arrtimedone
-    """
+            # normalize name
+            full_name = re.sub(r"\s+", " ", full_name) +f" {type} "
+            full_name = re.sub(r"\s*/\s*", "/", full_name)
 
-    # thứ tự hạng cố định
-    CLASS_ORDER = [
-        "F", "A", "J", "C", "D", "I",
-        "W", "S",
-        "Y", "B", "M", "H", "K",
-        "L", "Q", "N", "R", "T", "E"
-    ]
+            # có INF attach
+            if infant_block:
 
-    def normalize_time(t):
-        """
-        Convert về HHMM
-        Ví dụ:
-        8:30 -> 0830
-        0830 -> 0830
-        08:30:00 -> 0830
-        """
-        if not t:
-            return None
+                infant_text = infant_block.strip("()")
 
-        t = str(t).strip()
+                # normalize infant
+                infant_text = re.sub(r"\s+", " ", infant_text)
 
-        # bỏ :
-        t = t.replace(":", "")
+                full_name = f"{full_name} {type} ({infant_text})"
 
-        # nếu có giây HHMMSS -> lấy HHMM
-        if len(t) >= 6:
-            t = t[:4]
+            result.append(full_name)
 
-        # padding
-        t = t.zfill(4)
-
-        return t
-
-    # normalize time
-    deptime = normalize_time(deptime)
-    deptimedone = normalize_time(deptimedone)
-
-    arrtime = normalize_time(arrtime)
-    arrtimedone = normalize_time(arrtimedone)
-
-    ss_parts = []
-
-    for i, group in enumerate(groups):
-
-        if not group.flights:
-            continue
-
-        selected_flight = None
-
-        # tìm đúng segment
-        for flight in group.flights:
-
-            dep = normalize_time(
-                getattr(flight, "departure_time", None)
-            )
-
-            arr = normalize_time(
-                getattr(flight, "arrival_time", None)
-            )
-
-            # chiều đi
-            if dep == deptime and arr == deptimedone:
-                selected_flight = flight
-                break
-
-            # chiều về
-            if (
-                arrtime
-                and arrtimedone
-                and dep == arrtime
-                and arr == arrtimedone
-            ):
-                selected_flight = flight
-                break
-
-        if not selected_flight:
-            continue
-
-        booking_classes = selected_flight.booking_classes
-
-        valid_class = None
-
-        # index của class_lowest
-        try:
-            lowest_index = CLASS_ORDER.index(class_lowest[i])
-        except ValueError:
-            lowest_index = len(CLASS_ORDER) - 1
-
-        # duyệt từ thấp -> cao
-        for cls in reversed(CLASS_ORDER):
-
-            # class không tồn tại
-            if cls not in booking_classes:
-                continue
-
-            # bỏ qua hạng thấp hơn class_lowest
-            if CLASS_ORDER.index(cls) > lowest_index:
-                continue
-
-            seat = booking_classes[cls]
-
-            if not str(seat).isdigit():
-                continue
-
-            if int(seat) >= num:
-                valid_class = cls
-                break
-
-        if not valid_class:
-            continue
-
-        # group đầu
-        if i == 0:
-            ss_parts.append(
-                f"SS{num}{valid_class}{selected_flight.index}"
-            )
-
-        # group sau
-        else:
-            ss_parts.append(
-                f"{valid_class}{selected_flight.index}"
-            )
-
-    return "*".join(ss_parts)
-
-def get_newseg(segs, pax_total, doituong=""):
-
-    seg_numbers = []
-
-    for seg in segs:
-
-        if getattr(seg.status, "value", "") == "FLOWN":
-            continue
-
-        seg_numbers.append(str(seg.seg_no))
-
-    result = {
-        "cmd_adt": "",
-        "cmd_chd": "",
-        "cmd_inf": "",
-        "adt_quantity": 0,
-        "chd_quantity": 0,
-        "inf_quantity": 0,
-    }
-
-    if not seg_numbers:
         return result
+    @staticmethod
+    def get_person_type(raw_text: str) -> dict:
+        """
+        Map vị trí pax:
+        P1 -> ADT
+        P2 -> CHD
+        """
 
-    seg_part = ",".join(seg_numbers)
+        result = {}
 
-    # mapping suffix
-    pax_mapping = {
-        "ADT": "",
-        "CHD": "-CH",
-        "INF": "-INF"
-    }
-
-    # mapping field name
-    cmd_mapping = {
-        "ADT": "cmd_adt",
-        "CHD": "cmd_chd",
-        "INF": "cmd_inf"
-    }
-
-    qty_mapping = {
-        "ADT": "adt_quantity",
-        "CHD": "chd_quantity",
-        "INF": "inf_quantity"
-    }
-
-    for pax_type, ticket_numbers in pax_total.items():
-
-        if not ticket_numbers:
-            continue
-
-        ticket_part = ",".join(
-            str(x) for x in ticket_numbers
+        matches = SegmentParser.PASSENGER_PATTERN.findall(
+            raw_text.upper()
         )
 
-        suffix = pax_mapping.get(pax_type, "")
+        for idx, match in enumerate(matches, start=1):
 
-        command = (
-            f"FXQ/R{doituong}{suffix},"
-            f"U/S{seg_part}/"
-            f"T{ticket_part}"
-        )
+            pax_type = match[2]
 
-        result[
-            cmd_mapping[pax_type]
-        ] = command
+            if pax_type in ("CNN", "CHD"):
+                pax_type = "CHD"
 
-        result[
-            qty_mapping[pax_type]
-        ] = len(ticket_numbers)
+            else:
+                pax_type = "ADT"
 
-    return result
+            result[idx] = pax_type
 
+        return result
+    @staticmethod
+    def get_pax_FHE(raw_text: str) -> dict:
 
+        result = {
+            "ADT": set(),
+            "CHD": set(),
+            "INF": set()
+        }
 
+        lines = raw_text.splitlines()
 
-async def change_pnr(
-    pnr,
-    dep,
-    arr,
-    depdate,
-    deptime,
-    deptimedone,
-    seg_del=None,
-    arrdate=None,
-    arrtime=None,
-    arrtimedone=None
-):
-    """
-    Flow:
-    1. RT PNR
-    2. XE segment cũ
-    3. Search trip mới
-    4. SS lowest trip
-    5. Recheck segment mới
-    """
-    async with httpx.AsyncClient(http2=False, timeout=60) as client:
-        try:
-            infoPnr = await checkmatvechoVNA(pnr,"precheckchangeVNA")
-            doituong = (infoPnr or {}).get("doituong", "")
-            if doituong == "ADT":
-                doituong = ""
-            # load pnr
-            await send_command(client,"IG", "change_pnr")
-            print(doituong)
-            ssid, resRt = await send_command(client,"RT" + pnr, "change_pnr")
-            res_Rt =resRt.json()["model"]["output"]["crypticResponse"]["response"]
-            
-            print("res_Rt")
-            if "INVALID RECORD LOCATOR" in res_Rt.upper():
-                return {
-                    "status": "mã PNR ko tồn tại"
-                }
-            num_customer = SegmentParser.get_number_person(res_Rt)
-            name_list=SegmentParser.get_person_name(res_Rt)
-            print(num_customer)
-            # delete segment cũ
-            class_old = SegmentParser.get_class_seg(res_Rt,seg_del)
-            print(class_old)
-            ssid, res = await send_command(client,"XE" + str(seg_del), "change_pnr")
-            print("XE" + str(seg_del))
-            print(res)
-            # build search new trip
-            searnewtrip = build_search_new_trip(
-                dep,
-                arr,
-                depdate,
-                deptime,
-                arrdate,
-                arrtime
+        person_type_map = SegmentParser.get_person_type(raw_text)
+
+        # =========================================
+        # helper
+        # =========================================
+
+        def process_line(line: str):
+
+            line = line.strip().upper()
+
+            match = re.search(
+                r"""
+                ^
+                (\d+)                      # line no
+                \s+
+                (FHE|FA)
+                \s+
+                (PAX|CHD|INF)
+                \b
+                .*?
+                (?:/P(\d+))?               # optional /P1
+                \s*$
+                """,
+                line,
+                re.VERBOSE
             )
 
-            # search hành trình mới
-            ssid, searnewtrip_res = await send_command(client,searnewtrip, "change_pnr")
-            print(searnewtrip)
-            searnewtrip_parser=AvailabilityParser.parse(searnewtrip_res.json()["model"]["output"]["crypticResponse"]["response"])
-            # lấy trip rẻ nhất
-            print("searnewtrip_parser")
-            ssnewtrip = get_lowest_trip(searnewtrip_parser,num_customer,class_old,deptime,deptimedone,arrtime,arrtimedone)
+            if not match:
+                return
 
-            # sell segment mới
-            ssid, newRt = await send_command(client,ssnewtrip, "change_pnr")
-            print(ssnewtrip)
-            newRt_parser = newRt.json()["model"]["output"]["crypticResponse"]["response"]
-            newseg = SegmentParser.parse(newRt_parser)
-            # build recheck
+            line_no, _, raw_type, pax_no = match.groups()
 
-            print(newseg)
-            if ")>" in newRt_parser:
-                print("MD page 2")    
-                ssid, newRt_page2 = await send_command(
-                    client,
-                    "MD",
-                    "change_pnr"
-                )
+            line_no = int(line_no)
 
-                newRt_parser += (
-                    "\n" +
-                    newRt_page2.json()["model"]["output"]["crypticResponse"]["response"]
-                )
-            pax_total= SegmentParser.get_pax_FHE(newRt_parser)
-            print(pax_total)
-            recheck = get_newseg(newseg,pax_total,doituong)
-            total_price = {
-                "penalty_total": 0,
-                "GRD_TOTAL": 0,
-                "total_new": 0
-            }
+            # =====================================
+            # INF -> bắt trực tiếp
+            # =====================================
 
-            cmd_list = [
-                ("ADT", recheck.get("cmd_adt"),recheck.get("adt_quantity")),
-                ("CHD", recheck.get("cmd_chd"),recheck.get("chd_quantity")),
-                ("INF", recheck.get("cmd_inf"),recheck.get("inf_quantity")),
+            if raw_type == "INF":
+                result["INF"].add(line_no)
+                return
+
+            # =====================================
+            # ADT / CHD -> lookup theo pax position
+            # =====================================
+
+            pax_no = int(pax_no) if pax_no else 1
+
+            pax_type = person_type_map.get(pax_no, "ADT")
+
+            if pax_type == "CHD":
+                result["CHD"].add(line_no)
+            else:
+                result["ADT"].add(line_no)
+
+        # =========================================
+        # PASS 1: FHE
+        # =========================================
+
+        found_fhe = False
+
+        for line in lines:
+
+            if re.search(r"^\d+\s+FHE\b", line.strip().upper()):
+                found_fhe = True
+                process_line(line)
+
+        # =========================================
+        # PASS 2: fallback FA
+        # =========================================
+
+        if not found_fhe:
+
+            for line in lines:
+
+                if re.search(r"^\d+\s+FA\b", line.strip().upper()):
+                    process_line(line)
+
+        # =========================================
+        # RESULT
+        # =========================================
+
+        return {
+            "ADT": sorted(result["ADT"]),
+            "CHD": sorted(result["CHD"]),
+            "INF": sorted(result["INF"])
+        }
+    @staticmethod
+    def get_number_person(raw_text: str) -> int:
+
+        matches = SegmentParser.PASSENGER_PATTERN.findall(
+            raw_text.upper()
+        )
+
+        return len(matches)
+    @staticmethod
+    def get_class_seg(raw_text: str, seg_del) -> List[str]:
+
+        segments = SegmentParser.parse(raw_text)
+
+        # convert seg_del thành list int
+        if isinstance(seg_del, str):
+            seg_numbers = [
+                int(x.strip())
+                for x in seg_del.split(",")
+                if x.strip().isdigit()
             ]
+        else:
+            seg_numbers = [int(seg_del)]
 
-            for pax_type, cmd,soluong in cmd_list:
+        # lấy booking_class theo seg_no
+        result = [
+            seg.booking_class
+            for seg in segments
+            if seg.seg_no in seg_numbers
+        ]
 
-                if not cmd:
-                    continue
+        # luôn trả về 2 phần tử
+        if not result:
+            result = [None, None]
 
-                print(f"RECHECK {pax_type}: {cmd}")
+        elif len(result) == 1:
+            result = [result[0], result[0]]
 
-                ssid, price_res = await send_command(
-                    client,
-                    cmd,
-                    "change_pnr"
-                )
+        else:
+            result = [result[0], result[-1]]
 
-                price_raw = (
-                    price_res.json()["model"]["output"]
-                    ["crypticResponse"]["response"]
-                )
-                if soluong == 1 :
-                    ssid, price_res_2 = await send_command(
-                        client,
-                        "MD",
-                        "change_pnr"
-                    )
+        return result
+    @classmethod
+    def parse(cls, raw_text: str) -> List[Segment]:
 
-                    price_raw = (
-                        price_res_2.json()["model"]["output"]
-                        ["crypticResponse"]["response"]
-                    )
-                    
-                print(price_raw)
+        segments = []
 
-                new_price = get_price_new(price_raw)
+        lines = raw_text.splitlines()
 
-                # cộng dồn
-                total_price["penalty_total"] += (
-                    new_price.get("penalty_total", 0)
-                )
+        for line in lines:
 
-                total_price["GRD_TOTAL"] += (
-                    new_price.get("GRD_TOTAL", 0)
-                )
+            line = line.rstrip()
 
-                total_price["total_new"] += (
-                    new_price.get("total_new", 0)
-                )
+            match = cls.SEGMENT_PATTERN.search(line)
 
-            print("TOTAL:", total_price)
-            ssid, res = await send_command(client,"IG", "change_pnr")
-            print("IG")
-            return {
-                "status": "success",
-                "search_command": searnewtrip,
-                "seg_new": newseg,
-                "new_price": total_price,
-                "namelist" :name_list
-            }
-        except Exception  as e:
-            try:
+            if not match:
+                continue
 
-                ssid, res = await send_command(client,"IG", "change_pnr")
-            except:
-                pass
-            return {
-                "status": "error",
-                "search_command": "error",
-                "seg_new": "error",
-                "new_price": "error",
-                "error":e
-            }
+            (
+                seg_no,
+                carrier,
+                flight_number,
+                booking_class,
+                day,
+                dow,
+                trip,
+                status_code,
+                departure_time,
+                arrival_time,
+                arrival_day
+            ) = match.groups()
 
+            from_airport = trip[:3]
+            to_airport = trip[3:]
 
-async def pre_change_pnr(
-    pnr
-):
-    """
-    Flow:
-    1. RT PNR
-    2. IG
-    """
-    try:
-        async with httpx.AsyncClient(http2=False, timeout=60) as client:
-            # load pnr
-            ssid, res = await send_command(client,"IG", "change_pnr")
-            print(res)
-            ssid, resRt = await send_command(client,"RT" + pnr, "change_pnr")
-            res_Rt =resRt.json()["model"]["output"]["crypticResponse"]["response"]
-            if "INVALID RECORD LOCATOR" in res_Rt.upper():
-                ssid, res = await send_command(client,"IG", "change_pnr")
-                return {
-                    "status": "mã PNR ko tồn tại"
-                }
-            seg=SegmentParser.parse(res_Rt)
-            ssid, res = await send_command(client,"IG", "change_pnr")
-            return {
-                    "seg": seg
-                }
-    except Exception as e:
-            print(e)
-            return {
-                    e
-                }
+            status = SegmentStatusResolver.resolve(status_code)
 
-# import asyncio
+            segment = Segment(
+                seg_no=int(seg_no),
+                carrier=carrier,
+                flight_number=flight_number,
+                booking_class=booking_class,
+                day=day,
+                dow=dow,
+                trip=trip,
+                from_airport=from_airport,
+                to_airport=to_airport,
+                status_code=status_code,
+                status=status,
+                departure_time=departure_time,
+                arrival_time=arrival_time,
+                arrival_day=arrival_day,
+                ticketed=status == SegmentStatus.TICKETED,
+                flown=status == SegmentStatus.FLOWN,
+                holding=status == SegmentStatus.HOLDING
+            )
+
+            segments.append(segment)
+
+        return segments
 
 
-# async def main():
-#     result = await change_pnr(
-#         pnr="ETZAHK",
-#         dep="PUS",
-#         arr="HAN",
-#         depdate="2026-07-16",
-#         deptime="1100",
-#         deptimedone="1315",
-#         # arrdate="2026-07-20",
-#         # arrtime="1635",
-#         # arrtimedone="1635",
-#         seg_del="3"
-#     )
-# #     # result = await pre_change_pnr(
-# #     #     pnr="E4BSEW"
-# #     # )
-#     print(result)
+# =========================
+# TEST
+# =========================
 
+# raw = "--- TST RLR RLP DCS ---\nRP/SELVN28AA/SELVN28AA            GH/SU  16MAY26/0838Z   D6OJ5O\n  1.LE/TUAN VIET MR(ADT)\n  2  VN 415 T 16MAY 6 ICNHAN         FLWN\n  3  VN 416 T 22MAY 5 HANICN TK1  2335 0550  23MAY  E  VN/D6OJ5O\n  4 AP HCMC 01035463396\n  5 APE HANVIETAIR.SERVICE@GMAIL.COM\n  6 APE HANVIETAIR.SERVICE@GMAIL.COM\n  7 APE HANVIETAIR247@GMAIL.COM\n  8 APM +82 1035463396\n  9 APM +82 1035463396\n 10 APM +82 1021511790\n 11 APN E+HANVIETAIR.SERVICE@GMAIL.COM/VI\n 12 TK OK28DEC/SELVN28AA//ETVN\n 13 SSR RQST VN KK1 ICNHAN/17CN,P1/FLWN/S2   SEE RTSTR\n 14 *SSR FQTV VN HK/ VN9005270707 ELITE\n 15 SSR DOCS VN HK1 P/VNM/E02924250/VNM/14JUL88/M/24JAN35/LE/TUA\n       N VIET\n 16 SSR DOCS VN HK1 P/VNM/E02924250/VNM/14JUL88/M/24JAN35/LE/TUA\n       N VIET/S2\n 17 FA PAX 738-2317402467/ETVN/28DEC25/SELVN28AA/17915015/S2-3\n 18 FB PAX 0000000000 TTP/T1/T-VN/ITR-EMLA/LA-VI OK ETICKET/S2-3\n 19 FE PAX NON-END.RESTRICT MAY APPLYCONTACT B4 DEPT FOR CHANGE\n)>"
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
+#raw = "--- TST RLR MSC ---\nRP/SELVN28AA/SELVN28AA            WS/SU  21MAY26/1351Z   E8J6L3\n  1.LUONG/THI THU PHUONG(ADT)   2.MOON/GOEUN(CHD/03MAY19)\n  3  VN 417 R 23JUL 4*ICNHAN HK2  1005 1235  23JUL  E  VN/E8J6L3\n  4  VN1717 R 23JUL 4*HANVII HK2  1720 1815  23JUL  E  VN/E8J6L3\n  5  VN1718 R 15AUG 6*VIIHAN HK2  1850 1945  15AUG  E  VN/E8J6L3\n  6  VN 416 R 15AUG 6*HANICN HK2  2335 0550  16AUG  E  VN/E8J6L3\n  7 APE LETHIPHUONGTHUY2212@GMAIL.COM\n  8 APE LETHIPHUONGTHUY2212@GMAIL.COM/P1\n  9 APM +84 914360360\n 10 APM +84 914360360/P1\n 11 APN M+84914360360/VI/P1\n 12 APN E+LETHIPHUONGTHUY2212@GMAIL.COM/VI/P1\n 13 TK PAX OK21MAY/SELVN28AA//ETVN/S3-6/P1-2\n 14 SSR CHLD VN HK1 03MAY19/P2\n 15 FA PAX 738-2321092706/ETVN/21MAY26/SELVN28AA/17915015\n       /S3-6/P1\n 16 FA PAX 738-2321092707/ETVN/21MAY26/SELVN28AA/17915015\n       /S3-6/P2\n 17 FB PAX 0000000000 TTP/T1-2/T-VN/ITR-EMLA/LA-VI OK ETICKET\n       /S3-6/P1\n 18 FB PAX 0000000001 TTP/T1-2/T-VN/ITR-EMLA/LA-VI OK ETICKET\n       /S3-6/P2\n)>"
+#raw ="TICKET REVALIDATION/REISSUE IS RECOMMENDED\n--- TST RLR ---\nRP/SELVN28AA/SELVN28AA            WS/SU   5MAY26/0419Z   ETZAHK\n  1.DO/HUU LAM MR(ADT)   2.NGUYEN/THI KIEU PHUONG MS(ADT)\n  3 AP HCMC 01035463396\n  4 APE HANVIETAIR.SERVICE@GMAIL.COM\n  5 APE HANVIETAIR.SERVICE@GMAIL.COM/P1\n  6 APE HANVIETAIR247@GMAIL.COM/P1\n  7 APM +82 1035463396\n  8 APM +82 1035463396/P1\n  9 APM +82 1021511790/P1\n 10 APN E+HANVIETAIR.SERVICE@GMAIL.COM/VI/P1\n 11 FHE PAX 738-2320659730/P2\n 12 FHE PAX 738-2320659731/P1\n>"
+# raw = "--- TST AXR RLR DCS ---\nRP/SELVN28AA/SELVN28AA            WS/SU  23MAY26/0250Z   EXAQFB\n  1.DO/JIHO MSTR(CHD/18NOV21)\n  2  VN 423 N 16MAY 6 PUSSGN         FLWN\n  3  VN 422 N 03JUN 3 SGNPUS HK1  0110 0750  03JUN  E  VN/EXAQFB\n  4 AP HCMC 01035463396\n  5 APE HANVIETAIR.SERVICE@GMAIL.COM\n  6 APM +82 1035463396\n  7 TK OK23MAY/SELVN28AA\n  8 TK PAX OK23MAY/SELVN28AA//ETVN/S3\n  9 SSR RQST VN KK1 PUSSGN/29BN,P1/FLWN/S2   SEE RTSTR\n 10 SSR CHLD VN HK1 18NOV21\n 11 SSR DOCS VN HK1 P/KOR/M395H3239/KOR/18NOV21/M/22JUL27/DO/JIH\n       O\n 12 SSR DOCS VN HK1 P/KOR/M395H3239/KOR/18NOV21/M/22JUL27/DO/JIH\n       O/S2\n 13 FA PAX 738-2320866781/ETVN/15MAY26/SELVN28AA/17915015/S2\n 14 FA PAX 738-2321092730/ETVN/23MAY26/SELVN28AA/17915015/S3\n 15 FHE PAX 738-2320866732\n 16 FB PAX 0000000001 TTP/T5-6/T-VN/ITR-EMLA/LA-VI OK ETICKET/S2\n 17 FB PAX 0000000000 TTP/T2/T-VN/ITR-EMLA OK ETICKET/S3\n 18 FE PAX KRW60000 NONREF - NON-END.RESTRICT MAY APPLYCONTACT\n       B4 DEPT FOR CHANGE/S3\n)>"
+
+# # segments = SegmentParser.parse(raw)
+# # segments = SegmentParser.get_class_seg(raw,"3")
+# # #segments = SegmentParser.get_pax_FHE(raw)
+# # print(segments)
+# # segments = SegmentParser.get_number_person(raw)
+# #segments = SegmentParser.get_pax_FHE(raw)
+# segments = SegmentParser.get_person_name(raw)
+# print(segments)
+# # # # for seg in segments:
+    
+# # #     print(seg.to_dict())
