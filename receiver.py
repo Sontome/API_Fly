@@ -276,34 +276,80 @@ try:
 
     subject = decode_mime_header(raw_subject)
     body = ""
-
+    
+    html_body = ""
+    
     if msg.is_multipart():
     
         for part in msg.walk():
     
             content_type = part.get_content_type()
-            disposition = str(part.get("Content-Disposition"))
     
-            if content_type == "text/plain" and "attachment" not in disposition:
+            disposition = str(
+                part.get("Content-Disposition", "")
+            )
     
-                charset = part.get_content_charset() or "utf-8"
+            # skip attachment
+            if "attachment" in disposition.lower():
+                continue
     
-                try:
-                    body = part.get_payload(decode=True).decode(charset, errors="ignore")
-                except:
-                    pass
+            charset = (
+                part.get_content_charset()
+                or "utf-8"
+            )
+    
+            try:
+    
+                payload = (
+                    part.get_payload(decode=True)
+                    .decode(charset, errors="ignore")
+                )
+    
+            except:
+    
+                continue
+    
+            # ưu tiên plain text
+            if content_type == "text/plain":
+    
+                body = payload
     
                 break
+    
+            # fallback html
+            elif content_type == "text/html":
+    
+                html_body = payload
     
     else:
     
         charset = msg.get_content_charset() or "utf-8"
     
         try:
-            body = msg.get_payload(decode=True).decode(charset, errors="ignore")
+    
+            body = (
+                msg.get_payload(decode=True)
+                .decode(charset, errors="ignore")
+            )
+    
         except:
+    
             pass
-            
+    
+    # fallback html -> text
+    if not body and html_body:
+    
+        body = re.sub(
+            r"<[^>]+>",
+            " ",
+            html_body
+        )
+    
+        body = re.sub(
+            r"\s+",
+            " ",
+            body
+        ).strip()
     write_log(DEBUG_LOG, f"SENDER RAW = {sender}")
     write_log(DEBUG_LOG, f"SUBJECT = {subject}")
     write_log(DEBUG_LOG, f"BODY = {body}")
