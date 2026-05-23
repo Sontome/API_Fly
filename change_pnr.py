@@ -259,7 +259,7 @@ def get_newseg(segs, pax_total, doituong=""):
     # mapping suffix
     pax_mapping = {
         "ADT": "",
-        "CHD": "-CH",
+        "CHD": "-CHD",
         "INF": "-INF"
     }
 
@@ -344,6 +344,7 @@ async def change_pnr(
                     "status": "mã PNR ko tồn tại"
                 }
             num_customer = SegmentParser.get_number_person(res_Rt)
+            name_list=SegmentParser.get_person_name(res_Rt)
             print(num_customer)
             # delete segment cũ
             class_old = SegmentParser.get_class_seg(res_Rt,seg_del)
@@ -457,7 +458,8 @@ async def change_pnr(
                 "status": "success",
                 "search_command": searnewtrip,
                 "seg_new": newseg,
-                "new_price": total_price
+                "new_price": total_price,
+                "namelist" :name_list
             }
         except Exception  as e:
             try:
@@ -504,8 +506,6 @@ async def pre_change_pnr(
             return {
                     e
                 }
-
-
 
 # import asyncio
 
