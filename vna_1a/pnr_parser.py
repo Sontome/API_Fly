@@ -121,16 +121,9 @@ class SegmentParser:
     @staticmethod
     def get_person_type(raw_text: str) -> dict:
         """
-        Xác định loại khách theo position:
-        P1 = ADT
-        P2 = CHD
-        ...
-
-        Return:
-        {
-            1: "ADT",
-            2: "CHD"
-        }
+        Map vị trí pax:
+        P1 -> ADT
+        P2 -> CHD
         """
 
         result = {}
@@ -138,17 +131,13 @@ class SegmentParser:
         matches = SegmentParser.PASSENGER_PATTERN.findall(
             raw_text.upper()
         )
-        print(matches)
+
         for idx, match in enumerate(matches, start=1):
 
             pax_type = match[2]
 
-            # normalize
             if pax_type in ("CNN", "CHD"):
                 pax_type = "CHD"
-
-            elif pax_type == "INF":
-                pax_type = "INF"
 
             else:
                 pax_type = "ADT"
@@ -170,7 +159,7 @@ class SegmentParser:
         person_type_map = SegmentParser.get_person_type(raw_text)
 
         # =========================================
-        # helper parse line
+        # helper
         # =========================================
 
         def process_line(line: str):
@@ -180,14 +169,14 @@ class SegmentParser:
             match = re.search(
                 r"""
                 ^
-                (\d+)                  # line no
+                (\d+)                      # line no
                 \s+
                 (FHE|FA)
                 \s+
                 (PAX|CHD|INF)
                 \b
                 .*?
-                (?:/P(\d+))?           # optional /P1 /P2
+                (?:/P(\d+))?               # optional /P1
                 \s*$
                 """,
                 line,
@@ -197,17 +186,30 @@ class SegmentParser:
             if not match:
                 return
 
-            line_no, _, _, pax_no = match.groups()
+            line_no, _, raw_type, pax_no = match.groups()
 
             line_no = int(line_no)
 
-            # default P1 nếu không có /P?
+            # =====================================
+            # INF -> bắt trực tiếp
+            # =====================================
+
+            if raw_type == "INF":
+                result["INF"].add(line_no)
+                return
+
+            # =====================================
+            # ADT / CHD -> lookup theo pax position
+            # =====================================
+
             pax_no = int(pax_no) if pax_no else 1
 
-            # lookup pax type thực tế
             pax_type = person_type_map.get(pax_no, "ADT")
 
-            result[pax_type].add(line_no)
+            if pax_type == "CHD":
+                result["CHD"].add(line_no)
+            else:
+                result["ADT"].add(line_no)
 
         # =========================================
         # PASS 1: FHE
