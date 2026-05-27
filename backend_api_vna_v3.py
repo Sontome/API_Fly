@@ -330,7 +330,8 @@ class PowerCallClient:
             "TOTALPAGE": data.get("TOTALPAGE"),
             "TOTALFARES": data.get("TOTALFARES"),
             "FARES": data.get("FARES", []),
-            "SessionKey": data.get("SessionKey")
+            "SessionKey": data.get("SessionKey"),
+            "payload_detail":form_data
         }
 def prase_flights(data,trip):
     result = []
