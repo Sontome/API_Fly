@@ -1694,9 +1694,10 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
         if result:
             # lưu payload theo session_key
             session_key = result.get("session_key")
-
+            
             if session_key:
                 session_payload_cache[session_key] = result.get("payload")
+                print("lưu " +  result.get("session_key") + " vào cache")
             return result
         else:
             return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
