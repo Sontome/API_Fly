@@ -61,6 +61,12 @@ import uuid
 from sync_missing_pnrs import process_missing_pnrs
 from services_mail.scheduler import MailScheduler
 from change_pnr import pre_change_pnr,change_pnr
+from cachetools import TTLCache
+
+# lưu tối đa 1000 session
+# ttl = 1800 giây = 15 phút
+session_payload_cache = TTLCache(maxsize=1000, ttl=900)
+
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
 request_limit_cache = {}
@@ -1681,6 +1687,11 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
         
 
         if result:
+            # lưu payload theo session_key
+            session_key = result.get("session_key")
+
+            if session_key:
+                session_payload_cache[session_key] = result.get("payload")
             return result
         else:
             return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
