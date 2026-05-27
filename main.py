@@ -374,7 +374,26 @@ class VnadetailRequest(BaseModel):
     miniFares: str =""
     session_key: str = ""
     hành_lý_vna: str = ""
-
+class VnadetailRequest_V3(BaseModel):
+    dep0: str ="ICN"
+    arr0: str ="HAN"
+    depdate0: str = tomorrow
+    depdate1: Optional[str] = day_after
+    activedVia: str = "0,1,2"
+    activedIDT: str = "ADT,VFR"
+    adt: str = "1"
+    chd: str = "0"
+    inf: str = "0"
+    page: str = "1"
+    sochieu: str = "RT"
+    filterTimeSlideMin0: str = "5"
+    filterTimeSlideMax0: str = "2355"
+    filterTimeSlideMin1: str = "5"
+    filterTimeSlideMax1: str = "2355"
+    miniFares: str =""
+    idx: str =""
+    session_key: str = ""
+    hành_lý_vna: str = ""
 async def safe_send_vj(result):
     try:
         await send_vj(result)
@@ -720,6 +739,88 @@ async def vna_detail_v2(request_detail: VnadetailRequest):
         
     except Exception as e:
         return {"status_code": 401, "body": "session hết hạn,index vé đã thay đổi"}
+@app.post("/vna/detail-v3")
+async def vna_detail_v3(request_detail: VnadetailRequest_V3):
+    try:
+        depdate0_dt = datetime.strptime(request_detail.depdate0, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ngày đi sai định dạng yyyy-mm-dd")
+
+    if request_detail.sochieu.upper() == "RT":
+        if not request_detail.depdate1:
+            raise HTTPException(status_code=400, detail="Vui lòng điền ngày về")
+        try:
+            depdate1_dt = datetime.strptime(request_detail.depdate1, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Ngày về sai định dạng yyyy-mm-dd")
+
+        if depdate1_dt < depdate0_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày về phải sau hoặc bằng ngày đi "
+            )
+    if request_detail.session_key == "":
+            raise HTTPException(
+                status_code=400,
+                detail="Thiếu tham số session_key"
+            )
+    if request_detail.miniFares == "":
+            raise HTTPException(
+                status_code=400,
+                detail="Thiếu số thứ tự chuyến bay cần lấy thông tin"
+            )
+    print(f"02{request_detail.miniFares},02{(request_detail.idx)}")
+    
+    mnfare = f"02{request_detail.miniFares},02{int(request_detail.idx)}"
+    
+    try:
+        if request_detail.sochieu.upper() != "RT":
+            result = await api_vna_detail_v2(
+                dep0=request_detail.dep0,
+                arr0=request_detail.arr0,
+                depdate0=request_detail.depdate0,
+                activedVia=request_detail.activedVia,
+                activedIDT=request_detail.activedIDT,
+                filterTimeSlideMin0=request_detail.filterTimeSlideMin0,
+                filterTimeSlideMax0=request_detail.filterTimeSlideMax0,
+                filterTimeSlideMin1=request_detail.filterTimeSlideMin1,
+                filterTimeSlideMax1=request_detail.filterTimeSlideMax1,
+                page=request_detail.page,
+                adt=request_detail.adt,
+                chd=request_detail.chd,
+                inf=request_detail.inf,
+                sochieu=request_detail.sochieu,
+                miniFares=mnfare,
+                session_key=request_detail.session_key
+            )
+        else:
+            result = await api_vna_detail_rt_v2(
+                dep0=request_detail.dep0,
+                arr0=request_detail.arr0,
+                depdate0=request_detail.depdate0,
+                depdate1=request_detail.depdate1,
+                activedVia=request_detail.activedVia,
+                activedIDT=request_detail.activedIDT,
+                filterTimeSlideMin0=request_detail.filterTimeSlideMin0,
+                filterTimeSlideMax0=request_detail.filterTimeSlideMax0,
+                filterTimeSlideMin1=request_detail.filterTimeSlideMin1,
+                filterTimeSlideMax1=request_detail.filterTimeSlideMax1,
+                page=request_detail.page,
+                adt=request_detail.adt,
+                chd=request_detail.chd,
+                inf=request_detail.inf,
+                sochieu=request_detail.sochieu,
+                miniFares=mnfare,
+                session_key=request_detail.session_key
+            )
+        
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+        
+    except Exception as e:
+        return {"status_code": 401, "body": "session hết hạn,index vé đã thay đổi"}        
 @app.post("/vj/check-ve-v2")
 async def VJ_V2(request: VjRequest):
     try:
