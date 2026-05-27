@@ -63,9 +63,7 @@ from services_mail.scheduler import MailScheduler
 from change_pnr import pre_change_pnr,change_pnr
 from cachetools import TTLCache
 
-# lưu tối đa 1000 session
-# ttl = 1800 giây = 15 phút
-session_payload_cache = TTLCache(maxsize=1000, ttl=900)
+
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -412,6 +410,9 @@ async def safe_send_vna(result):
     except Exception as e:
         print(f"❌ Lỗi khi gửi Telegram VNA: {e}")
 app = FastAPI()
+# lưu tối đa 1000 session
+# ttl = 1800 giây = 15 phút
+session_payload_cache = TTLCache(maxsize=1000, ttl=900)
 @app.middleware("http")
 async def rate_limit_thuhongtour(request: Request, call_next):
 
