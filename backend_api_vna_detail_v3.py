@@ -413,7 +413,7 @@ async def api_vna_detail_rt_v3(payload):
         
         if chiều_về["số_điểm_dừng"] == "1": 
             số_hiệu_máy_bay_1_về = extract_flight_code(item["SK"][1]["SG"][1]["RC"])
-            số_hiệu_máy_bay_2_về = extract_flight_code(item["SK"][1]["SG"][2]["RC"])
+            
             giờ_bay_chặng_1 = item["SKD"][1]["SEG"][0].get("TT","")
             thời_gian_bay = convert_hhmm_to_minutes(giờ_bay_chặng_1)
             #print(thời_gian_bay)
@@ -424,6 +424,8 @@ async def api_vna_detail_rt_v3(payload):
             giờ_cất_cánh_1_về = calculate_landing_time(giờ_hạ_cánh_1_về,convert_hhmm_to_minutes(chiều_về["thời_gian_chờ"]),chiều_về["điểm_dừng_1"],chiều_về["điểm_dừng_1"])
             print(giờ_hạ_cánh_1_về,convert_hhmm_to_minutes(chiều_về["thời_gian_chờ"]),chiều_về["điểm_dừng_1"],chiều_về["điểm_dừng_1"])
         if chiều_về["số_điểm_dừng"] == "2": 
+            số_hiệu_máy_bay_1_về = extract_flight_code(item["SK"][1]["SG"][1]["RC"])
+            số_hiệu_máy_bay_2_về = extract_flight_code(item["SK"][1]["SG"][2]["RC"])
             giờ_bay_chặng_1 = item["SKD"][1]["SEG"][0].get("TT","")
             thời_gian_bay = convert_hhmm_to_minutes(giờ_bay_chặng_1)
             #print(thời_gian_bay)
