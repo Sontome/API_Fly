@@ -147,7 +147,7 @@ async def doc_va_loc_ve_re_nhat(data):
     }
 
 
-async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,miniFares,depdate1=""):
+async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,miniFares,payload,depdate1=""):
         
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
         raw_cookies = json.load(f)["cookies"]
@@ -161,60 +161,9 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
         "x-requested-with": "XMLHttpRequest",
         "Referer": "https://wholesale.powercallair.com/booking/findSkdFareGroup.lts?mode=v3"
     }
-
-    form_data = {
-        'mode': 'v3',
-        'activedCar': 'VN',
-        'activedCLSS1': 'M,E,S,H,R,L,U,I,Z,W,J,K,T,B,A,N,Q,Y,V',
-        'activedCLSS2': '',
-        'activedAirport': f"{dep0}-{arr0}",
-        
-        'activedVia': activedVia,
-        'activedStatus': 'OK,HL',
-        'activedIDT': activedIDT,
-        'minAirFareView': '1',
-        'maxAirFareView': '2000000',
-        'page': page,
-        
-        'sort': 'priceAsc',
-        'interval01Val': '1000',
-        'interval02Val': '',
-        'filterTimeSlideMin0': filterTimeSlideMin0,
-        'filterTimeSlideMax0': filterTimeSlideMax0,
-        'filterTimeSlideMin1': filterTimeSlideMin1,
-        'filterTimeSlideMax1': filterTimeSlideMax1,
-        'trip':sochieu,
-        'dayInd': 'N',
-        'strDateSearch': depdate0[:6],
-        'daySeq': '0',
-        'dep0': dep0,
-        'dep1': "",
-        'arr0': arr0,
-        'arr1': "",
-        'depdate0': depdate0,
-        'depdate1': depdate1,
-        'retdate': depdate1,
-        'comp': 'Y',
-        'adt': adt,
-        'chd': chd,
-        'inf': inf,
-        'car': 'YY',
-        'idt': 'ALL',
-        'isBfm': 'Y',
-        'CBFare': 'YY',
-        'miniFares': miniFares,
-        'sessionKey': session_key
-    }
-    if sochieu=="RT":
-        form_data.update({
-            "activedAirport": f"{dep0}-{arr0}-{arr0}-{dep0}",
-            'activedCLSS2': 'M,E,S,H,R,L,U,I,Z,W,J,K,T,B,A,N,Q,Y,V',
-            "dep1": arr0,
-            "depdate1": depdate1,
-            "interval02Val": "1000",
-            "retdate": depdate1
-           
-        })
+    payload["miniFares"] = miniFares
+    form_data = payload
+    
     
 
     connector = aiohttp.TCPConnector(ssl=False)
@@ -270,7 +219,7 @@ async def get_vna_flight_options( session_key,dep0, arr0, depdate0,activedVia,ac
 
 # ====== 🧪 HÀM API CHÍNH ====== #
 
-async def api_vna_detail_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,miniFares,session_key):
+async def api_vna_detail_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,miniFares,session_key,payload):
     
     if session_key==None:
         session_key = create_session_powercall()
@@ -292,7 +241,8 @@ async def api_vna_detail_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTim
         chd=chd,
         inf=inf,
         miniFares=miniFares,
-        sochieu=sochieu
+        sochieu=sochieu,
+        payload=payload                                
     )
     if data["body"]=="null":
         return data
@@ -417,7 +367,7 @@ async def api_vna_detail_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTim
     
     
     return data
-async def api_vna_detail_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,miniFares,depdate1,session_key):
+async def api_vna_detail_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filterTimeSlideMin0,filterTimeSlideMax0,filterTimeSlideMin1,filterTimeSlideMax1,page,adt,chd,inf,sochieu,miniFares,depdate1,session_key,payload):
     
     if session_key==None:
         session_key = create_session_powercall()
@@ -440,7 +390,8 @@ async def api_vna_detail_rt_v2(dep0, arr0, depdate0,activedVia,activedIDT,filter
         chd=chd,
         inf=inf,
         miniFares=miniFares,
-        sochieu=sochieu
+        sochieu=sochieu,
+        payload=payload 
     )
 
     result = []
