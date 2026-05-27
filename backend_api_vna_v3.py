@@ -592,7 +592,8 @@ async def api_checkve_vna_v3(trip:str="RT",
             "tổng_trang": "1",
             "session_key" : sskey,
             "activedVia" : "0,1",
-            "body" : data_sorted
+            "body" : data_sorted,
+            "payload":flightsVNA_baythang["payload_detail"]
             }
         return {
             "status_code": 200,
