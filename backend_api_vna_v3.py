@@ -384,7 +384,7 @@ def prase_flights(data,trip):
                     **parse_gia_ve(str(item["FA"][0]["FD"])),
                     "số_ghế_còn":  str(item["FA"][0]["AV"]),
                     "hành_lý_vna": item["IT"],
-                    "id":  item["I"],
+                    "miniFares":  item["I"],
                     "idx":  str(item["FA"][0]["SQ"])
 
 
@@ -444,7 +444,7 @@ def prase_flights(data,trip):
                     **parse_gia_ve(str(item["FA"][0]["FD"])),
                     "số_ghế_còn":  str(item["FA"][0]["AV"]),
                     "hành_lý_vna": item["IT"],
-                    "id":  item["I"],
+                    "miniFares":  item["I"],
                     "idx":  str(item["FA"][0]["SQ"])
 
                 }
@@ -610,8 +610,8 @@ async def api_checkve_vna_v3(trip:str="RT",
             "tổng_trang": "1",
             "session_key" : sskey,
             "activedVia" : "0,1",
-            "body" : data_sorted,
-            "payload":flightsVNA_baythang["payload_detail"]
+            "body" : data_sorted
+            #"payload":flightsVNA_baythang["payload_detail"]
             }
         return {
             "status_code": 200,
