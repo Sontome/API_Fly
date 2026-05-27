@@ -778,7 +778,9 @@ async def vna_detail_v3(request_detail: VnadetailRequest_V3):
     print(f"02{request_detail.miniFares},02{(request_detail.idx)}")
     
     mnfare = f"02{request_detail.miniFares},02{int(request_detail.idx)}"
-    
+    payload = session_payload_cache.get(request_detail.session_key)
+    if not payload:
+        return {"status_code": 401, "body": "session hết hạn,index vé đã thay đổi"}  
     try:
         if request_detail.sochieu.upper() != "RT":
             result = await api_vna_detail_v2(
@@ -797,7 +799,8 @@ async def vna_detail_v3(request_detail: VnadetailRequest_V3):
                 inf=request_detail.inf,
                 sochieu=request_detail.sochieu,
                 miniFares=mnfare,
-                session_key=request_detail.session_key
+                session_key=request_detail.session_key,
+                payload=payload
             )
         else:
             result = await api_vna_detail_rt_v2(
@@ -817,7 +820,8 @@ async def vna_detail_v3(request_detail: VnadetailRequest_V3):
                 inf=request_detail.inf,
                 sochieu=request_detail.sochieu,
                 miniFares=mnfare,
-                session_key=request_detail.session_key
+                session_key=request_detail.session_key,
+                payload=payload
             )
         
         if result:
