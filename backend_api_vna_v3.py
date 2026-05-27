@@ -364,7 +364,9 @@ def prase_flights(data,trip):
                 "thông_tin_chung":{
                     **parse_gia_ve(str(item["FA"][0]["FD"])),
                     "số_ghế_còn":  str(item["FA"][0]["AV"]),
-                    "hành_lý_vna": item["IT"]
+                    "hành_lý_vna": item["IT"],
+                    "id":  item["I"],
+                    "idx":  str(item["FA"][0]["SQ"])
 
 
                 }
@@ -422,7 +424,9 @@ def prase_flights(data,trip):
                 "thông_tin_chung":{
                     **parse_gia_ve(str(item["FA"][0]["FD"])),
                     "số_ghế_còn":  str(item["FA"][0]["AV"]),
-                    "hành_lý_vna": item["IT"]
+                    "hành_lý_vna": item["IT"],
+                    "id":  item["I"],
+                    "idx":  str(item["FA"][0]["SQ"])
 
                 }
                 
