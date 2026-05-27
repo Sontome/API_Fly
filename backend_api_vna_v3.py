@@ -333,6 +333,24 @@ class PowerCallClient:
             "SessionKey": data.get("SessionKey"),
             "payload_detail":form_data
         }
+    async def getdetail(
+        self,
+        payload: dict,
+        
+    ):
+        
+
+        form_data = payload
+        
+
+        async with self.session.post(self.url, data=form_data) as resp:
+            text = await resp.text()
+            status, data = self._parse_response(text)
+
+            if status not in ("JSON", "JS_OBJECT"):
+                return text
+
+        return json.loads(text)
 def prase_flights(data,trip):
     result = []
     #print(data)
