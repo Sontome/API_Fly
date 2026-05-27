@@ -166,9 +166,9 @@ async def get_vna_flight_options( payload):
 
         
         
-        print(result)
+        #print(result)
         kq= await doc_va_loc_ve_re_nhat(result)
-        
+        print(kq)
         return kq
 
 # ====== 🧪 HÀM API CHÍNH ====== #
@@ -183,7 +183,7 @@ async def api_vna_detail_v3(payload):
     if data["body"]=="null":
         return data
     result = []
-    #print(data)
+    print(data)
     for item in data["body"]:
         detail = parse_gia_ve_tre_em(item["FARE"])
         chiều_đi={
