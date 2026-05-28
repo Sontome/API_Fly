@@ -2603,7 +2603,7 @@ async def change_pnr_api(data: ChangePNRRequest):
 @app.post("/check-stu")
 async def check_stu_vna(data: CheckStuVNARequest):
     result = await check_price_stu_vna(
-        qualtity=data.qualtity,
+        qualtity=int(data.qualtity),
         dep=data.dep,
         arr=data.arr,
         depdate=data.depdate,
