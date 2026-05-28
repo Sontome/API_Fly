@@ -63,7 +63,7 @@ from sync_missing_pnrs import process_missing_pnrs
 from services_mail.scheduler import MailScheduler
 from change_pnr import pre_change_pnr,change_pnr
 from cachetools import TTLCache
-
+from check_price_stu_vna import check_price_stu_vna
 
 
 load_dotenv()
@@ -84,7 +84,19 @@ mail_scheduler = MailScheduler(delay=10)
 
 class PreChangePNRRequest(BaseModel):
     pnr: str
-
+class CheckStuVNARequest(BaseModel):
+    qualtity: str
+    dep: str
+    arr: str
+    depdate: str
+    deptime: str
+    deptimedone: str
+    
+    # optional
+    
+    arrdate: Optional[str] = None
+    arrtime: Optional[str] = None
+    arrtimedone: Optional[str] = None
 class ChangePNRRequest(BaseModel):
     pnr: str
     dep: str
@@ -2588,7 +2600,22 @@ async def change_pnr_api(data: ChangePNRRequest):
     )
 
     return result
+@app.post("/check-stu")
+async def check_stu_vna(data: CheckStuVNARequest):
+    result = await check_price_stu_vna(
+        qualtity=data.qualtity,
+        dep=data.dep,
+        arr=data.arr,
+        depdate=data.depdate,
+        deptime=data.deptime,
+        deptimedone=data.deptimedone,   
+        
+        arrdate=data.arrdate,
+        arrtime=data.arrtime,
+        arrtimedone=data.arrtimedone
+    )
 
+    return result
 
 @app.post("/pre-change-pnr")
 async def pre_change_pnr_api(data: PreChangePNRRequest):
