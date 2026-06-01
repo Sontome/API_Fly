@@ -313,7 +313,7 @@ async def api_vna_detail_rt_v3(payload):
     result = []
     if data["body"]=="null":
         return data
-    #print(data)
+    print(data)
     for item in data["body"]:
         detail = parse_gia_ve_tre_em(item["FARE"])
         chiều_đi={
