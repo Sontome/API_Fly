@@ -851,7 +851,7 @@ async def VJ_V2(request: VjRequest):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
-@app.post("/vj/detail-v2")
+@app.post("/vj/detail-v3")
 async def vj_detail_v2(request: VjdetailRequest):
     if int(request.inf) > 2 or int(request.inf)> int(request.adt):
             raise HTTPException(
