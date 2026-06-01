@@ -450,7 +450,13 @@ async def change_pnr(
                 total_price["total_new"] += (
                     new_price.get("total_new", 0)
                 )
-
+            # fix trường hợp total_new âm
+            if (
+                total_price.get("GRD_TOTAL", 0) < 0
+                and total_price.get("total_new", 0) < 0
+            ):
+                total_price["GRD_TOTAL"] = -abs(total_price.get("penalty_total", 0))
+                total_price["total_new"] = 0
             print("TOTAL:", total_price)
             ssid, res = await send_command(client,"IG", "change_pnr")
             print("IG")
