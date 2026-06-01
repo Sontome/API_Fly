@@ -851,8 +851,50 @@ async def VJ_V2(request: VjRequest):
 
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
-@app.post("/vj/detail-v3")
+@app.post("/vj/detail-v2")
 async def vj_detail_v2(request: VjdetailRequest):
+    if int(request.inf) > 2 or int(request.inf)> int(request.adt):
+            raise HTTPException(
+                status_code=400,
+                detail="Số lượng trẻ sơ sinh không được vượt quá số lượng hành khách người lớn và tối đa là 2 "
+            )  
+    if int(request.adt) + int(request.chd)> 9 :
+            raise HTTPException(
+                status_code=400,
+                detail="Tổng Số lượng hành khách người lớn + trẻ em tối đa là 9"
+            )
+    if request.sochieu.upper() == "RT":
+        if not request.booking_key_arrival:
+            raise HTTPException(status_code=400, detail="chưa có bookingkey chuyến về")  
+    
+
+    try:
+        if request.sochieu.upper() != "RT":
+            result = await api_vj_detail_v2(
+                booking_key=request.booking_key,
+                adult_count=int(request.adt),
+                child_count=int(request.chd),
+                infant_count=int(request.inf)
+                
+            )
+        else:
+            result = await api_vj_detail_rt_v2(
+                booking_key=request.booking_key,
+                adult_count=int(request.adt),
+                child_count=int(request.chd),
+                infant_count=int(request.inf),
+                booking_key_arrival=request.booking_key_arrival
+            )
+
+        if result:
+            return result
+        else:
+            return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
+
+    except Exception as e:
+        return {"status_code": 500, "body": str(e)}        
+@app.post("/vj/detail-v3")
+async def vj_detail_v3(request: VjdetailRequest):
     if int(request.inf) > 2 or int(request.inf)> int(request.adt):
             raise HTTPException(
                 status_code=400,
