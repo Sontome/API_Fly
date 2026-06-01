@@ -751,7 +751,13 @@ async def vna_detail_v3(request_detail: VnadetailRequest_V3):
     
     mnfare = f"02{request_detail.miniFares},02{int(request_detail.idx)}"
     print(mnfare)
+    print(
+        f"get={request_detail.session_key}, "
+        f"exists={request_detail.session_key in session_payload_cache}, "
+        f"cache_size={len(session_payload_cache)}"
+    )
     payload = session_payload_cache.get(request_detail.session_key)
+    
     if not payload:
         return {"status_code": 401, "body": " payload session hết hạn,index vé đã thay đổi"}  
     try:
@@ -1649,6 +1655,10 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
             if session_key:
                 session_payload_cache[session_key] = result.get("payload")
                 print("lưu " +  result.get("session_key") + " vào cache")
+                print(
+                    f"save={session_key}, "
+                    f"cache_size={len(session_payload_cache)}"
+                )
             return result
         else:
             return { "status_code": 400, "body" : "Lỗi khi lấy dữ liệu" }
