@@ -393,7 +393,7 @@ async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_cou
     global token
 
     token = get_app_access_token_from_state()
-    com = get_company(token)
+    
     
     #print(company)
     token = get_app_access_token_from_state()
@@ -448,7 +448,7 @@ async def api_vj_detail_rt_v2(booking_key,booking_key_arrival, adult_count=1, ch
     global token
 
     token = get_app_access_token_from_state()
-    com = get_company(token)
+    
     
     #print(company)
     token = get_app_access_token_from_state()
