@@ -34,7 +34,7 @@ def url_encode(text):
         return urllib.parse.quote(text)
 def get_company(bear,retry=False):
     global token
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/getlistcompanies"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/getlistcompanies"
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -78,7 +78,7 @@ def get_company(bear,retry=False):
         print(response.text)
         return None
 def get_tax(authorization, booking_key, adult_count, child_count, infant_count,booking_key_arrival=None): 
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/quotationwithoutpassenger"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/quotationwithoutpassenger"
     headers = {
         "accept": "application/json, text/plain, */*",
         "authorization": f"Bearer {authorization}",
@@ -116,7 +116,7 @@ def get_tax(authorization, booking_key, adult_count, child_count, infant_count,b
         print("❌ Lỗi khi gọi API thuế:", e)
         return None
 def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/ancillaryOptions"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/ancillaryOptions"
 
     params = {
         "bookingKey": booking_key,
