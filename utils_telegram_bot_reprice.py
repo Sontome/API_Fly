@@ -3,8 +3,8 @@ import json
 import os
 
 # 👉 Thêm token và chat_id vào config, hoặc gán trực tiếp luôn
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "7843918695:AAGnIVDjJV52Citq0mn8zOQ0_Wr0MmD45qA")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-5089944980")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID_REPRICE", "-5089944980")
 
 
 async def send_mess(message: str):
