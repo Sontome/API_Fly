@@ -81,7 +81,7 @@ def url_encode(text):
         return urllib.parse.quote(text)
 #lấy giá hành lý eco-deluxe
 def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/ancillaryOptions"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/ancillaryOptions"
 
     params = {
         "bookingKey": booking_key,
@@ -172,7 +172,7 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
         return {}
 def get_company(bear,retry=False):
     global token
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/getlistcompanies"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/getlistcompanies"
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -223,7 +223,7 @@ async def get_vietjet_flight_options( departure_place,
     promo_param = f"&promoCode={promo_code}" if promo_code else ""
     
     url = (
-        f"https://agentapi.vietjetair.com/api/v13/Booking/findtraveloptions?"
+        f"https://agentapi.vietjetair.com/api/v14/Booking/findtraveloptions?"
         f"cityPair={departure_place}-{return_place}"
         f"&departurePlace={departure_place}"
         f"&departurePlaceName=Seoul"
@@ -281,7 +281,7 @@ async def get_vietjet_flight_options( departure_place,
         print("💥 Lỗi khi gọi API async:", e)
         return None
 def get_tax(authorization, booking_key, adult_count, child_count, infant_count,booking_key_arrival=None): 
-    url = "https://agentapi.vietjetair.com/api/v13/Booking/quotationwithoutpassenger"
+    url = "https://agentapi.vietjetair.com/api/v14/Booking/quotationwithoutpassenger"
     headers = {
         "accept": "application/json, text/plain, */*",
         "authorization": f"Bearer {authorization}",
