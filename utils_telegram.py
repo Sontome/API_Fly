@@ -2,6 +2,7 @@ import httpx
 import json
 import os
 import asyncio
+from dotenv import load_dotenv
 load_dotenv()
 # 👉 Thêm token và chat_id vào config, hoặc gán trực tiếp luôn
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
