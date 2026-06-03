@@ -287,11 +287,19 @@ def get_newseg(segs, pax_total, doituong=""):
 
         suffix = pax_mapping.get(pax_type, "")
 
-        command = (
-            f"FXQ/R{doituong}{suffix},"
-            f"U/S{seg_part}/"
-            f"T{ticket_part}"
-        )
+        # ADT không có U
+        if pax_type == "ADT":
+            command = (
+                f"FXQ/R{doituong}{suffix}/"
+                f"S{seg_part}/"
+                f"T{ticket_part}"
+            )
+        else:
+            command = (
+                f"FXQ/R{doituong}{suffix},"
+                f"U/S{seg_part}/"
+                f"T{ticket_part}"
+            )
 
         result[
             cmd_mapping[pax_type]
@@ -302,7 +310,6 @@ def get_newseg(segs, pax_total, doituong=""):
         ] = len(ticket_numbers)
 
     return result
-
 
 
 
