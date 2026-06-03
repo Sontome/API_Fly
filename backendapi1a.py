@@ -1424,6 +1424,15 @@ async def checkmatvechoVNA(code,ssid=None):
             # print(data)
 
             rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
+            # nếu có page 2 thì gọi thêm MD đúng 1 lần
+            if ")>" in rt_respone_raw:
+                print("co trang 2")
+        
+                ssid, res_md = await send_command(client, "MD", ssid)
+        
+                data_md = res_md.json()
+        
+                rt_respone_raw += "\n" + data_md["model"]["output"]["crypticResponse"]["response"]
             rt_respone = parse_pnr(rt_respone_raw,code)
             
 
