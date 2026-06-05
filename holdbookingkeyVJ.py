@@ -210,7 +210,7 @@ def get_payment_methods(token,bookingkey_departure, bookingkey_arrival=None):
                 f"{item.get('paymentdescription')}"
             )
         
-            if item.get("identifier") == "PL":
+            if item.get("identifier") == "PL" and item.get("paymentdescription") == "Pay Later":
                 paykey = item.get("key")
                 print("✅ Found Pay Later key")
                 break
