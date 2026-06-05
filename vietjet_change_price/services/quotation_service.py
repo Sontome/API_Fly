@@ -275,7 +275,7 @@ class ChangeQuotationService:
             flight_no=journey[0]["segments"][0]["Number"],
         )
         return_journey = None
-        if journey[1]:
+        if len(journey) >1:
             return_journey = JourneyInfo(
                 journey_key=journey[1]["journeykey"],
                 booking_key=journey[1]["segments"][0]["arrivalAirport"]["Code"],
