@@ -287,11 +287,10 @@ def get_newseg(segs, pax_total, doituong=""):
 
         suffix = pax_mapping.get(pax_type, "")
 
-        # ADT không có U
-        if pax_type == "ADT":
+        if doituong == "ADT":
             command = (
-                f"FXQ/R{doituong}{suffix}/"
-                f"S{seg_part}/"
+                f"FXQ/R{suffix}"
+                f"/S{seg_part}/"
                 f"T{ticket_part}"
             )
         else:
