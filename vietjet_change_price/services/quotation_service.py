@@ -318,7 +318,7 @@ class ChangeQuotationService:
         if not journey:
             raise QuotationError(
                 
-                f"journey found in PNR={req.pnr}"
+                f"No journey found in PNR={req.pnr}"
             )
 
         # logger.debug(
