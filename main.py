@@ -64,7 +64,7 @@ from services_mail.scheduler import MailScheduler
 from change_pnr import pre_change_pnr,change_pnr
 from cachetools import TTLCache
 from check_price_stu_vna import check_price_stu_vna
-
+from routers.change_router import router as change_router
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -2687,7 +2687,7 @@ async def pre_change_pnr_api(data: PreChangePNRRequest):
     return result
 
 
-
+app.include_router(change_router)
 
 
 
