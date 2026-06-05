@@ -186,8 +186,23 @@ def get_payment_methods(token,bookingkey_departure, bookingkey_arrival=None):
         response.raise_for_status()
         
         data = response.json()
-        data0  = data.get("data",[])
-        paykey = data0[0].get("key","")
+        data0 = data.get("data", [])
+
+        paykey = None
+        
+        for item in data0:
+            print(
+                f"Payment: {item.get('identifier')} - "
+                f"{item.get('paymentdescription')}"
+            )
+        
+            if item.get("identifier") == "PL":
+                paykey = item.get("key")
+                print("✅ Found Pay Later key")
+                break
+        
+        if not paykey:
+            print("❌ Không tìm thấy payment method identifier='PL'")
 
         
         return paykey
