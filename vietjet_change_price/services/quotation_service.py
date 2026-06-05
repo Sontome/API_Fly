@@ -317,7 +317,7 @@ class ChangeQuotationService:
 
         if not journey:
             raise QuotationError(
-                f"No {'departure' if req.is_departure_leg else 'return'} "
+                
                 f"journey found in PNR={req.pnr}"
             )
 
