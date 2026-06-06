@@ -37,10 +37,46 @@ from models.change_models import (
 logging.getLogger("httpcore").disabled = True
 logging.getLogger("httpx").disabled = True
 logger = logging.getLogger(__name__)
+def parse_passengers(raw_passengers):
+    """
+    Trả về danh sách:
+    [
+        {"full_name": "TRINH SON", "type": "ADT"},
+        {"full_name": "VU TRINH", "type": "INF"},
+        {"full_name": "TRINH LONG", "type": "CHD"},
+    ]
+    """
+    result = []
 
+    for pax in raw_passengers:
+        full_name = f"{pax.get('lastName', '').strip()} {pax.get('firstName', '').strip()}".strip()
+
+        if pax.get("adult"):
+            pax_type = "ADT"
+        elif pax.get("child"):
+            pax_type = "CHD"
+        else:
+            pax_type = "UNK"
+
+        result.append({
+            "full_name": full_name,
+            "type": pax_type
+        })
+
+        # xử lý infant đi kèm
+        for inf in pax.get("infant", []):
+            inf_name = f"{inf.get('lastName', '').strip()} {inf.get('firstName', '').strip()}".strip()
+
+            result.append({
+                "full_name": inf_name,
+                "type": "INF"
+            })
+
+    return result
 def extract_trips(data):
     trips = []
-
+    passengers=[]
+    passengers= parse_passengers(data.get("passengers", []))
     for seg_no, journey in enumerate(data.get("journeys", []), start=1):
         for segment in journey.get("segments", []):
             trips.append({
@@ -52,7 +88,10 @@ def extract_trips(data):
                 "arrival_time": segment.get("ETALocal"),
             })
 
-    return {"trips": trips}
+    return {
+      "trips": trips,
+      "passengers":passengers      
+      }
 def build_change_result(ctx):
     trips = []
 
