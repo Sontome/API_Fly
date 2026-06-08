@@ -703,7 +703,7 @@ async def api_vj_rt_v2(departure_place, return_place, departure_date,return_date
     company = url_encode(com['data'][1]['company']['key'])
     #print(company)
     token = get_app_access_token_from_state()
-    promo_codes = ["VJIN20", "VJSALE20"]
+    promo_codes = ["VJIN20"]
     all_departure = []
     all_arrival = []
     for promo in promo_codes:
