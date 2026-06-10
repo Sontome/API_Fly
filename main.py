@@ -2153,7 +2153,7 @@ async def send_message(data: MessageRequest):
         "status": "success",
         "message_sent": data.message
     }
-@app.post("/send_checkin")
+@app.post("/send_check_in")
 async def send_message_checkin(data: MessageRequest):
     await send_checkin(data.message)
 
