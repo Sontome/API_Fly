@@ -35,6 +35,7 @@ from backend_api_kakao import send_rcs
 from backend_api_vna_detail_v2 import api_vna_detail_v2,api_vna_detail_rt_v2
 from backend_api_vna_detail_v3 import api_vna_detail_v3,api_vna_detail_rt_v3
 from utils_telegram import send_mess as send_vj
+from utils_telegram import send_mess_checkin as send_checkin
 from utils_telegram_delay import send_mess as send_vj_delay
 from utils_telegram_vna import send_mess as send_vna
 from typing import Optional
@@ -2152,7 +2153,14 @@ async def send_message(data: MessageRequest):
         "status": "success",
         "message_sent": data.message
     }
+@app.post("/send_checkin")
+async def send_message_checkin(data: MessageRequest):
+    await send_checkin(data.message)
 
+    return {
+        "status": "success",
+        "message_sent": data.message
+    }
 @app.get("/checkpnrother/{code}")
 async def get_pnr(code: str):
     try:
