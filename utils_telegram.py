@@ -7,7 +7,7 @@ load_dotenv()
 # 👉 Thêm token và chat_id vào config, hoặc gán trực tiếp luôn
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-1002520783135")
-TELEGRAM_CHAT_ID_CHECKIN = os.getenv("TELEGRAM_CHAT_ID", "-1005182212364")
+TELEGRAM_CHAT_ID_CHECKIN = os.getenv("TELEGRAM_CHAT_ID_CHECKIN", "-1005182212364")
 
 async def send_mess(message: str) -> bool:
     
