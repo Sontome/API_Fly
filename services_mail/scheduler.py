@@ -1,6 +1,7 @@
 import threading
 import time
 from .send_ticket_worker import process_mail_queue
+import requests
 
 class MailScheduler:
     def __init__(self, delay=10):
@@ -43,7 +44,15 @@ class MailScheduler:
 
         try:
             process_mail_queue()
-
+            # Gọi endpoint local sau khi xử lý mail xong
+            try:
+                r = requests.get(
+                    "http://127.0.0.1:8000/trigger-gas-bot",
+                    timeout=30
+                )
+                print(f"[GAS] Status: {r.status_code}")
+            except Exception as e:
+                print(f"[GAS] Error: {e}")
         finally:
             with self.lock:
                 self.worker_running = False
