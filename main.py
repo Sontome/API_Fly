@@ -1423,7 +1423,27 @@ async def proxy_gas_bot(request: Request):
             headers=cors_headers
         )
 
+@app.get("/trigger-gas-bot")
+async def trigger_gas_bot():
 
+    async def run():
+        try:
+            async with httpx.AsyncClient(
+                follow_redirects=True,
+                timeout=60
+            ) as client:
+                await client.get(
+                    f"{GAS_BOT_URL}?todo=check"
+                )
+        except Exception as e:
+            print("GAS BOT ERROR:", e)
+
+    asyncio.create_task(run())
+
+    return {
+        "status": "ok",
+        "message": "Trigger sent"
+    }
 @app.get("/sendmailvna")
 async def sendemail_1a(
     code: str = Query(..., description="code"),
