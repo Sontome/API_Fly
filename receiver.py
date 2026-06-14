@@ -643,7 +643,24 @@ try:
         )
     
         write_log(DEBUG_LOG, f"BODY = {body[:1000]}")
+    try:
 
+        response = requests.get(
+            "https://apilive.hanvietair.com/mail-trigger",
+            timeout=30
+        )
+    
+        write_log(
+            DEBUG_LOG,
+            f"MAIL_TRIGGER = {response.status_code} | {response.text}"
+        )
+    
+    except Exception as e:
+    
+        write_log(
+            ERROR_LOG,
+            f"MAIL_TRIGGER ERROR = {str(e)}"
+        )
     write_log(DEBUG_LOG, "MAIL PROCESS DONE")
 
 # =========================
