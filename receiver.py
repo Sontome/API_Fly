@@ -31,7 +31,11 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 # =========================
 
 today = datetime.now()
-
+def get_save_dir():
+    today = datetime.now()
+    path = f"/data/inbound_mail/{today:%Y/%m/%d}"
+    os.makedirs(path, exist_ok=True)
+    return path
 SAVE_DIR = f"/data/inbound_mail/{today:%Y/%m/%d}"
 
 LOG_DIR = "/data/inbound_logs"
@@ -504,7 +508,7 @@ try:
                 final_filename
             )
             
-            save_path = os.path.join(SAVE_DIR, final_filename)
+            save_path = os.path.join(get_save_dir(), final_filename)
         
             with open(save_path, "wb") as f:
                 f.write(data)
