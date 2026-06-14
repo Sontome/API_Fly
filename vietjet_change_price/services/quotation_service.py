@@ -384,8 +384,9 @@ class ChangeQuotationService:
             ctx.new_trip_return_option = NewTripOption(
                 new_booking_key=result["fareOption"][0]["BookingKey"],
                 flight_no=result["segmentOptions"][0]["flight"]["Number"],
-                origin=result["segmentOptions"][0]["flight"]["arrivalAirport"]["Code"],
-                destination=result["segmentOptions"][0]["flight"]["departureAirport"]["Code"],
+                
+                destination=result["segmentOptions"][0]["flight"]["arrivalAirport"]["Code"],
+                origin=result["segmentOptions"][0]["flight"]["departureAirport"]["Code"],
                 raw_response="result",
                 departure_time=result["segmentOptions"][0]["flight"]["ETDLocal"],
                 arrival_time=result["segmentOptions"][0]["flight"]["ETDLocal"],
@@ -409,8 +410,8 @@ class ChangeQuotationService:
             ctx.new_trip_option = NewTripOption(
                 new_booking_key=result["fareOption"][0]["BookingKey"],
                 flight_no=result["segmentOptions"][0]["flight"]["Number"],
-                origin=result["segmentOptions"][0]["flight"]["arrivalAirport"]["Code"],
-                destination=result["segmentOptions"][0]["flight"]["departureAirport"]["Code"],
+                destination=result["segmentOptions"][0]["flight"]["arrivalAirport"]["Code"],
+                origin=result["segmentOptions"][0]["flight"]["departureAirport"]["Code"],
                 raw_response="result",
                 departure_time=result["segmentOptions"][0]["flight"]["ETDLocal"],
                 arrival_time=result["segmentOptions"][0]["flight"]["ETDLocal"],
