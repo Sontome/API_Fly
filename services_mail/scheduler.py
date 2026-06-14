@@ -41,14 +41,14 @@ class MailScheduler:
         with self.lock:
             self.worker_running = True
             self.timer = None
-        # try:
-        #         r = requests.get(
-        #             "https://apilive.hanvietair.com/trigger-gas-bot",
-        #             timeout=30
-        #         )
-        #         print(f"[GAS] Status: {r.status_code}")
-        #     except Exception as e:
-        #         print(f"[GAS] Error: {e}")
+        try:
+            r = requests.get(
+                "https://apilive.hanvietair.com/trigger-gas-bot",
+                timeout=30
+            )
+            print(f"[GAS] Status: {r.status_code}")
+        except Exception as e:
+            print(f"[GAS] Error: {e}")
         try:
             process_mail_queue()
             # Gọi endpoint local sau khi xử lý mail xong
