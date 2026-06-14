@@ -47,7 +47,7 @@ class MailScheduler:
             # Gọi endpoint local sau khi xử lý mail xong
             try:
                 r = requests.get(
-                    "http://127.0.0.1:8000/trigger-gas-bot",
+                    "https://apilive.hanvietair.com/trigger-gas-bot",
                     timeout=30
                 )
                 print(f"[GAS] Status: {r.status_code}")
