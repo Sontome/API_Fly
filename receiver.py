@@ -645,7 +645,7 @@ try:
         write_log(DEBUG_LOG, f"BODY = {body[:1000]}")
     try:
 
-        response = requests.get(
+        requests.post(
             "https://apilive.hanvietair.com/mail-trigger",
             timeout=30
         )
