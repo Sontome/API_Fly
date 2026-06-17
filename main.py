@@ -2718,7 +2718,7 @@ async def pre_change_pnr_api(data: PreChangePNRRequest):
 
 
 app.include_router(change_router)
-# app.include_router(spa_router)
+app.include_router(spa_router)
 
 
 
