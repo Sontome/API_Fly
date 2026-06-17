@@ -390,7 +390,7 @@ class CheckQuoteResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post(
-    "/search",
+    "/check-ve-v3",
     response_model=SearchQuoteResponse,
     summary="Tìm kiếm chuyến bay Sun Portal",
     description=(
@@ -542,7 +542,7 @@ async def create_and_hold_booking(body: BookingQuoteRequest) -> BookingQuoteResp
 
 
 @router.post(
-    "/check",
+    "/checkpnr",
     response_model=CheckQuoteResponse,
     summary="Tra cứu booking theo PNR",
     description="Nhận `CheckQuoteRequest` (mã PNR) và gọi `check_booking_simple`.",
