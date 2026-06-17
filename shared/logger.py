@@ -5,7 +5,13 @@ Logger dùng chung với prefix phân loại rõ ràng.
 
 import logging
 import sys
-from enum import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
 
 
 class LogPrefix(StrEnum):
