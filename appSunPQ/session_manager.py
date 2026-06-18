@@ -6,6 +6,7 @@ Tự động login lại nếu session hết hạn.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any
 
 import requests
@@ -14,7 +15,7 @@ from appSunPQ.auth.cookie_manager import CookieManager
 from appSunPQ.auth.playwright_login import PlaywrightLoginService
 from appSunPQ.auth.token_manager import TokenManager
 from appSunPQ.constants import STATE_FILE
-from appSunPQ.endpoints import CHECK_ACCOUNT_FUND
+from appSunPQ.endpoints import SEARCH_MINFARE
 from shared.exceptions import SessionExpiredError
 from shared.http_client import HttpClient, build_session
 from shared.logger import LogPrefix, get_logger
@@ -84,9 +85,17 @@ class SessionManager:
     2. Nạp token vào TokenManager.
     3. Nạp cookie vào CookieManager.
     4. Khôi phục requests.Session.
-    5. Kiểm tra token còn hoạt động (check-account-fund).
+    5. Kiểm tra token còn hoạt động (POST /normal/search-minfare với route
+       mặc định ICN→HAN, ngày = hôm nay + 90).
     6. Nếu hết hạn → login lại bằng Playwright → cập nhật state.
     """
+
+    # Route mặc định dùng để kiểm tra session qua search-minfare.
+    # Chọn ICN→HAN vì đây là tuyến phổ biến, ít khả năng bị chặn/giới hạn
+    # bởi business rule (ví dụ tuyến quá hiếm hoặc đã ngừng bay).
+    _SESSION_CHECK_DEPARTURE = "ICN"
+    _SESSION_CHECK_ARRIVAL = "HAN"
+    _SESSION_CHECK_DAYS_AHEAD = 90
 
     def __init__(
         self,
@@ -138,20 +147,72 @@ class SessionManager:
             f"token={'***' + self.token_manager.get_access_token()[-8:] if self.token_manager.get_access_token() else 'EMPTY'}"
         )
 
+    def _build_session_check_payload(self) -> dict[str, Any]:
+        """
+        Build payload mặc định cho POST /normal/search-minfare dùng để
+        kiểm tra session.
+
+        Mặc định: ICN → HAN, flight_date = hôm nay + 90 ngày, 1 adult,
+        OW (search-minfare chỉ cần 1 route để trả lời "token còn dùng được
+        không", không quan tâm có chuyến bay thật hay không).
+
+        Format khớp với fetch mẫu thật::
+
+            {
+                "adult": 1, "child": 0, "infant": 0,
+                "list_route": [{"departure": "ICN", "arrival": "HAN", "flight_date": "YYYY-MM-DD"}],
+                "option": {
+                    "direct_only": false, "promo_code": "", "corporate_code": "",
+                    "trip_type": "OW", "point_of_purchase": "", "day_interval": 7,
+                    "currency": "KRW", "fare_family": ["9GECO"]
+                }
+            }
+        """
+        check_date = (
+            datetime.now() + timedelta(days=self._SESSION_CHECK_DAYS_AHEAD)
+        ).strftime("%Y-%m-%d")
+
+        return {
+            "adult": 1,
+            "child": 0,
+            "infant": 0,
+            "list_route": [
+                {
+                    "departure": self._SESSION_CHECK_DEPARTURE,
+                    "arrival": self._SESSION_CHECK_ARRIVAL,
+                    "flight_date": check_date,
+                }
+            ],
+            "option": {
+                "direct_only": False,
+                "promo_code": "",
+                "corporate_code": "",
+                "trip_type": "OW",
+                "point_of_purchase": "",
+                "day_interval": 7,
+                "currency": "KRW",
+                "fare_family": ["9GECO"],
+            },
+        }
+
     def _is_session_valid(self) -> bool:
         """
-        Kiểm tra session còn hợp lệ bằng cách gọi check-account-fund.
+        Kiểm tra session còn hợp lệ bằng cách gọi POST /normal/search-minfare
+        với route mặc định ICN → HAN, ngày = hôm nay + 90.
+
+        Dùng cùng domain (agency-api-spa) và cùng kiểu request (POST + JSON
+        body) như search/booking thật, nên kết quả phản ánh đúng trạng thái
+        token sẽ dùng cho các API đó — tránh lỗi "check OK nhưng request
+        thật vẫn 401" do check nhầm domain/endpoint khác.
 
         Returns:
             True nếu session OK, False nếu đã hết hạn.
         """
-        logger.debug(f"Kiểm tra session tại: {CHECK_ACCOUNT_FUND}")
+        logger.debug(f"Kiểm tra session tại: {SEARCH_MINFARE}")
         try:
-
-            headers,cookies = self.header_builder.build_for_get()
-            print(cookies)
-            print(type(cookies))
-            self.http_client.get(CHECK_ACCOUNT_FUND, headers=headers,cookies=cookies)
+            headers = self.header_builder.build()
+            payload = self._build_session_check_payload()
+            self.http_client.post(SEARCH_MINFARE, headers=headers, json=payload)
             logger.info("Session hợp lệ.")
             return True
         except Exception as e:
