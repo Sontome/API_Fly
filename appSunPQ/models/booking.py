@@ -181,7 +181,13 @@ def build_booking_payload(
     return {
         "list_itinerary": list_itinerary,
         "list_passenger": pax_list,
-        "contact_info":   contact_dict,
+        #"contact_info":   contact_dict,
+        "contact_info":  {
+                            "email": "hanvietair.service@gmail.com",
+                            "phone_number": "+84985422486",
+                            "full_name": "Mr Son HVA",
+                            "isValid": True
+                        },
         "option": {
             "direct_only":    False,
             "promo_code":     promo_code,
