@@ -300,7 +300,7 @@ async def check_price_stu_vna(
     5. Recheck segment mới
     """
     if qualtity == 1 :
-        pnr = "EKKKVC"
+        pnr = "D6WZTV"
     elif qualtity == 2 :
         pnr = "EKOCL5"
     else :
