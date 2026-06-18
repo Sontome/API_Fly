@@ -302,9 +302,9 @@ async def check_price_stu_vna(
     if qualtity == 1 :
         pnr = "D6WZTV"
     elif qualtity == 2 :
-        pnr = "EKOCL5"
+        pnr = "D6XPXO"
     else :
-        pnr = "EKO47I"
+        pnr = "D6Y25V"
     async with httpx.AsyncClient(http2=False, timeout=60) as client:
         try:
             
