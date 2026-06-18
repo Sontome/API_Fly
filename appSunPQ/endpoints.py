@@ -15,7 +15,7 @@ SEARCH_FLIGHT = f"{API_BASE_URL}/normal/search"
 
 # ─── Session / Account ──────────────────────────────────────────────────────
 # GET /normal/check-account-fund
-CHECK_ACCOUNT_FUND = f"https://master-api-spa.sunportal.com.vn/api/common/auth/me"
+CHECK_ACCOUNT_FUND = f"https://agency-cms-spa.sunportal.com.vn/api/banner/list?type=homepage"
 
 # ─── Hold booking ───────────────────────────────────────────────────────────
 # POST /normal/create/hold-booking
