@@ -307,7 +307,7 @@ def load_domain_configs():
         res = (
             supabase
             .table("domain_config")
-            .select("domain, config")
+            .select("domain, config_json")
             .execute()
         )
 
@@ -318,7 +318,7 @@ def load_domain_configs():
         configs = {}
 
         for row in res.data:
-            configs[row["domain"]] = row["config"]
+            configs[row["domain"]] = row["config_json"]
 
         print(f"✅ Loaded {len(configs)} domain configs")
 
