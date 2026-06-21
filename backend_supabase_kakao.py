@@ -292,3 +292,38 @@ def update_rcs_by_pnr_phone(pnr: str, phone: str,
     except Exception as e:
         print("❌ Lỗi update_rcs_by_pnr_phone:", e)
         return None        
+def load_domain_configs():
+    """
+    Load toàn bộ domain config từ Supabase
+    Trả về:
+    {
+        "apiapp.hanvietair.com": {
+            "enabled": ["VJ", "VN"]
+        }
+    }
+    """
+
+    try:
+        res = (
+            supabase
+            .table("domain_config")
+            .select("domain, config")
+            .execute()
+        )
+
+        if not res.data:
+            print("⚠️ Không có domain config nào")
+            return {}
+
+        configs = {}
+
+        for row in res.data:
+            configs[row["domain"]] = row["config"]
+
+        print(f"✅ Loaded {len(configs)} domain configs")
+
+        return configs
+
+    except Exception as e:
+        print("❌ Lỗi load_domain_configs:", e)
+        return {}
