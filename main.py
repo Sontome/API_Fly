@@ -54,6 +54,7 @@ from ocr_gemini import ocr_then_parse
 from backend_api_vna_v3 import api_checkve_vna_v3
 from utils_kakao import process_all_unsent_kakao
 from backend_supabase_kakao import add_kakao_pnr,get_phone_email_from_pnr,update_kakao_by_pnr_phone,update_rcs_by_pnr_phone
+from domain_access import load_rules as load_domain_rules, assert_airline_allowed, filter_vna_flights
 from backend_reprice import add_reprice_pnr
 from booking_other import booking_other,check_pnr_other
 import zipfile
@@ -448,6 +449,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ====================================================
+# 🔐 Domain-based airline access control
+# Load 1 LẦN DUY NHẤT lúc startup, không query Supabase trong request.
+# Đổi config trên Supabase -> restart uvicorn để load lại.
+# ====================================================
+@app.on_event("startup")
+async def _startup_load_domain_rules():
+    load_domain_rules()
+
 @app.get("/")
 async def hello():
     return {"message": "API sẵn sàng"}
@@ -457,6 +467,7 @@ async def hello():
 # ====================================================
 @app.get("/vj/check-ve-vj")
 async def VJ(
+    request: Request,
     city_pair: str = Query(...),
     departure_place: str = Query(""),
     departure_place_name: str = Query(""),
@@ -469,6 +480,7 @@ async def VJ(
     sochieu: str = Query(2),
     name: str = Query("")
 ):
+    assert_airline_allowed(request, "VJ")
     result = await api_vj(
         city_pair=city_pair,
         departure_place=departure_place,
@@ -490,6 +502,7 @@ async def VJ(
 # ====================================================
 @app.get("/vna/check-ve-vna")
 async def VNA(
+    request: Request,
     dep0: str = Query(..., description="Sân bay đi, ví dụ: ICN"),
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-MM-dd hoặc yyyyMMdd"),
@@ -497,6 +510,7 @@ async def VNA(
     name: Optional[str] = Query("khách lẻ", description="Tên người đặt"),
     sochieu: int = Query(1, description="1: Một chiều, 2: Khứ hồi")
 ):
+    assert_airline_allowed(request, "VNA")
     try:
         result = await api_vna(
             dep0=dep0,
@@ -516,6 +530,7 @@ async def VNA(
         return {"success": False, "message": str(e)}
 @app.get("/vna/check-ve-v2")
 async def VNA_v2(
+    request: Request,
     dep0: str = Query(..., description="Sân bay đi, ví dụ: ICN"),
     arr0: str = Query(..., description="Sân bay đến, ví dụ: HAN"),
     depdate0: str = Query(..., description="Ngày đi, định dạng yyyy-mm-dd"),
@@ -533,6 +548,7 @@ async def VNA_v2(
     filterTimeSlideMax1: str = Query("2355", description="Thời gian xuất phát muộn nhất chiều về (23h55p)"),
     session_key: str = Query(None, description="session_key")
 ):
+    assert_airline_allowed(request, "VNA")
     try:
         depdate0_dt = datetime.strptime(depdate0, "%Y-%m-%d")
     except ValueError:
@@ -598,7 +614,8 @@ async def VNA_v2(
     except Exception as e:
         return {"status_code": 401, "body": str(e)}
 @app.post("/vna/check-ve-v2")
-async def VNA_V2(request: VnaRequest):
+async def VNA_V2(request: VnaRequest, http_request: Request):
+    assert_airline_allowed(http_request, "VNA")
     try:
         depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
     except ValueError:
@@ -793,7 +810,8 @@ async def vna_detail_v3(request_detail: VnadetailRequest_V3):
         return {"status_code": 401, "body": "session hết hạn,index vé đã thay đổi"}   
      
 @app.post("/vj/check-ve-v2")
-async def VJ_V2(request: VjRequest):
+async def VJ_V2(request: VjRequest, http_request: Request):
+    assert_airline_allowed(http_request, "VJ")
     try:
         depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
     except ValueError:
@@ -996,9 +1014,9 @@ async def create_other_booking(request: BookingOtherRequest):
         "message": "Đã nhận yêu cầu và đang xử lý nền. Vui lòng theo dõi Telegram để xem kết quả."
     }
 @app.post("/vj/lowfare-v2")
-async def vj_lowfare_v2(request: VjLowFareRequest):
-      
-    
+async def vj_lowfare_v2(request: VjLowFareRequest, http_request: Request):
+    assert_airline_allowed(http_request, "VJ")
+
     if request.sochieu.upper() == "RT":
         if not request.return_date:
             raise HTTPException(status_code=400, detail="chưa có ngày về")  
@@ -1685,7 +1703,8 @@ async def huyve_VNA(
     except Exception as e:
         return (str(e))
 @app.post("/vna/check-ve-v3")
-async def VNA_V3(request: VnaCheckveRequest_V3):
+async def VNA_V3(request: VnaCheckveRequest_V3, http_request: Request):
+    allowed_airlines = assert_airline_allowed(http_request, "VNA")
     try:
         depdate0_dt = datetime.strptime(request.depdate0, "%Y-%m-%d")
     except ValueError:
@@ -1723,6 +1742,12 @@ async def VNA_V3(request: VnaCheckveRequest_V3):
         
 
         if result:
+            # Domain bị giới hạn -> lọc kết quả gộp nhiều hãng (VN + Other
+            # Airline) chỉ giữ lại VN và các hãng nằm trong "enabled".
+            # Domain full access (allowed_airlines is None) -> giữ nguyên.
+            if isinstance(result.get("body"), list):
+                result["body"] = filter_vna_flights(result["body"], allowed_airlines)
+
             # lưu payload theo session_key
             session_key = result.get("session_key")
             
