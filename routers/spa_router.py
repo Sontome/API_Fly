@@ -43,12 +43,13 @@ try:
 except ImportError:
     pass
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 
 from appSunPQ.client import SunPortalClient
 from appSunPQ.models.booking import ContactInfo, Passenger
+from domain_access import assert_airline_allowed
 from shared.exceptions import (
     BookingError,
     CheckBookingError,
@@ -399,7 +400,8 @@ class CheckQuoteResponse(BaseModel):
         "mỗi gói có sẵn `list_itinerary` để dùng trực tiếp cho `/spa/booking`."
     ),
 )
-async def search_flights(body: SearchQuoteRequest) -> SearchQuoteResponse:
+async def search_flights(body: SearchQuoteRequest, request: Request) -> SearchQuoteResponse:
+    assert_airline_allowed(request, "SUNPQ")
     client = await get_client_async()
     try:
         result = await run_in_threadpool(
