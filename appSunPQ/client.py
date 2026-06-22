@@ -24,10 +24,12 @@ from appSunPQ.models.booking import (
     Passenger,
 )
 from appSunPQ.models.check import CheckResult
+from appSunPQ.models.minfare import MinFareResult
 from appSunPQ.models.search import SearchResponse
 from appSunPQ.services.booking_service import BookingService
 from appSunPQ.services.check_service import CheckService
 from appSunPQ.services.hold_service import HoldService
+from appSunPQ.services.minfare_service import MinFareService
 from appSunPQ.services.search_service import SearchService
 from appSunPQ.session_manager import SessionManager
 from shared.logger import LogPrefix, get_logger
@@ -81,6 +83,7 @@ class SunPortalClient:
         self._hold_service    = HoldService(self._session_manager)
         self._booking_service = BookingService(self._session_manager)
         self._check_service   = CheckService(self._session_manager)
+        self._minfare_service = MinFareService(self._session_manager)
 
         if auto_init:
             logger.info("Khởi tạo SunPortalClient...")
@@ -325,6 +328,41 @@ class SunPortalClient:
         """
         return self._check_service.check_booking_simple(
             pnr=pnr,
+            override_url=override_url,
+        )
+
+    # ── Min-Fare (giá rẻ theo ngày) ──────────────────────────────────────────
+
+    def search_minfare_simple(
+        self,
+        departure: str,
+        arrival: str,
+        flight_date: str,
+        adult: int = 1,
+        child: int = 0,
+        infant: int = 0,
+        day_interval: int = 7,
+        currency: str = "KRW",
+        override_url: str | None = None,
+    ) -> MinFareResult:
+        """
+        Tra giá thấp nhất ±day_interval ngày quanh flight_date (1 chiều).
+
+        RT cần gọi 2 lần riêng: 1 cho chiều đi, 1 cho chiều về.
+
+        Returns:
+            MinFareResult — dùng ``.to_list()`` để lấy
+            ``[{"ngày": "07/08/2026", "giá_vé_gốc": 316800}, ...]``.
+        """
+        return self._minfare_service.search_minfare(
+            departure=departure,
+            arrival=arrival,
+            flight_date=flight_date,
+            adult=adult,
+            child=child,
+            infant=infant,
+            day_interval=day_interval,
+            currency=currency,
             override_url=override_url,
         )
 
