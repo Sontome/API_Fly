@@ -43,13 +43,13 @@ try:
 except ImportError:
     pass
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 
 from appSunPQ.client import SunPortalClient
 from appSunPQ.models.booking import ContactInfo, Passenger
-from appSunPQ.models.minfare import MinFareResult
+from domain_access import assert_airline_allowed
 from shared.exceptions import (
     BookingError,
     CheckBookingError,
@@ -391,7 +391,7 @@ class CheckQuoteResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post(
-    "/search",
+    "/check-ve-v3",
     response_model=SearchQuoteResponse,
     summary="Tìm kiếm chuyến bay Sun Portal",
     description=(
@@ -400,7 +400,8 @@ class CheckQuoteResponse(BaseModel):
         "mỗi gói có sẵn `list_itinerary` để dùng trực tiếp cho `/spa/booking`."
     ),
 )
-async def search_flights(body: SearchQuoteRequest) -> SearchQuoteResponse:
+async def search_flights(body: SearchQuoteRequest, request: Request) -> SearchQuoteResponse:
+    assert_airline_allowed(request, "SUNPQ")
     client = await get_client_async()
     try:
         result = await run_in_threadpool(
@@ -543,7 +544,7 @@ async def create_and_hold_booking(body: BookingQuoteRequest) -> BookingQuoteResp
 
 
 @router.post(
-    "/check",
+    "/checkpnr",
     response_model=CheckQuoteResponse,
     summary="Tra cứu booking theo PNR",
     description="Nhận `CheckQuoteRequest` (mã PNR) và gọi `check_booking_simple`.",
@@ -571,144 +572,3 @@ async def check_booking(body: CheckQuoteRequest) -> CheckQuoteResponse:
         )
 
     return CheckQuoteResponse(success=True, data=result.to_dict())
-
-
-# ---------------------------------------------------------------------------
-# Schema: /spa/check-ve-v3
-# ---------------------------------------------------------------------------
-
-class CheckV3Response(BaseModel):
-    success: bool
-    data: dict[str, Any]
-
-
-# ---------------------------------------------------------------------------
-# Helper
-# ---------------------------------------------------------------------------
-
-def _extract_leg_info(segments: list[dict[str, Any]]) -> tuple[str, str, str] | None:
-    """
-    Trích departure, arrival, flight_date từ list segment của 1 chiều bay.
-
-    Returns:
-        (departure_code, arrival_code, flight_date) hoặc None nếu thiếu data.
-        - departure = code của segment đầu tiên
-        - arrival   = code của segment cuối cùng
-        - flight_date = ngày bay của segment đầu tiên
-    """
-    if not segments:
-        return None
-
-    first = segments[0]
-    last  = segments[-1]
-
-    dep_code   = first.get("departure") or first.get("departure_info", {}).get("code", "")
-    arr_code   = last.get("arrival")  or last.get("arrival_info",  {}).get("code", "")
-    flight_date = first.get("flight_date", "")
-
-    # Fallback: flight_date từ departure_info.datetime (lấy phần ngày)
-    if not flight_date:
-        dep_dt = first.get("departure_info", {}).get("datetime", "")
-        flight_date = dep_dt[:10] if dep_dt else ""
-
-    if not dep_code or not arr_code or not flight_date:
-        return None
-
-    return dep_code, arr_code, flight_date
-
-
-# ---------------------------------------------------------------------------
-# Endpoint
-# ---------------------------------------------------------------------------
-
-@router.post(
-    "/check-ve-v3",
-    response_model=CheckV3Response,
-    summary="Tra cứu booking + giá rẻ theo ngày",
-    description=(
-        "Gộp 2 tác vụ trong 1 lần gọi:\n\n"
-        "1. **retrieve-booking** — lấy thông tin PNR đầy đủ.\n"
-        "2. **search-minfare** — tra giá rẻ nhất ±7 ngày quanh ngày bay:\n"
-        "   - OW: 1 lần cho chiều đi.\n"
-        "   - RT: 2 lần riêng biệt, mỗi chiều 1 lần.\n\n"
-        "Trả về tất cả thông tin booking cộng thêm trường `lowerfare`:\n\n"
-        "```json\n"
-        "{\n"
-        "  \"lowerfare\": {\n"
-        "    \"chiều đi\": [{\"ngày\": \"14/08/2026\", \"giá_vé_gốc\": 273400}, ...],\n"
-        "    \"chiều về\": [{\"ngày\": \"22/08/2026\", \"giá_vé_gốc\": 316800}, ...]\n"
-        "  }\n"
-        "}\n"
-        "```\n"
-        "Lỗi minfare không chặn kết quả — nếu tra giá thất bại, `lowerfare` trả về list rỗng."
-    ),
-)
-async def check_booking_v3(body: CheckQuoteRequest) -> CheckV3Response:
-    client = await get_client_async()
-
-    # ── Bước 1: retrieve-booking ──────────────────────────────────────────
-    try:
-        check_result = await run_in_threadpool(client.check_booking_simple, body.pnr)
-    except SessionExpiredError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f"Session hết hạn: {e}")
-    except CheckBookingError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail=f"Tra cứu booking thất bại: {e}")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Lỗi không mong muốn: {e}")
-
-    result_dict = check_result.to_dict()
-
-    # ── Bước 2: search-minfare cho từng chiều ─────────────────────────────
-    # Lấy số lượng pax từ kết quả booking (dùng đúng số khi search minfare)
-    pax = check_result.passengers
-    adt = sum(1 for p in pax if p.get("type") == "ADULT")
-    chd = sum(1 for p in pax if p.get("type") == "CHILD")
-    inf = sum(1 for p in pax if p.get("type") == "INFANT")
-    # Đảm bảo tối thiểu 1 adult (tránh payload không hợp lệ)
-    adt = max(adt, 1)
-
-    lowerfare_out: list[dict[str, Any]] = []
-    lowerfare_in:  list[dict[str, Any]] = []
-
-    # Chiều đi
-    leg_out = _extract_leg_info(check_result.chieudi)
-    if leg_out:
-        dep, arr, fdate = leg_out
-        mf_out: MinFareResult = await run_in_threadpool(
-            client.search_minfare_simple,
-            departure=dep,
-            arrival=arr,
-            flight_date=fdate,
-            adult=adt,
-            child=chd,
-            infant=inf,
-        )
-        lowerfare_out = mf_out.to_list()
-
-    # Chiều về (chỉ có nếu RT — chieuve không rỗng)
-    leg_in = _extract_leg_info(check_result.chieuve)
-    if leg_in:
-        dep, arr, fdate = leg_in
-        mf_in: MinFareResult = await run_in_threadpool(
-            client.search_minfare_simple,
-            departure=dep,
-            arrival=arr,
-            flight_date=fdate,
-            adult=adt,
-            child=chd,
-            infant=inf,
-        )
-        lowerfare_in = mf_in.to_list()
-
-    # ── Gộp kết quả ───────────────────────────────────────────────────────
-    result_dict["lowerfare"] = {
-        "chiều đi": lowerfare_out,
-        "chiều về": lowerfare_in,
-    }
-
-    return CheckV3Response(success=True, data=result_dict)
