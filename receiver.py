@@ -622,27 +622,36 @@ try:
             attachment_count += 1
 
     # =========================
-    # NO ATTACHMENT
+    # NO ATTACHMENT / UNMATCHED
     # =========================
-
+    
     if attachment_count == 0 and not is_flight_change:
+        
+        # Xác định status rõ hơn
+        if sender_email.lower().strip() in allowed_attachment_senders:
+            status = "EXPECTED_ATTACHMENT_MISSING"
+        else:
+            status = "UNMATCHED"
+        
         payload = {
             "sender_name": sender_name,
             "sender_email": sender_email,
             "subject": subject,
+            "body": body[:5000] if body else None,   # ← thêm body
             "file_name": None,
             "file_path": None,
-            "status": "NO_ATTACHMENT"
+            "status": status                          # ← status rõ ràng hơn
         }
     
         supabase.table("inbound_email").insert(payload).execute()
     
         write_log(
             ACCESS_LOG,
-            f"{sender_email} | {subject} | NO ATTACHMENT"
+            f"{sender_email} | {subject} | {status}"
         )
     
         write_log(DEBUG_LOG, f"BODY = {body[:1000]}")
+
     try:
 
         requests.post(
