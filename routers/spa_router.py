@@ -49,6 +49,7 @@ from starlette.concurrency import run_in_threadpool
 
 from appSunPQ.client import SunPortalClient
 from appSunPQ.models.booking import ContactInfo, Passenger
+from appSunPQ.models.minfare import MinFareResult
 from domain_access import assert_airline_allowed
 from shared.exceptions import (
     BookingError,
@@ -393,16 +394,26 @@ class CheckQuoteResponse(BaseModel):
 @router.post(
     "/check-ve-v3",
     response_model=SearchQuoteResponse,
-    summary="Tìm kiếm chuyến bay Sun Portal",
+    summary="Tìm kiếm chuyến bay Sun Portal + giá rẻ theo ngày",
     description=(
         "Nhận `SearchQuoteRequest` và gọi `search_simple`. "
         "Trả về danh sách gói bay đã format (chiều_đi / chiều_về / thông_tin_chung), "
-        "mỗi gói có sẵn `list_itinerary` để dùng trực tiếp cho `/spa/booking`."
+        "mỗi gói có sẵn `list_itinerary` để dùng trực tiếp cho `/spa/booking`.\n\n"
+        "Đồng thời gọi thêm `search-minfare` để lấy giá rẻ nhất ±7 ngày:\n\n"
+        "- OW: 1 lần cho chiều đi.\n"
+        "- RT: 2 lần riêng biệt (chiều đi + chiều về).\n\n"
+        "Kết quả trả thêm trường `lowerfare` trong `data`:\n\n"
+        "```json\n"
+        "{\"lowerfare\": {\"chiều đi\": [{\"ngày\": \"14/08/2026\", \"giá_vé_gốc\": 273400}], "
+        "\"chiều về\": [...]}}\n"
+        "```"
     ),
 )
 async def search_flights(body: SearchQuoteRequest, request: Request) -> SearchQuoteResponse:
     assert_airline_allowed(request, "SUNPQ")
     client = await get_client_async()
+
+    # ── Bước 1: search_simple ─────────────────────────────────────────────
     try:
         result = await run_in_threadpool(
             client.search_simple,
@@ -435,10 +446,53 @@ async def search_flights(body: SearchQuoteRequest, request: Request) -> SearchQu
             detail=f"Lỗi không mong muốn: {e}",
         )
 
+    # ── Bước 2: search_minfare — chạy song song với threadpool ───────────
+    # Lỗi minfare không chặn kết quả search chính, chỉ trả list rỗng.
+    lowerfare_out: list[dict[str, Any]] = []
+    lowerfare_in: list[dict[str, Any]] = []
+
+    try:
+        mf_out: MinFareResult = await run_in_threadpool(
+            client.search_minfare_simple,
+            departure=body.departure,
+            arrival=body.arrival,
+            flight_date=body.dep_date,
+            adult=body.adt,
+            child=body.chd,
+            infant=body.inf,
+            currency=body.currency,
+        )
+        lowerfare_out = mf_out.to_list()
+    except Exception:
+        pass  # minfare lỗi -> giữ list rỗng, không block kết quả
+
+    if body.trip_type == "RT" and body.arr_date:
+        try:
+            mf_in: MinFareResult = await run_in_threadpool(
+                client.search_minfare_simple,
+                departure=body.arrival,   # chiều về: đảo dep/arr
+                arrival=body.departure,
+                flight_date=body.arr_date,
+                adult=body.adt,
+                child=body.chd,
+                infant=body.inf,
+                currency=body.currency,
+            )
+            lowerfare_in = mf_in.to_list()
+        except Exception:
+            pass
+
+    # ── Gộp lowerfare vào data ────────────────────────────────────────────
+    formatted = result.formatted
+    formatted["lowerfare"] = {
+        "chiều đi": lowerfare_out,
+        "chiều về": lowerfare_in,
+    }
+
     return SearchQuoteResponse(
         success=True,
         total_count=result.total_count,
-        data=result.formatted,
+        data=formatted,
     )
 
 
