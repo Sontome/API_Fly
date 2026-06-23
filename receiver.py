@@ -629,7 +629,7 @@ try:
         
         # Xác định status rõ hơn
         if sender_email.lower().strip() in allowed_attachment_senders:
-            status = "EXPECTED_ATTACHMENT_MISSING"
+            status = "UNMATCHED"
         else:
             status = "UNMATCHED"
         
