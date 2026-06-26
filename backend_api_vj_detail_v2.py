@@ -167,7 +167,7 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
         data= data.get("data", [])
         
         baggage_item = next((item for item in data if item.get("code") == "Baggage"), None)
-        
+        print(baggage_item)
         if baggage_item:
             ancillaries_departure = baggage_item.get("ancillariesDeparture", [])
             ancillaries_return = baggage_item.get("ancillariesReturn", [])
