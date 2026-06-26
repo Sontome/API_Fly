@@ -202,6 +202,7 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
             result["chiều_về"]["HANH_LY_DELUXE"]= (giá_hành_lý_deluxe_chiều_về)
             result["chiều_về"]["HANH_LY"]= (giá_hành_lý_deluxe_chiều_về)
+        print(   result)     
         return result
     except Exception as e:
         print (e)
