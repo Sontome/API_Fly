@@ -112,8 +112,10 @@ def get_tax(authorization, booking_key, adult_count, child_count, infant_count,b
             res_json = res.json()
 
         result["departure"] = (extract_tax(res_json,"departure"))
+            
         if booking_key_arrival :
             result["arrival"] = (extract_tax(res_json,"arrival"))
+        print( result)       
         return result
     except requests.RequestException as e:
         print("❌ Lỗi khi gọi API thuế:", e)
@@ -215,10 +217,10 @@ def extract_tax(tax,departure):
     """
     try:
         print(type(tax))
-        print(tax)
+        
         data = tax.get("data", {})
         departure = data.get(departure, {})
-
+        print(departure)
         # Giá vé gốc
         fares = departure.get("fares", {})
         total_fares = fares.get("charges", [{}])[0].get("totalbaseamount", 0)
