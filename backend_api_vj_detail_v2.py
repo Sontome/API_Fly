@@ -102,10 +102,11 @@ def get_tax(authorization, booking_key, adult_count, child_count, infant_count,b
     try:
         res = requests.post(url, headers=headers, json=payload)
         res_json = res.json()
-
+        
         if res_json.get("resultcode") != 1:
             print("⚠️ Gọi lại get_tax lần 2...")
-            print(res_json.get("resultcode"))    
+            print(res_json.get("resultcode"))   
+            print(payload)      
             res = requests.post(url, headers=headers, json=payload)
             res_json = res.json()
 
