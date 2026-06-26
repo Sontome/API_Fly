@@ -394,7 +394,7 @@ def convert_price(data):
         for k in detail:
             for subk in detail[k]:
                 detail[k][subk] += arr_detail[k][subk]
-
+    print( detail )   
     return {"detail": detail}
 async def api_vj_detail_v2(booking_key, adult_count=1, child_count=0, infant_count=0):
     global token
@@ -464,6 +464,7 @@ async def api_vj_detail_rt_v2(booking_key,booking_key_arrival, adult_count=1, ch
     
     result = convert_price(result_data)
     giá_hành_lý = get_ancillary_options(token,booking_key,booking_key_arrival)
+        
     if giá_hành_lý:
         #print(giá_hành_lý)
         result["detail"]["người lớn"]["giá_vé"] +=lamtron(giá_hành_lý["chiều_đi"]["HANH_LY"])
