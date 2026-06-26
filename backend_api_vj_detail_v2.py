@@ -193,12 +193,12 @@ def get_ancillary_options(bearer_token, booking_key, booking_key_return=None):
             default_ancillaries_departure = defaultWithFare_item.get("ancillariesDeparture", [])
             default_ancillaries_return = defaultWithFare_item.get("ancillariesReturn", [])
         if default_ancillaries_departure:
-            hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Deluxe 20kgs"), [])
+            hành_lý_deluxe_chiều_đi = next((item for item in default_ancillaries_departure if item.get("originalName") == "Bag 20kgs"), [])
             giá_hành_lý_deluxe_chiều_đi = hành_lý_deluxe_chiều_đi.get("totalAmount",0)
             result["chiều_đi"]["HANH_LY"]= (giá_hành_lý_deluxe_chiều_đi)
             result["chiều_đi"]["HANH_LY_DELUXE"]= (giá_hành_lý_deluxe_chiều_đi)
         if default_ancillaries_return:
-            hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Deluxe 20kgs"), [])
+            hành_lý_deluxe_chiều_về = next((item for item in default_ancillaries_return if item.get("originalName") == "Bag 20kgs"), [])
             giá_hành_lý_deluxe_chiều_về = hành_lý_deluxe_chiều_về.get("totalAmount",0)
             result["chiều_về"]["HANH_LY_DELUXE"]= (giá_hành_lý_deluxe_chiều_về)
             result["chiều_về"]["HANH_LY"]= (giá_hành_lý_deluxe_chiều_về)
