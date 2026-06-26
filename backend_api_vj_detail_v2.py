@@ -214,6 +214,8 @@ def extract_tax(tax,departure):
     - phí_nhiên_liệu (int)
     """
     try:
+        print(type(tax))
+        print(tax)
         data = tax.get("data", {})
         departure = data.get(departure, {})
 
