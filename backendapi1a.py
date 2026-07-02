@@ -414,7 +414,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 ]
             else:
                 print(hanhkhach)
-                random_email = random_email_from_name(hanhkhach[0]["name"])
+                random_email = random_email_from_name(hanhkhach[0])
                 print("📧 Random email:", random_email)
             
                 cmds = [
