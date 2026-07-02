@@ -401,7 +401,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 phone = normalize_phone(phone)
                 cmds = [
                     f"APE-{email}",
-                    f"APE-{email}/p1",
+                    #f"APE-{email}/p1",
                     "APE-noreply.tkt.vna@gmail.com",
                     f"APM-{phone}",
                     f"APM-{phone}/p1",
@@ -418,8 +418,9 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 print("📧 Random email:", random_email)
             
                 cmds = [
-                    f"APE-{random_email}",
-                    f"APE-{random_email}/p1",
+                    # f"APE-{random_email}",
+                    # f"APE-{random_email}/p1",
+                    "APE-HANVIETAIR247@gmail.com",
                     "APE-HANVIETAIR247@gmail.com/p1",
                     "APM-+82 1035463396",
                     "APM-+82 1035463396/p1",
