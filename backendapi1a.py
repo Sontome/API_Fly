@@ -413,6 +413,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                     "IG"
                 ]
             else:
+                print(hanhkhach)
                 random_email = random_email_from_name(hanhkhach[0]["name"])
                 print("📧 Random email:", random_email)
             
