@@ -9,7 +9,7 @@ FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
 QR_IMAGE_PATH = "qrhva.jpg"
 #FONT_ARIAL = "C:\\Windows\\Fonts\\arial.ttf"
 NEW_TEXT = "Issuing office:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nPhone:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
-XANHSM_BANNER = "BAY CHUẨN "
+XANHSM_BANNER = "CHOOSE YOUR"
 NOTE_LINES = [
     "• Lưu ý:",
     "• Quý khách khi bay cần mang theo Hộ chiếu (còn hạn trên 6 tháng, tính từ ngày bay),",
