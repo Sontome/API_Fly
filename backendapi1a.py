@@ -11,6 +11,8 @@ from createNewSession import createNewSession
 from itertools import zip_longest
 from backend_reprice import add_reprice_pnr
 from backend_supabase_kakao import add_kakao_pnr
+import unicodedata
+
 EMAIL_RE = re.compile(r'([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})', re.I)
 
 # ================== SESSION HANDLER ==================
@@ -28,6 +30,36 @@ AIRPORT_TZ = {
     "PQC": 7,
     # nếu cần thì bổ sung thêm
 }
+
+EMAIL_DOMAINS = [
+    "gmail.com",
+    "naver.com",
+    "yahoo.com",
+    "hotmail.com",
+    "yandex.com",
+    "zohomail.com",
+    "aol.com",
+    "protonmail.com"
+]
+
+def remove_accents(text):
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
+    return text
+
+def random_email_from_name(pax):
+    # Lấy phần trước dấu ,
+    m = re.match(r"([^,]+)", pax)
+    name = m.group(1) if m else pax
+
+    # TRINH/SON -> trinhson
+    name = name.replace("/", "")
+
+    name = remove_accents(name)
+    name = re.sub(r"[^a-zA-Z0-9]", "", name).lower()
+
+    email = f"{name}{random.randint(1000,99999)}@{random.choice(EMAIL_DOMAINS)}"
+    return email
 def clean_name(raw_name: str):
     if not raw_name:
         return None
@@ -381,14 +413,17 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                     "IG"
                 ]
             else:
+                random_email = random_email_from_name(hanhkhach[0]["name"])
+                print("📧 Random email:", random_email)
+            
                 cmds = [
-                    "APE-hanvietair.service@gmail.com",
-                    "APE-hanvietair.service@gmail.com/p1",
+                    f"APE-{random_email}",
+                    f"APE-{random_email}/p1",
                     "APE-HANVIETAIR247@gmail.com/p1",
                     "APM-+82 1035463396",
                     "APM-+82 1035463396/p1",
                     "APM-+82 1021511790/p1",
-                    "APN-E+HANVIETAIR.SERVICE@GMAIL.COM/VI/p1",
+                    f"APN-E+{random_email}/VI/p1",
                     "APN-M+82 1035463396/KR/P1",
                     "TK OK",
                     "RF HVA",
