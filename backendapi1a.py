@@ -420,7 +420,7 @@ async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, a
                 cmds = [
                     # f"APE-{random_email}",
                     # f"APE-{random_email}/p1",
-                    "APE-HANVIETAIR247@gmail.com",
+                    "APE-HANVIETAIR.SERVICE@GMAIL.COM",
                     "APE-HANVIETAIR247@gmail.com/p1",
                     "APM-+82 1035463396",
                     "APM-+82 1035463396/p1",
