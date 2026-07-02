@@ -330,7 +330,7 @@ def build_pricing_command(hanhkhach, list_cmd, doituong):
         list_cmd.append(cmd)
     # Nếu có INF thì thêm dòng FXP riêng
     if has_infant and doituong=="VFR":
-        list_cmd.append("FXB/INF/RVFR-INF,U")
+        list_cmd.append("FXP/INF/RVFR-INF,U")
     return list_cmd, has_infant
 async def giu_ve_live_cmd(hanhkhach, dep, arr, depdate, deptime, arrdate=None, arrtime=None, doituong="VFR",email=None, phone= None,phonekakao="",emailkakao="",id_f2=None):
     cmd_AN = build_an_command(dep, arr, depdate, deptime, arrdate, arrtime)
