@@ -8,7 +8,7 @@ CONFIG_GIA_FILE = "config_gia.json"
 import subprocess
 import urllib.parse
 global token
-PROMOCODES = ["VJIN20"]
+PROMOCODES = ["VJIN20","ECO77","SALE77"]
 # 🔧 Giá mặc định
 def convert_hhmm_to_minutes(hhmm: str) -> int:
     hours = int(hhmm[:2])
