@@ -9,6 +9,7 @@ from backend_api_kakao import send_bms_image,kakao_delay
 from backend_checkpayment_PDF_VJ import check_payment
 from backend_checkpayment_PDF_VNA import check_payment_vna
 from backend_checkpayment_PDF_ASIANA import check_payment_asiana
+from backend_checkpayment_PDF_SUN import check_payment_sun
 from checkdate_VJ import checkdate_VJ
 from checkdate_VNA import checkdate_VNA
 from backend_read_PDF_VNA import check_ngon_ngu
@@ -1527,6 +1528,48 @@ async def checkpaymentVNA(
     try:
         
         res=check_payment_vna(temp_path)
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+    # Xóa file input ngay nếu không cần giữ
+    # try:
+    #     if os.path.exists(temp_path):
+    #         os.remove(temp_path)
+    # except Exception as e:
+    #     print(f"Lỗi xóa file input: {e}")
+
+    # Thêm task xóa file output sau khi gửi xong
+    
+
+    # Trả file output về cho client
+    return res
+@app.post("/check-payment-sun/")
+async def checkpaymentSUN(
+    
+    file: UploadFile = File(...)
+    
+):
+    # Lấy tên file gốc, bỏ path cho an toàn
+    filename = os.path.basename(file.filename)
+
+    # Thay khoảng trắng thành _
+    filename = filename.replace(" ", "_")
+
+    # Tạo path
+    temp_path = os.path.join(BASE_DIR, filename)
+
+    # Ghi file upload vào thư mục tạm
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+
+    # Tạo đường dẫn file output
+    res = None
+    
+    # Xử lý PDF
+    try:
+        
+        res=check_payment_sun(temp_path)
         
     except Exception as e:
         return {"error": str(e)}
