@@ -90,6 +90,9 @@ def check_payment_api(hang, file_path):
         elif hang == "VNA":
             endpoint = "http://127.0.0.1:8000/check-payment-vna/"
 
+        elif hang == "SUN":
+            endpoint = "http://127.0.0.1:8000/check-payment-sun/"
+
         else:
             return None
 
@@ -229,6 +232,45 @@ def generate_custom_filename(sender_email, subject, original_filename):
 
             result["file_name"] = (
                 f"VNA-{booking_code}-{passenger_name}.pdf"
+            )
+
+            return result
+
+    # =========================
+    # SunPQ (Sun PhuQuoc Airways)
+    # =========================
+
+    elif sender_email == "no-reply@sunphuquocairways.com":
+
+        match = re.match(
+            r"^(.+?),\s*([A-Z0-9]+),\s*\d{1,2}[A-Z]{3}\d{4}",
+            subject,
+            re.I
+        )
+
+        if match:
+
+            passenger_name = match.group(1).strip()
+            booking_code = match.group(2).upper()
+
+            passenger_name = re.sub(
+                r"\s+",
+                " ",
+                passenger_name
+            ).strip()
+
+            passenger_name = re.sub(
+                r'[\\/:*?"<>|]',
+                '',
+                passenger_name
+            )
+
+            result["type"] = "SUN"
+            result["pnr"] = booking_code
+            result["name"] = passenger_name
+
+            result["file_name"] = (
+                f"SUN-{booking_code}-{passenger_name}.pdf"
             )
 
             return result
@@ -455,7 +497,9 @@ try:
     
         "noreply.itinerary@vietjetair.com",
     
-        "no-reply@service.vietnamairlines.com"
+        "no-reply@service.vietnamairlines.com",
+
+        "no-reply@sunphuquocairways.com"
     ]
     # =========================
     # ATTACHMENTS
@@ -543,7 +587,7 @@ try:
             # CHECK PAYMENT
             # =========================
             
-            if file_info["type"] in ["VJ", "VNA"]:
+            if file_info["type"] in ["VJ", "VNA", "SUN"]:
             
                 payment_result = check_payment_api(
                     hang=file_info["type"],
