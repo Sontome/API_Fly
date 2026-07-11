@@ -559,43 +559,43 @@ async def api_checkve_vna_v3(trip:str="RT",
                     data=flightsfull_noichuyen["FARES"],
                     trip=trip
                 ))
-            if flightsVNA_noichuyen["FARES"] and flightsVNA_baythang["FARES"] :    
-                print("⚠️ FARES rỗng, retry với comp=C")
+            # if flightsVNA_noichuyen["FARES"] and flightsVNA_baythang["FARES"] :    
+            #     print("⚠️ FARES rỗng, retry với comp=C")
         
-                ca_retry = await pc.getfulllistCA(
-                    trip=trip,
-                    dep0=dep0,
-                    dep1=dep1,
-                    depdate0=depdate_0,
-                    depdate1=depdate_1,
-                    comp="C",
-                    adt=adt,
-                    chd=chd,
-                    inf=inf
-                )
+            #     ca_retry = await pc.getfulllistCA(
+            #         trip=trip,
+            #         dep0=dep0,
+            #         dep1=dep1,
+            #         depdate0=depdate_0,
+            #         depdate1=depdate_1,
+            #         comp="C",
+            #         adt=adt,
+            #         chd=chd,
+            #         inf=inf
+            #     )
                 
-                sskey_retry = ca_retry.get("fulllist", {}).get("SessionKey")
+            #     sskey_retry = ca_retry.get("fulllist", {}).get("SessionKey")
                 
-                if sskey_retry:
-                    flightsVNA_thuonggia = await pc.getflights(
-                        full_list=ca_retry["fulllist"],
-                        trip=trip,
-                        session_key=sskey_retry,
-                        activedCar="VN",
-                        dep0=dep0,
-                        dep1=dep1,
-                        depdate0=depdate_0,
-                        depdate1=depdate_1,
-                        activedVia="0",
-                        comp="C",
-                        adt=adt,
-                        chd=chd,
-                        inf=inf
-                    )
-                    resultfull.extend(prase_flights(
-                        data=flightsVNA_thuonggia["FARES"],
-                        trip=trip
-                    ))
+            #     if sskey_retry:
+            #         flightsVNA_thuonggia = await pc.getflights(
+            #             full_list=ca_retry["fulllist"],
+            #             trip=trip,
+            #             session_key=sskey_retry,
+            #             activedCar="VN",
+            #             dep0=dep0,
+            #             dep1=dep1,
+            #             depdate0=depdate_0,
+            #             depdate1=depdate_1,
+            #             activedVia="0",
+            #             comp="C",
+            #             adt=adt,
+            #             chd=chd,
+            #             inf=inf
+            #         )
+            #         resultfull.extend(prase_flights(
+            #             data=flightsVNA_thuonggia["FARES"],
+            #             trip=trip
+            #         ))
         log_step("TỔNG THỜI GIAN MAIN", t0)
         if sskey and resultfull :
             data_sorted = sorted(
