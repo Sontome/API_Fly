@@ -427,23 +427,25 @@ class SearchResponse:
         if recommendations:
             if departure_code in KOREA_AIRPORT_CODES:
                 # ── Xuất phát từ Hàn Quốc ────────────────────────────────
-                # Cần trả về ĐỒNG THỜI 2 loại vé (nếu tìm thấy):
-                #   (1) vé có hạng đi (và hạng về, nếu là khứ hồi) thuộc
-                #       nhóm PREMIUM_BOOKING_CLASSES (S, G, A, X)
-                #   (2) vé có hạng đi VÀ hạng về đều KHÔNG thuộc nhóm đó
+                # Cần trả về TOÀN BỘ vé của TẤT CẢ recommendation thỏa mãn
+                # (không dừng lại ở recommendation đầu tiên tìm thấy):
+                #   (1) các recommendation có hạng đi (và hạng về, nếu là
+                #       khứ hồi) đều thuộc nhóm PREMIUM_BOOKING_CLASSES
+                #       (S, G, A, X)
+                #   (2) các recommendation có hạng đi VÀ hạng về đều KHÔNG
+                #       thuộc nhóm đó
                 # Nếu một recommendation có 2 chiều lệch nhóm (1 bên premium,
                 # 1 bên không) thì recommendation đó không thỏa mãn cho cả
-                # 2 trường hợp trên → bỏ qua, xét recommendation kế tiếp.
-                rec_premium = _find_recommendation_by_class_group(
+                # 2 trường hợp trên → bỏ qua.
+                recs_premium = _find_recommendations_by_class_group(
                     recommendations, want_premium=True
                 )
-                rec_normal = _find_recommendation_by_class_group(
+                recs_normal = _find_recommendations_by_class_group(
                     recommendations, want_premium=False
                 )
 
-                for rec in (rec_premium, rec_normal):
-                    if rec is not None:
-                        body.extend(_build_entries_from_recommendation(rec))
+                for rec in [*recs_premium, *recs_normal]:
+                    body.extend(_build_entries_from_recommendation(rec))
 
                 # Fallback: không tìm thấy recommendation nào thỏa điều kiện
                 # → giữ hành vi cũ (dùng recommendation[0]) để tránh body rỗng.
@@ -502,12 +504,12 @@ def _hhmm_to_duration(value: str) -> str:
 # Helpers cho from_dict → formatted body
 # ─────────────────────────────────────────────────────────────────────────
  
-def _find_recommendation_by_class_group(
+def _find_recommendations_by_class_group(
     recommendations: list["Recommendation"],
     want_premium: bool,
-) -> "Recommendation | None":
+) -> list["Recommendation"]:
     """
-    Tìm recommendation đầu tiên có hạng vé (booking_class) của chiều đi
+    Tìm TẤT CẢ recommendation có hạng vé (booking_class) của chiều đi
     (``list_fare[0]``) và chiều về (``list_fare[1]``, nếu là khứ hồi)
     đồng nhất về nhóm:
 
@@ -517,11 +519,15 @@ def _find_recommendation_by_class_group(
       PREMIUM_BOOKING_CLASSES.
 
     Nếu 2 chiều lệch nhóm (1 bên premium, 1 bên không) thì recommendation
-    đó không thỏa mãn cho cả 2 trường hợp trên → bỏ qua, xét recommendation
-    tiếp theo.
+    đó không thỏa mãn cho cả 2 trường hợp trên → bỏ qua.
 
     Với vé một chiều (chỉ có ``list_fare[0]``), chỉ xét hạng đi.
+
+    Trả về danh sách theo đúng thứ tự xuất hiện trong ``recommendations``
+    (không dừng lại ở kết quả đầu tiên tìm thấy).
     """
+    matches: list["Recommendation"] = []
+
     for rec in recommendations:
         adult = rec.adult_pricing
         if not adult or not adult.list_fare:
@@ -539,13 +545,13 @@ def _find_recommendation_by_class_group(
                 continue
 
             if outbound_is_premium == want_premium:
-                return rec
+                matches.append(rec)
         else:
             # Một chiều (OW): chỉ xét hạng đi
             if outbound_is_premium == want_premium:
-                return rec
+                matches.append(rec)
 
-    return None
+    return matches
 
 
 def _build_entries_from_recommendation(rec: "Recommendation") -> list[dict[str, Any]]:
