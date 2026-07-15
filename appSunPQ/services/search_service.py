@@ -96,7 +96,7 @@ class SearchService:
                 ],
                 "option": {
                     "direct_only": False,
-                    "promo_code": "",
+                    "promo_code": "555555",
                     "corporate_code": "",
                     "trip_type": "RT",
                     "point_of_purchase": "",
