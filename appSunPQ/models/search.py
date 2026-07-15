@@ -455,6 +455,10 @@ class SearchResponse:
                 # ── Điểm khởi hành khác Hàn Quốc: giữ nguyên logic cũ ───
                 # (luôn lấy recommendation[0])
                 body.extend(_build_entries_from_recommendation(recommendations[0]))
+
+        # ── 4. Lọc kết quả cuối cùng: chỉ giữ các chuyến bay thẳng ─────────
+        # (số_điểm_dừng == "0" ở cả chiều đi lẫn chiều về, nếu có)
+        body = _filter_direct_only(body)
  
         obj = cls(
             success=success,
@@ -504,6 +508,29 @@ def _hhmm_to_duration(value: str) -> str:
 # Helpers cho from_dict → formatted body
 # ─────────────────────────────────────────────────────────────────────────
  
+def _filter_direct_only(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Lọc danh sách entry, chỉ giữ lại các chuyến bay THẲNG (không quá cảnh):
+
+    - ``chiều_đi.số_điểm_dừng`` phải bằng ``"0"``.
+    - Nếu entry có ``chiều_về`` (khứ hồi) thì ``chiều_về.số_điểm_dừng``
+      cũng phải bằng ``"0"``.
+    """
+    filtered: list[dict[str, Any]] = []
+    for entry in entries:
+        depart_leg = entry.get("chiều_đi") or {}
+        if depart_leg.get("số_điểm_dừng") != "0":
+            continue
+
+        return_leg = entry.get("chiều_về")
+        if return_leg is not None and return_leg.get("số_điểm_dừng") != "0":
+            continue
+
+        filtered.append(entry)
+
+    return filtered
+
+
 def _find_recommendations_by_class_group(
     recommendations: list["Recommendation"],
     want_premium: bool,
