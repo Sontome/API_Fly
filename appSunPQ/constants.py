@@ -27,5 +27,5 @@ SUBMIT_SELECTOR = "button[type='submit']"
 
 # ─── Tham số request mặc định ───────────────────────────────────────────────
 DEFAULT_CURRENCY = "KRW"
-DEFAULT_FARE_FAMILY = ["9GECO", "9GBUZ"]
+DEFAULT_FARE_FAMILY = ["9GECO","9GPRE", "9GBUZ"]
 DEFAULT_CHANNEL = "b2b"
