@@ -56,6 +56,20 @@ from __future__ import annotations
  
 from dataclasses import dataclass, field
 from typing import Any
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Constants
+# ─────────────────────────────────────────────────────────────────────────
+
+# Các mã sân bay được coi là "xuất phát từ Hàn Quốc". Mở rộng thêm nếu cần.
+KOREA_AIRPORT_CODES: set[str] = {
+    "ICN", "GMP", "PUS", "CJU", "TAE", "KWJ", "USN", "CJJ",
+}
+
+# Nhóm hạng vé "đặc biệt" (promo) — dùng để phân loại recommendation khi
+# điểm khởi hành là Hàn Quốc.
+PREMIUM_BOOKING_CLASSES: set[str] = {"S", "G", "A", "X"}
  
  
 # ─────────────────────────────────────────────────────────────────────────
@@ -400,49 +414,45 @@ class SearchResponse:
             for rec in inner.get("recommendation", [])
         ]
  
-        # ── 3. Build formatted body từ recommendation[0] ────────────────────
+        # ── 3. Build formatted body ──────────────────────────────────────────
+        # Xác định điểm khởi hành (departure của route/chặng đầu tiên trong
+        # list_flight) để biết có phải xuất phát từ Hàn Quốc hay không.
+        departure_code = ""
+        list_flight = inner.get("list_flight", [])
+        if list_flight:
+            departure_code = list_flight[0].get("departure", "")
+
         body: list[dict[str, Any]] = []
- 
+
         if recommendations:
-            best_rec = recommendations[0]
-            adult = best_rec.adult_pricing
- 
-            # fare theo route (ICNHAN / HANICN) – dùng chung cho mọi cặp trong rec[0]
-            fare_outbound: RouteFare | None = None
-            fare_inbound: RouteFare | None = None
-            if adult:
-                for fare in adult.list_fare:
-                    route_key = fare.route.replace("-", "")
-                    # Xác định chiều đi / chiều về dựa trên thứ tự list_fare
-                    if fare_outbound is None:
-                        fare_outbound = fare
-                    else:
-                        fare_inbound = fare
- 
-            for itinerary in best_rec.itineraries:
-                trips = itinerary.trips
- 
-                if len(trips) == 0:
-                    continue
- 
-                if len(trips) >= 2:
-                    # ── Khứ hồi (RT): 2 trip trong list_trip ──────────────
-                    out_trip: Trip = trips[0]
-                    in_trip: Trip  = trips[1]
-                    entry = {
-                        "chiều_đi":        _format_leg(out_trip, fare_outbound, trip_id=1),
-                        "chiều_về":        _format_leg(in_trip,  fare_inbound,  trip_id=2),
-                        "thông_tin_chung": _format_summary(fare_outbound, fare_inbound),
-                    }
-                else:
-                    # ── Một chiều (OW): chỉ có 1 trip trong list_trip ─────
-                    only_trip: Trip = trips[0]
-                    entry = {
-                        "chiều_đi":        _format_leg(only_trip, fare_outbound, trip_id=1),
-                        "thông_tin_chung": _format_summary(fare_outbound, None),
-                    }
- 
-                body.append(entry)
+            if departure_code in KOREA_AIRPORT_CODES:
+                # ── Xuất phát từ Hàn Quốc ────────────────────────────────
+                # Cần trả về ĐỒNG THỜI 2 loại vé (nếu tìm thấy):
+                #   (1) vé có hạng đi (và hạng về, nếu là khứ hồi) thuộc
+                #       nhóm PREMIUM_BOOKING_CLASSES (S, G, A, X)
+                #   (2) vé có hạng đi VÀ hạng về đều KHÔNG thuộc nhóm đó
+                # Nếu một recommendation có 2 chiều lệch nhóm (1 bên premium,
+                # 1 bên không) thì recommendation đó không thỏa mãn cho cả
+                # 2 trường hợp trên → bỏ qua, xét recommendation kế tiếp.
+                rec_premium = _find_recommendation_by_class_group(
+                    recommendations, want_premium=True
+                )
+                rec_normal = _find_recommendation_by_class_group(
+                    recommendations, want_premium=False
+                )
+
+                for rec in (rec_premium, rec_normal):
+                    if rec is not None:
+                        body.extend(_build_entries_from_recommendation(rec))
+
+                # Fallback: không tìm thấy recommendation nào thỏa điều kiện
+                # → giữ hành vi cũ (dùng recommendation[0]) để tránh body rỗng.
+                if not body:
+                    body.extend(_build_entries_from_recommendation(recommendations[0]))
+            else:
+                # ── Điểm khởi hành khác Hàn Quốc: giữ nguyên logic cũ ───
+                # (luôn lấy recommendation[0])
+                body.extend(_build_entries_from_recommendation(recommendations[0]))
  
         obj = cls(
             success=success,
@@ -492,6 +502,105 @@ def _hhmm_to_duration(value: str) -> str:
 # Helpers cho from_dict → formatted body
 # ─────────────────────────────────────────────────────────────────────────
  
+def _find_recommendation_by_class_group(
+    recommendations: list["Recommendation"],
+    want_premium: bool,
+) -> "Recommendation | None":
+    """
+    Tìm recommendation đầu tiên có hạng vé (booking_class) của chiều đi
+    (``list_fare[0]``) và chiều về (``list_fare[1]``, nếu là khứ hồi)
+    đồng nhất về nhóm:
+
+    - ``want_premium=True``  → cả 2 chiều đều thuộc PREMIUM_BOOKING_CLASSES
+      (S, G, A, X).
+    - ``want_premium=False`` → cả 2 chiều đều KHÔNG thuộc
+      PREMIUM_BOOKING_CLASSES.
+
+    Nếu 2 chiều lệch nhóm (1 bên premium, 1 bên không) thì recommendation
+    đó không thỏa mãn cho cả 2 trường hợp trên → bỏ qua, xét recommendation
+    tiếp theo.
+
+    Với vé một chiều (chỉ có ``list_fare[0]``), chỉ xét hạng đi.
+    """
+    for rec in recommendations:
+        adult = rec.adult_pricing
+        if not adult or not adult.list_fare:
+            continue
+
+        outbound_class = adult.list_fare[0].booking_class
+        outbound_is_premium = outbound_class in PREMIUM_BOOKING_CLASSES
+
+        if len(adult.list_fare) >= 2:
+            inbound_class = adult.list_fare[1].booking_class
+            inbound_is_premium = inbound_class in PREMIUM_BOOKING_CLASSES
+
+            # 2 chiều phải cùng nhóm (cùng premium hoặc cùng không) mới hợp lệ
+            if outbound_is_premium != inbound_is_premium:
+                continue
+
+            if outbound_is_premium == want_premium:
+                return rec
+        else:
+            # Một chiều (OW): chỉ xét hạng đi
+            if outbound_is_premium == want_premium:
+                return rec
+
+    return None
+
+
+def _build_entries_from_recommendation(rec: "Recommendation") -> list[dict[str, Any]]:
+    """
+    Build danh sách entry (``chiều_đi`` / ``chiều_về`` / ``thông_tin_chung``)
+    từ MỘT Recommendation cụ thể.
+
+    Dùng chung cho cả:
+    - Logic cũ: luôn build từ ``recommendation[0]``.
+    - Logic mới (điểm đi là Hàn Quốc): build từ recommendation được chọn
+      theo nhóm hạng vé (premium / normal) bởi
+      :func:`_find_recommendation_by_class_group`.
+    """
+    entries: list[dict[str, Any]] = []
+    adult = rec.adult_pricing
+
+    # fare theo route (ICNHAN / HANICN) – dùng chung cho mọi cặp trong rec
+    fare_outbound: RouteFare | None = None
+    fare_inbound: RouteFare | None = None
+    if adult:
+        for fare in adult.list_fare:
+            # Xác định chiều đi / chiều về dựa trên thứ tự list_fare
+            if fare_outbound is None:
+                fare_outbound = fare
+            else:
+                fare_inbound = fare
+
+    for itinerary in rec.itineraries:
+        trips = itinerary.trips
+
+        if len(trips) == 0:
+            continue
+
+        if len(trips) >= 2:
+            # ── Khứ hồi (RT): 2 trip trong list_trip ──────────────
+            out_trip: Trip = trips[0]
+            in_trip: Trip = trips[1]
+            entry = {
+                "chiều_đi":        _format_leg(out_trip, fare_outbound, trip_id=1),
+                "chiều_về":        _format_leg(in_trip,  fare_inbound,  trip_id=2),
+                "thông_tin_chung": _format_summary(fare_outbound, fare_inbound),
+            }
+        else:
+            # ── Một chiều (OW): chỉ có 1 trip trong list_trip ─────
+            only_trip: Trip = trips[0]
+            entry = {
+                "chiều_đi":        _format_leg(only_trip, fare_outbound, trip_id=1),
+                "thông_tin_chung": _format_summary(fare_outbound, None),
+            }
+
+        entries.append(entry)
+
+    return entries
+
+
 def _parse_datetime(dt_str: str) -> tuple[str, str]:
     """
     Tách chuỗi datetime 'YYYY-MM-DD HH:MM:SS' thành (giờ 'HH:MM', ngày 'DD/MM/YYYY').
