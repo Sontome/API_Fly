@@ -612,9 +612,10 @@ def _best_fare_by_group(
 ) -> "RouteFare | None":
     """
     Trong danh sách RouteFare đã thu thập cho 1 trip_id, lọc theo nhóm
-    hạng vé (premium S/G/A/X hoặc normal), rồi chọn ra fare có hạng vé
-    ưu tiên nhất theo FARE_CLASS_PRIORITY_ORDER. Nếu có nhiều fare cùng
-    hạng ưu tiên nhất, chọn fare rẻ nhất (total_amount thấp nhất).
+    hạng vé (premium S/G/A/X hoặc normal), rồi chọn ra fare RẺ NHẤT
+    (total_amount thấp nhất) trong nhóm đó. Nếu có nhiều fare cùng giá,
+    dùng FARE_CLASS_PRIORITY_ORDER làm tiêu chí phụ để chọn (ưu tiên
+    hạng đứng trước trong danh sách).
     """
     candidates = [
         f for f in fares
@@ -623,9 +624,9 @@ def _best_fare_by_group(
     if not candidates:
         return None
 
-    best_rank = min(_fare_class_rank(f.booking_class) for f in candidates)
-    best_candidates = [f for f in candidates if _fare_class_rank(f.booking_class) == best_rank]
-    return min(best_candidates, key=lambda f: f.total_amount)
+    best_price = min(f.total_amount for f in candidates)
+    cheapest = [f for f in candidates if f.total_amount == best_price]
+    return min(cheapest, key=lambda f: _fare_class_rank(f.booking_class))
 
 
 def _build_korea_direct_entries(
