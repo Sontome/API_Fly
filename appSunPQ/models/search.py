@@ -70,6 +70,15 @@ KOREA_AIRPORT_CODES: set[str] = {
 # Nhóm hạng vé "đặc biệt" (promo) — dùng để phân loại recommendation khi
 # điểm khởi hành là Hàn Quốc.
 PREMIUM_BOOKING_CLASSES: set[str] = {"S", "G", "A", "X"}
+
+# Thứ tự ưu tiên hạng vé (từ ưu tiên cao nhất → thấp nhất) khi có nhiều hạng
+# cùng khả dụng cho 1 chuyến bay thẳng. Dùng để chọn ra hạng "tốt nhất" của
+# mỗi nhóm (premium / normal). Lưu ý "L" xuất hiện 2 lần trong danh sách gốc;
+# _fare_class_rank() chỉ lấy rank của lần xuất hiện ĐẦU TIÊN.
+FARE_CLASS_PRIORITY_ORDER: list[str] = [
+    "X", "A", "G", "L", "S", "V", "U", "R", "O", "T",
+    "Q", "N", "M", "L", "K", "H", "B", "W", "Y",
+]
  
  
 # ─────────────────────────────────────────────────────────────────────────
@@ -427,27 +436,34 @@ class SearchResponse:
         if recommendations:
             if departure_code in KOREA_AIRPORT_CODES:
                 # ── Xuất phát từ Hàn Quốc ────────────────────────────────
-                # Cần trả về TOÀN BỘ vé của TẤT CẢ recommendation thỏa mãn
-                # (không dừng lại ở recommendation đầu tiên tìm thấy):
-                #   (1) các recommendation có hạng đi (và hạng về, nếu là
-                #       khứ hồi) đều thuộc nhóm PREMIUM_BOOKING_CLASSES
-                #       (S, G, A, X)
-                #   (2) các recommendation có hạng đi VÀ hạng về đều KHÔNG
-                #       thuộc nhóm đó
-                # Nếu một recommendation có 2 chiều lệch nhóm (1 bên premium,
-                # 1 bên không) thì recommendation đó không thỏa mãn cho cả
-                # 2 trường hợp trên → bỏ qua.
-                recs_premium = _find_recommendations_by_class_group(
-                    recommendations, want_premium=True
+                # Vấn đề: hãng không luôn recommend đủ mọi tổ hợp
+                # (chiều đi thẳng + chiều về thẳng) ghép chung với nhau
+                # trong CÙNG một recommendation — nên không thể chỉ dựa
+                # vào "list_segment" của từng recommendation để tìm vé
+                # bay thẳng.
+                #
+                # Logic mới: xác định thẳng trip_id bay thẳng (stop_number
+                # không có / bằng 0) của mỗi chiều từ `list_flight`, sau đó
+                # quét TẤT CẢ recommendation để gom mọi mức giá + hạng vé
+                # đã từng xuất hiện cho đúng trip_id đó (dù trip_id đó được
+                # ghép chung với trip nào ở chiều còn lại). Từ tập hợp giá
+                # thu được, tách theo 2 nhóm hạng (S/G/A/X và phần còn lại),
+                # chọn hạng "tốt nhất" mỗi nhóm theo FARE_CLASS_PRIORITY_ORDER,
+                # rồi ghép hạng tốt nhất của chiều đi với hạng tốt nhất
+                # cùng nhóm của chiều về → tối đa 2 vé (1 vé nhóm premium,
+                # 1 vé nhóm normal).
+                outbound_direct_id = (
+                    _find_direct_trip_id(list_flight[0]) if list_flight else None
                 )
-                recs_normal = _find_recommendations_by_class_group(
-                    recommendations, want_premium=False
+                inbound_direct_id = (
+                    _find_direct_trip_id(list_flight[1]) if len(list_flight) > 1 else None
                 )
 
-                for rec in [*recs_premium, *recs_normal]:
-                    body.extend(_build_entries_from_recommendation(rec))
+                body.extend(_build_korea_direct_entries(
+                    recommendations, trip_map, outbound_direct_id, inbound_direct_id,
+                ))
 
-                # Fallback: không tìm thấy recommendation nào thỏa điều kiện
+                # Fallback: không tìm được vé bay thẳng nào theo logic mới
                 # → giữ hành vi cũ (dùng recommendation[0]) để tránh body rỗng.
                 if not body:
                     body.extend(_build_entries_from_recommendation(recommendations[0]))
@@ -531,54 +547,144 @@ def _filter_direct_only(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return filtered
 
 
-def _find_recommendations_by_class_group(
+_FARE_CLASS_RANK: dict[str, int] = {}
+for _idx, _cls in enumerate(FARE_CLASS_PRIORITY_ORDER):
+    _FARE_CLASS_RANK.setdefault(_cls, _idx)  # giữ rank của lần xuất hiện đầu tiên
+
+
+def _fare_class_rank(booking_class: str) -> int:
+    """
+    Trả về thứ hạng ưu tiên của 1 hạng vé theo FARE_CLASS_PRIORITY_ORDER
+    (số càng nhỏ càng ưu tiên). Hạng không có trong danh sách → xếp cuối.
+    """
+    return _FARE_CLASS_RANK.get(booking_class, len(FARE_CLASS_PRIORITY_ORDER))
+
+
+def _find_direct_trip_id(flight_group: dict[str, Any]) -> str | None:
+    """
+    Tìm trip_id bay THẲNG (không có "stop_number" hoặc "stop_number" == 0)
+    trong 1 flight_group (1 phần tử của ``data.list_flight``).
+
+    Trả về None nếu flight_group không có chuyến bay thẳng nào.
+    """
+    for trip_data in flight_group.get("list_trip", []):
+        if not trip_data.get("stop_number"):
+            return trip_data.get("trip_id")
+    return None
+
+
+def _collect_fares_for_trip(
     recommendations: list["Recommendation"],
-    want_premium: bool,
-) -> list["Recommendation"]:
+    trip_id: str,
+    leg_index: int,
+) -> list["RouteFare"]:
     """
-    Tìm TẤT CẢ recommendation có hạng vé (booking_class) của chiều đi
-    (``list_fare[0]``) và chiều về (``list_fare[1]``, nếu là khứ hồi)
-    đồng nhất về nhóm:
+    Quét TẤT CẢ recommendation, gom mọi RouteFare (giá + hạng vé) đã từng
+    được gán cho ``trip_id`` ở vị trí ``leg_index`` (0 = chiều đi,
+    1 = chiều về) trong bất kỳ itinerary nào của recommendation đó — bất
+    kể trip_id đó được ghép chung với trip nào ở chiều còn lại.
 
-    - ``want_premium=True``  → cả 2 chiều đều thuộc PREMIUM_BOOKING_CLASSES
-      (S, G, A, X).
-    - ``want_premium=False`` → cả 2 chiều đều KHÔNG thuộc
-      PREMIUM_BOOKING_CLASSES.
-
-    Nếu 2 chiều lệch nhóm (1 bên premium, 1 bên không) thì recommendation
-    đó không thỏa mãn cho cả 2 trường hợp trên → bỏ qua.
-
-    Với vé một chiều (chỉ có ``list_fare[0]``), chỉ xét hạng đi.
-
-    Trả về danh sách theo đúng thứ tự xuất hiện trong ``recommendations``
-    (không dừng lại ở kết quả đầu tiên tìm thấy).
+    Một recommendation có thể đóng góp nhiều lần nếu nó chứa nhiều
+    itinerary khác nhau, nhưng vì tất cả itinerary trong 1 recommendation
+    dùng chung 1 bộ giá nên chỉ cần cộng dồn 1 lần cho mỗi recommendation
+    khớp trip_id.
     """
-    matches: list["Recommendation"] = []
+    fares: list["RouteFare"] = []
 
     for rec in recommendations:
         adult = rec.adult_pricing
-        if not adult or not adult.list_fare:
+        if not adult or leg_index >= len(adult.list_fare):
             continue
 
-        outbound_class = adult.list_fare[0].booking_class
-        outbound_is_premium = outbound_class in PREMIUM_BOOKING_CLASSES
+        matched = any(
+            leg_index < len(itinerary.trip_ids) and itinerary.trip_ids[leg_index] == trip_id
+            for itinerary in rec.itineraries
+        )
+        if matched:
+            fares.append(adult.list_fare[leg_index])
 
-        if len(adult.list_fare) >= 2:
-            inbound_class = adult.list_fare[1].booking_class
-            inbound_is_premium = inbound_class in PREMIUM_BOOKING_CLASSES
+    return fares
 
-            # 2 chiều phải cùng nhóm (cùng premium hoặc cùng không) mới hợp lệ
-            if outbound_is_premium != inbound_is_premium:
+
+def _best_fare_by_group(
+    fares: list["RouteFare"],
+    want_premium: bool,
+) -> "RouteFare | None":
+    """
+    Trong danh sách RouteFare đã thu thập cho 1 trip_id, lọc theo nhóm
+    hạng vé (premium S/G/A/X hoặc normal), rồi chọn ra fare có hạng vé
+    ưu tiên nhất theo FARE_CLASS_PRIORITY_ORDER. Nếu có nhiều fare cùng
+    hạng ưu tiên nhất, chọn fare rẻ nhất (total_amount thấp nhất).
+    """
+    candidates = [
+        f for f in fares
+        if (f.booking_class in PREMIUM_BOOKING_CLASSES) == want_premium
+    ]
+    if not candidates:
+        return None
+
+    best_rank = min(_fare_class_rank(f.booking_class) for f in candidates)
+    best_candidates = [f for f in candidates if _fare_class_rank(f.booking_class) == best_rank]
+    return min(best_candidates, key=lambda f: f.total_amount)
+
+
+def _build_korea_direct_entries(
+    recommendations: list["Recommendation"],
+    trip_map: dict[str, "Trip"],
+    outbound_direct_id: str | None,
+    inbound_direct_id: str | None,
+) -> list[dict[str, Any]]:
+    """
+    Build tối đa 2 "vé" (entry) cho trường hợp khởi hành từ Hàn Quốc:
+    1 vé ghép hạng premium (S/G/A/X) tốt nhất mỗi chiều, và 1 vé ghép
+    hạng normal (khác S/G/A/X) tốt nhất mỗi chiều — luôn dùng ĐÚNG
+    trip_id bay thẳng của mỗi chiều (lấy từ list_flight), không phụ
+    thuộc vào cách recommendation ghép cặp trip.
+
+    Nếu là một chiều (không có inbound_direct_id), mỗi vé chỉ có chiều đi.
+    Nếu một nhóm (premium/normal) không tìm được đủ giá cho cả 2 chiều
+    (khứ hồi) thì bỏ qua nhóm đó.
+    """
+    entries: list[dict[str, Any]] = []
+
+    if not outbound_direct_id:
+        return entries
+    outbound_trip = trip_map.get(outbound_direct_id)
+    if outbound_trip is None:
+        return entries
+
+    inbound_trip = trip_map.get(inbound_direct_id) if inbound_direct_id else None
+
+    outbound_fares = _collect_fares_for_trip(recommendations, outbound_direct_id, leg_index=0)
+    inbound_fares = (
+        _collect_fares_for_trip(recommendations, inbound_direct_id, leg_index=1)
+        if inbound_direct_id else []
+    )
+
+    for want_premium in (True, False):
+        fare_out = _best_fare_by_group(outbound_fares, want_premium)
+        if fare_out is None:
+            continue
+
+        if inbound_trip is not None:
+            fare_in = _best_fare_by_group(inbound_fares, want_premium)
+            if fare_in is None:
+                # Không tìm được giá cùng nhóm cho chiều về → bỏ qua nhóm này
                 continue
-
-            if outbound_is_premium == want_premium:
-                matches.append(rec)
+            entry = {
+                "chiều_đi":        _format_leg(outbound_trip, fare_out, trip_id=1),
+                "chiều_về":        _format_leg(inbound_trip,  fare_in,  trip_id=2),
+                "thông_tin_chung": _format_summary(fare_out, fare_in),
+            }
         else:
-            # Một chiều (OW): chỉ xét hạng đi
-            if outbound_is_premium == want_premium:
-                matches.append(rec)
+            entry = {
+                "chiều_đi":        _format_leg(outbound_trip, fare_out, trip_id=1),
+                "thông_tin_chung": _format_summary(fare_out, None),
+            }
 
-    return matches
+        entries.append(entry)
+
+    return entries
 
 
 def _build_entries_from_recommendation(rec: "Recommendation") -> list[dict[str, Any]]:
