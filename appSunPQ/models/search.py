@@ -433,6 +433,15 @@ class SearchResponse:
 
         body: list[dict[str, Any]] = []
 
+        # is_round_trip: xác định dựa trên số flight_group trong list_flight
+        # (server luôn trả đủ 2 flight_group — 1 cho mỗi chiều — khi khách
+        # tìm khứ hồi, BẤT KỂ chiều đó có tìm được chuyến bay thẳng hay
+        # không). Dùng để phân biệt "khứ hồi nhưng thiếu chuyến bay thẳng
+        # chiều về" (phải bỏ qua, coi như không có tổ hợp phù hợp) với
+        # "một chiều thật sự" (chỉ có 1 flight_group, chiều_về vốn dĩ không
+        # tồn tại — hợp lệ).
+        is_round_trip = len(list_flight) > 1
+
         if recommendations:
             if departure_code in KOREA_AIRPORT_CODES:
                 # ── Xuất phát từ Hàn Quốc ────────────────────────────────
@@ -461,6 +470,7 @@ class SearchResponse:
 
                 body.extend(_build_korea_direct_entries(
                     recommendations, trip_map, outbound_direct_id, inbound_direct_id,
+                    is_round_trip=is_round_trip,
                 ))
 
                 # Fallback: không tìm được vé bay thẳng nào theo logic mới
@@ -634,6 +644,7 @@ def _build_korea_direct_entries(
     trip_map: dict[str, "Trip"],
     outbound_direct_id: str | None,
     inbound_direct_id: str | None,
+    is_round_trip: bool = False,
 ) -> list[dict[str, Any]]:
     """
     Build tối đa 2 "vé" (entry) cho trường hợp khởi hành từ Hàn Quốc:
@@ -642,7 +653,15 @@ def _build_korea_direct_entries(
     trip_id bay thẳng của mỗi chiều (lấy từ list_flight), không phụ
     thuộc vào cách recommendation ghép cặp trip.
 
-    Nếu là một chiều (không có inbound_direct_id), mỗi vé chỉ có chiều đi.
+    Nếu là một chiều thật sự (``is_round_trip=False``, không có
+    inbound_direct_id), mỗi vé chỉ có chiều đi.
+
+    Nếu là khứ hồi (``is_round_trip=True``) nhưng KHÔNG tìm được chuyến bay
+    thẳng nào cho chiều về (``inbound_trip`` không tồn tại), trả về RỖNG
+    ngay — KHÔNG được rơi xuống nhánh chỉ-có-chiều-đi (trông giống một
+    chiều), vì thực tế khách yêu cầu khứ hồi và chiều về không có lựa chọn
+    bay thẳng phù hợp. Coi như "không có tổ hợp phù hợp".
+
     Nếu một nhóm (premium/normal) không tìm được đủ giá cho cả 2 chiều
     (khứ hồi) thì bỏ qua nhóm đó.
     """
@@ -655,6 +674,12 @@ def _build_korea_direct_entries(
         return entries
 
     inbound_trip = trip_map.get(inbound_direct_id) if inbound_direct_id else None
+
+    # Khứ hồi nhưng chiều về không có chuyến bay thẳng nào → không có tổ hợp
+    # phù hợp, tuyệt đối không build "vé" chỉ có chiều đi để giả làm một
+    # chiều.
+    if is_round_trip and inbound_trip is None:
+        return entries
 
     outbound_fares = _collect_fares_for_trip(recommendations, outbound_direct_id, leg_index=0)
     inbound_fares = (
@@ -676,11 +701,15 @@ def _build_korea_direct_entries(
                 "chiều_đi":        _format_leg(outbound_trip, fare_out, trip_id=1),
                 "chiều_về":        _format_leg(inbound_trip,  fare_in,  trip_id=2),
                 "thông_tin_chung": _format_summary(fare_out, fare_in),
+                "_confirm_itinerary": _build_confirm_itinerary(
+                    (outbound_trip, fare_out), (inbound_trip, fare_in),
+                ),
             }
         else:
             entry = {
                 "chiều_đi":        _format_leg(outbound_trip, fare_out, trip_id=1),
                 "thông_tin_chung": _format_summary(fare_out, None),
+                "_confirm_itinerary": _build_confirm_itinerary((outbound_trip, fare_out)),
             }
 
         entries.append(entry)
@@ -727,6 +756,9 @@ def _build_entries_from_recommendation(rec: "Recommendation") -> list[dict[str, 
                 "chiều_đi":        _format_leg(out_trip, fare_outbound, trip_id=1),
                 "chiều_về":        _format_leg(in_trip,  fare_inbound,  trip_id=2),
                 "thông_tin_chung": _format_summary(fare_outbound, fare_inbound),
+                "_confirm_itinerary": _build_confirm_itinerary(
+                    (out_trip, fare_outbound), (in_trip, fare_inbound),
+                ),
             }
         else:
             # ── Một chiều (OW): chỉ có 1 trip trong list_trip ─────
@@ -734,6 +766,7 @@ def _build_entries_from_recommendation(rec: "Recommendation") -> list[dict[str, 
             entry = {
                 "chiều_đi":        _format_leg(only_trip, fare_outbound, trip_id=1),
                 "thông_tin_chung": _format_summary(fare_outbound, None),
+                "_confirm_itinerary": _build_confirm_itinerary((only_trip, fare_outbound)),
             }
 
         entries.append(entry)
@@ -881,6 +914,74 @@ def _format_leg(trip: Trip, fare: "RouteFare | None", trip_id: int = 1) -> dict[
     return result
  
  
+def _build_confirm_itinerary(
+    *trip_fare_pairs: tuple["Trip | None", "RouteFare | None"],
+) -> list[dict[str, Any]]:
+    """
+    Build ``list_itinerary`` đúng format cho POST /normal/create/confirm-price.
+
+    KHÁC với list_itinerary dùng cho create-booking (``_format_leg``):
+    - ``trip_id``: trip_id GỐC dạng chuỗi (vd "ICNHAN-1", "HANICN-1") —
+      KHÔNG phải số thứ tự 1/2.
+    - ``segment_id``: đánh số LIÊN TỤC xuyên suốt toàn bộ itinerary (cả 2
+      chiều nếu khứ hồi) — KHÔNG reset lại về 1 ở mỗi chiều.
+    - Không có ``elapse_flying_time``, ``duration``, ``flight_status``.
+
+    Args:
+        trip_fare_pairs: các cặp (trip, fare) theo thứ tự chiều đi trước,
+            chiều về sau (nếu có). ``trip`` hoặc ``fare`` có thể là None
+            (sẽ bị bỏ qua / dùng giá trị rỗng).
+
+    Returns:
+        List sẵn sàng dùng làm ``list_itinerary`` cho confirm-price.
+
+    Example::
+
+        _build_confirm_itinerary((out_trip, fare_out), (in_trip, fare_in))
+        # -> [
+        #     {"trip_id": "ICNHAN-1", "segment_id": 1, ...},
+        #     {"trip_id": "HANICN-1", "segment_id": 2, ...},
+        # ]
+    """
+    itinerary: list[dict[str, Any]] = []
+    seg_counter = 0
+
+    for trip, fare in trip_fare_pairs:
+        if trip is None:
+            continue
+
+        # Map segment_id (1-based, trong PHẠM VI của trip này) -> SegmentFareInfo
+        seg_fare_map: dict[int, SegmentFareInfo] = {}
+        booking_class = fare.booking_class if fare else ""
+        fare_basis = fare.segment_fare[0].fare_basis if (fare and fare.segment_fare) else ""
+        if fare:
+            for idx, sf in enumerate(fare.segment_fare, start=1):
+                seg_fare_map[idx] = sf
+
+        num_segments = len(trip.segments)
+        for seg_idx, seg in enumerate(trip.segments, start=1):
+            seg_counter += 1
+            sf = seg_fare_map.get(seg_idx)
+            seg_booking_class = sf.booking_class if sf else booking_class
+            seg_fare_basis    = sf.fare_basis    if sf else fare_basis
+            seg_break_point   = sf.break_point   if sf else ("Y" if seg_idx == num_segments else "N")
+
+            itinerary.append({
+                "trip_id":       trip.trip_id,
+                "segment_id":    seg_counter,
+                "departure":     seg.departure.code,
+                "arrival":       seg.arrival.code,
+                "flight_date":   seg.flight_date,
+                "flight_number": int(seg.flight_number) if str(seg.flight_number).isdigit() else seg.flight_number,
+                "carrier":       seg.carrier,
+                "booking_class": seg_booking_class,
+                "fare_basis":    seg_fare_basis,
+                "break_point":   seg_break_point,
+            })
+
+    return itinerary
+
+
 def _format_summary(
     fare_out: "RouteFare | None",
     fare_in:  "RouteFare | None",
