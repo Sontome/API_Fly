@@ -33,6 +33,7 @@ from typing import Any
 from appSunPQ.constants import DEFAULT_CURRENCY, DEFAULT_FARE_FAMILY
 from appSunPQ.endpoints import SEARCH_FLIGHT
 from appSunPQ.models.search import SearchResponse
+from appSunPQ.services.confirm_price_service import ConfirmPriceService
 from appSunPQ.session_manager import SessionManager
 from shared.exceptions import SearchError
 from shared.logger import LogPrefix, get_logger
@@ -62,6 +63,7 @@ class SearchService:
 
     def __init__(self, session_manager: SessionManager) -> None:
         self._sm = session_manager
+        self._confirm_service = ConfirmPriceService(session_manager)
 
     # ── Public API ──────────────────────────────────────────────────────
 
@@ -133,6 +135,14 @@ class SearchService:
                 f"Kết quả tìm kiếm: {result.total_count} recommendation, "
                 f"{len(result.trip_map)} trip, success={result.success}"
             )
+
+            # ── Confirm lại giá chuẩn cho từng "vé" trong formatted body ──
+            # Giá trong recommendation là giá GỢI Ý — cần confirm-price cho
+            # đúng tổ hợp itinerary đã ghép (mỗi entry = 1 lần gọi, gồm cả
+            # chiều đi + chiều về nếu khứ hồi) để lấy giá chuẩn cuối cùng.
+            # Entry nào confirm lỗi/không hợp lệ sẽ bị loại khỏi kết quả.
+            self._confirm_and_filter_body(result, payload)
+
             return result
 
         except SearchError:
@@ -210,3 +220,83 @@ class SearchService:
             },
         }
         return self.search(payload, override_url=override_url)
+
+    # ── Internal: confirm-price cho formatted body ─────────────────────────
+
+    def _confirm_and_filter_body(
+        self,
+        result: SearchResponse,
+        payload: dict[str, Any],
+    ) -> None:
+        """
+        Với mỗi entry trong ``result.formatted["body"]``, gọi
+        POST /normal/create/confirm-price (1 lần/entry, gồm cả chiều đi +
+        chiều về nếu khứ hồi — xem ``ConfirmPriceService``) để lấy giá
+        CHUẨN, rồi cập nhật lại ``thông_tin_chung.giá_vé`` bằng tổng tiền
+        đã confirm.
+
+        Quy ước:
+        - Giá TỪNG CHIỀU (``chiều_đi.giá_vé_gốc`` / ``chiều_về.giá_vé_gốc``)
+          GIỮ NGUYÊN như giá ước tính từ search (confirm-price chỉ trả về
+          MỘT tổng duy nhất cho khứ hồi, không tách được theo từng chiều).
+        - Nếu confirm-price lỗi / trả về không hợp lệ (success=False hoặc
+          total_amount <= 0) cho 1 entry → BỎ HẲN entry đó khỏi kết quả trả
+          về (không hiển thị giá chưa chắc chắn cho khách).
+        - Field nội bộ ``_confirm_itinerary`` luôn bị xóa khỏi entry trước
+          khi trả về (không phải dữ liệu client cần thấy).
+
+        Mutates ``result.formatted["body"]`` in-place (thay bằng danh sách
+        đã lọc + cập nhật giá).
+        """
+        adult = payload.get("adult", 1)
+        child = payload.get("child", 0)
+        infant = payload.get("infant", 0)
+        option = payload.get("option") or {}
+        trip_type = option.get("trip_type", "RT")
+        currency = option.get("currency", DEFAULT_CURRENCY)
+        promo_code = option.get("promo_code", "")
+        corporate_code = option.get("corporate_code", "")
+
+        body = result.formatted.get("body", [])
+        confirmed_body: list[dict[str, Any]] = []
+
+        for entry in body:
+            confirm_itinerary = entry.pop("_confirm_itinerary", None)
+
+            if not confirm_itinerary:
+                logger.warning(
+                    "Bỏ 1 entry khỏi kết quả: thiếu dữ liệu để confirm-price"
+                )
+                continue
+
+            try:
+                confirmed = self._confirm_service.confirm_price_simple(
+                    list_itinerary=confirm_itinerary,
+                    adult=adult, child=child, infant=infant,
+                    trip_type=trip_type, currency=currency,
+                    promo_code=promo_code, corporate_code=corporate_code,
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Confirm-price thất bại cho 1 entry, bỏ khỏi kết quả: {e}"
+                )
+                continue
+
+            if not confirmed.is_valid:
+                logger.warning(
+                    "Confirm-price trả về không hợp lệ (success=False hoặc "
+                    "total_amount<=0), bỏ entry khỏi kết quả"
+                )
+                continue
+
+            summary = dict(entry.get("thông_tin_chung") or {})
+            summary["giá_vé"] = str(int(confirmed.total_amount))
+            entry["thông_tin_chung"] = summary
+
+            confirmed_body.append(entry)
+
+        logger.info(
+            f"Confirm-price: {len(confirmed_body)}/{len(body)} entry hợp lệ "
+            "sau khi xác nhận giá"
+        )
+        result.formatted["body"] = confirmed_body
