@@ -30,6 +30,16 @@ SEARCH_MINFARE = f"{API_BASE_URL}/normal/search-minfare"
 # SessionManager không tự đăng nhập lại, và /normal/search vẫn 401.
 CHECK_ACCOUNT_FUND = f"{API_BASE_URL}/normal/check-account-fund"
 
+# ─── Confirm price ──────────────────────────────────────────────────────────
+# POST /normal/create/confirm-price
+#
+# Dùng để lấy GIÁ CHUẨN (đã tính lại thuế/phí) cho MỘT tổ hợp itinerary cụ
+# thể đã ghép sẵn (OW: 1 chiều, RT: cả 2 chiều gộp trong CÙNG 1 lần gọi).
+# Giá trả về trong /normal/search (recommendation.list_pax_pricing) chỉ là
+# giá ước tính/gợi ý — sau khi ghép chặng thực tế giá có thể tăng/giảm chút
+# ít, nên cần confirm lại trước khi hiển thị/báo giá cuối cùng cho khách.
+CONFIRM_PRICE = f"{API_BASE_URL}/normal/create/confirm-price"
+
 # ─── Hold booking ───────────────────────────────────────────────────────────
 # POST /normal/create/hold-booking
 HOLD_BOOKING = f"{API_BASE_URL}/normal/create/hold-booking"

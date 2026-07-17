@@ -24,10 +24,12 @@ from appSunPQ.models.booking import (
     Passenger,
 )
 from appSunPQ.models.check import CheckResult
+from appSunPQ.models.confirm_price import ConfirmPriceResult
 from appSunPQ.models.minfare import MinFareResult
 from appSunPQ.models.search import SearchResponse
 from appSunPQ.services.booking_service import BookingService
 from appSunPQ.services.check_service import CheckService
+from appSunPQ.services.confirm_price_service import ConfirmPriceService
 from appSunPQ.services.hold_service import HoldService
 from appSunPQ.services.minfare_service import MinFareService
 from appSunPQ.services.search_service import SearchService
@@ -84,6 +86,10 @@ class SunPortalClient:
         self._booking_service = BookingService(self._session_manager)
         self._check_service   = CheckService(self._session_manager)
         self._minfare_service = MinFareService(self._session_manager)
+        # NOTE: SearchService đã tự động gọi confirm-price bên trong
+        # search()/search_simple() cho từng entry của formatted body — đây
+        # là service riêng chỉ để dùng THỦ CÔNG (vd debug/test) nếu cần.
+        self._confirm_price_service = ConfirmPriceService(self._session_manager)
 
         if auto_init:
             logger.info("Khởi tạo SunPortalClient...")
@@ -146,6 +152,49 @@ class SunPortalClient:
             adult=adt, child=chd, infant=inf,
             trip_type=trip_type, currency=currency,
             promo_code=promo_code, override_url=override_url,
+        )
+
+    # ── Confirm Price (thủ công — search_simple đã tự gọi bước này rồi) ─────
+
+    def confirm_price_simple(
+        self,
+        list_itinerary: list[dict[str, Any]],
+        adult: int = 1,
+        child: int = 0,
+        infant: int = 0,
+        trip_type: str = "RT",
+        currency: str = "KRW",
+        promo_code: str = "",
+        corporate_code: str = "",
+        override_url: str | None = None,
+    ) -> ConfirmPriceResult:
+        """
+        Gọi thủ công POST /normal/create/confirm-price cho 1 tổ hợp
+        itinerary cụ thể.
+
+        LƯU Ý: ``search_simple()`` đã TỰ ĐỘNG gọi bước này cho từng entry
+        trong ``formatted["body"]`` rồi (xem ``SearchService``) — hàm này
+        chỉ hữu ích khi cần confirm lại thủ công (vd: sau khi khách chọn
+        vé một lúc, muốn double-check giá trước khi tạo booking).
+
+        Args:
+            list_itinerary: PHẢI đúng format confirm-price (trip_id gốc
+                dạng chuỗi, segment_id đánh số liên tục toàn bộ itinerary)
+                — KHÔNG dùng ``formatted["body"][i]["chiều_đi"]["list_itinerary"]``
+                (đó là format cho create-booking, khác nhau).
+            adult/child/infant: Phải khớp với số hành khách lúc search.
+            trip_type: "RT" hoặc "OW".
+            currency: Mã tiền tệ.
+
+        Returns:
+            ConfirmPriceResult — ``result.total_amount`` là giá CHUẨN.
+        """
+        return self._confirm_price_service.confirm_price_simple(
+            list_itinerary=list_itinerary,
+            adult=adult, child=child, infant=infant,
+            trip_type=trip_type, currency=currency,
+            promo_code=promo_code, corporate_code=corporate_code,
+            override_url=override_url,
         )
 
     # ── Create Booking (bước 1 — xác nhận giá) ───────────────────────────────
