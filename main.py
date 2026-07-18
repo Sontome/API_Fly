@@ -1285,7 +1285,7 @@ async def checkdate_SUN_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbyeYXBMs0GyphXmQi6fthle_fcQwg-ECry5IPO3JF5XOg9tdBWWfx_PEqNrBEfTiXKw_A/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbyTdtv8n9dRzLxphiqs2Uw_OXZispwJbrSu8WcKGTDPKKGFtxqsIi0R2YBAGeVLg_sCNw/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -1449,7 +1449,7 @@ async def process_pdf_SUN(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzgTyomJ_gN3X_iNo2tGHwVeUvn2PXCzdNk7gMHKCzb374LxtNDjzlYbC3LLlWNYPjj/exec"
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzO1lkvIqegrtFDZrbbSg8frUrZ9D0eCRHZ9sGXUrOC41QmE39naccRzu3XfHCczPuH/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
