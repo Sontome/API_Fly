@@ -44,7 +44,7 @@ def find_text_coordinates(layout, search_text):
         return None
 def check_bag_vj(pnr):
     try:
-        url = "https://thuhongtour.com/get_bag_vj"
+        url = "https://apilive.hanvietair.com/get_bag_vj"
         params = {
             "pnr": pnr
         }
