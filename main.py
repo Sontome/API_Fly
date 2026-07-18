@@ -1369,6 +1369,48 @@ async def process_pdf_VJ(
         filename=file.filename,
         media_type="application/pdf"
     )
+@app.post("/process-pdf-sun/")
+async def process_pdf_SUN(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    option: str = Form("")
+):
+    # Tạo đường dẫn file tạm input
+    temp_path = os.path.join(TEMP_DIR, f"{file.filename}")
+
+    # Ghi file upload vào thư mục tạm
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+
+    # Tạo đường dẫn file output
+    output_path = os.path.join(TEMP_DIR, f"output_{file.filename}")
+    
+    # Xử lý PDF
+    try:
+        
+        reformat_SUN(temp_path,output_path,option)
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+    # Xóa file input ngay nếu không cần giữ
+    try:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+    except Exception as e:
+        print(f"Lỗi xóa file input: {e}")
+
+    # Thêm task xóa file output sau khi gửi xong
+    background_tasks.add_task(
+        lambda: os.path.exists(output_path) and os.remove(output_path)
+    )
+
+    # Trả file output về cho client
+    return FileResponse(
+        path=output_path,
+        filename=file.filename,
+        media_type="application/pdf"
+    )
 GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbzgTyomJ_gN3X_iNo2tGHwVeUvn2PXCzdNk7gMHKCzb374LxtNDjzlYbC3LLlWNYPjj/exec"
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
