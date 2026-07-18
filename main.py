@@ -1285,7 +1285,7 @@ async def checkdate_SUN_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbyWEoooxoKaY8whGauTvU0K6u6YG47jw_7WCvBv9gjOLFYCJNMpQBavCStcNnpl8NZpAw/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbyZFENRPNWe_KjMyxK_QKUDTTdy_fs6Bho5xhx5MTnXw2I2vSxNmfNSRXa85thJQ_mJFg/exec"
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
