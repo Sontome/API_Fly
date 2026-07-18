@@ -3,8 +3,6 @@ import fitz
 from datetime import datetime
 
 def check_payment_sun(pdf_path):
-    # mapping sân bay (KEY uppercase substrings) -> IATA
-    # dùng chung với VNA vì cách hiển thị tên sân bay giống nhau
     airports_map_raw = {
         "SEOUL INCHEON INTERNATION": "ICN",
         "BUSAN GIMHAE INTL": "PUS",
@@ -36,7 +34,6 @@ def check_payment_sun(pdf_path):
 
     doc = fitz.open(pdf_path)
 
-    # ====== TÌM SỐ VÉ (dạng 809 2451473800 / 809-2451473800 / 8092451473800) ======
     full_text = ""
     for p in doc:
         full_text += p.get_text().upper() + "\n"
@@ -56,17 +53,20 @@ def check_payment_sun(pdf_path):
     for i, b in enumerate(raw_blocks):
         raw_text = b[4]
         lines = [ln.strip() for ln in raw_text.splitlines() if ln.strip()]
+        # FIX: also build a single-line "joined" version of the block so that
+        # airport names split across multiple lines (e.g. "SEOUL INCHEON" /
+        # "INTERNATIONAL") can still be matched.
+        joined = " ".join(lines).upper()
         blocks.append({
             "idx": i,
             "raw": raw_text,
             "lines": lines,
-            "upper": raw_text.upper()
+            "upper": raw_text.upper(),
+            "joined": joined
         })
 
-    # tìm các block "departure" (phải có số hiệu chuyến bay dạng 9G411 + giờ)
     departure_indices = []
     for i, blk in enumerate(blocks):
-        # flight number Sun PhuQuoc: digit + letter + digits, vd 9G411, 9G410
         has_flight_no = re.search(r"\b\d[A-Z]\d{2,4}\b", blk["upper"])
         has_time = re.search(r"\b\d{2}:\d{2}\b", blk["upper"])
         if has_flight_no and has_time:
@@ -78,18 +78,20 @@ def check_payment_sun(pdf_path):
         end = min(len(blocks) - 1, block_index + max_window)
         for bi in range(start, end + 1):
             blk = blocks[bi]
-            for li, line in enumerate(blk["lines"]):
-                uline = line.upper()
-                for ap_name, code in airports_map.items():
-                    if ap_name in uline:
-                        matches.append((bi, li, code))
-                        break
+            # FIX: search within the joined (whitespace-normalized) block text
+            # instead of per individual physical line, since airport names can
+            # be split across lines by PyMuPDF's block/line segmentation.
+            joined = blk["joined"]
+            for ap_name, code in airports_map.items():
+                pos = joined.find(ap_name)
+                if pos != -1:
+                    matches.append((bi, pos, code))
 
         matches_sorted = sorted(matches, key=lambda x: (x[0], x[1]))
 
         seen = set()
         codes_ordered = []
-        for bi, li, code in matches_sorted:
+        for bi, pos, code in matches_sorted:
             if code not in seen:
                 codes_ordered.append(code)
                 seen.add(code)
@@ -140,5 +142,5 @@ def check_payment_sun(pdf_path):
         "result": result
     }
 
-# ví dụ chạy
-# print(check_payment_sun("input_sun.pdf"))
+# if __name__ == "__main__":
+#     print(check_payment_sun("input.pdf"))
