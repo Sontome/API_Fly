@@ -1,0 +1,611 @@
+import fitz
+from datetime import datetime, timedelta
+import re
+import time
+import os
+import shutil
+
+QR_IMAGE_PATH = "qrhva.jpg"
+FILES_DIR = "/var/www/files"
+FONT_ARIAL = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
+FONT_ARIAL_BOLD = "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf"
+
+#FONT_ARIAL = "C:\\Windows\\Fonts\\arial.ttf"
+XANHSM_BANNER = "CHỌN CHỖ"
+NEW_TEXT = "Nơi xuất vé:\nB2BAGTHANVIETAIR, 220-1,2NDFLOOR, SUJIRO489\nBEON-GIL15, SUJI-GU, YONGIN-SI, GYEONGGI-DO, SEOUL\nSố điện thoại:  +82-10-3546-3396\nEmail:  Hanvietair@gmail.com"
+NOTE_LINES = [
+    "• Lưu ý:",
+    "• Quý khách khi bay cần mang theo Hộ chiếu (còn hạn trên 6 tháng, tính từ ngày bay),",
+    "  Chứng minh thư, thẻ sinh viên (nếu cần), Visa còn hạn.",
+    "• Xác nhận lại số kiện hành lý, số kg hành lý mỗi chặng trên mặt vé.",
+    "• Có mặt tại sân bay ít nhất 2–3 tiếng trước giờ khởi hành."
+] 
+NOTE_LINES_XANHSM = ["Quý khách vui lòng kiểm tra thông tin hành trình.",
+        "For a seamless journey, please check information about your itinerary."]
+START_PHRASE = "Nơi xuất vé:"
+END_PHRASE = "Ngày:"
+def replace_text_between_phrases(pdf_path,output_path,
+                                  new_text,start_phrase=START_PHRASE, end_phrase=END_PHRASE,
+                                 font_size=10,type=0):
+    new_text = new_text + "\nNgày:  "
+    doc = fitz.open(pdf_path)
+    # ===== THAY "Tổngtiền:" THÀNH "IT FARE" TRÊN TẤT CẢ CÁC TRANG =====
+    if type == 1:
+        for page_number in range(len(doc)):
+            page = doc[page_number]
+            tongtien_matches = page.search_for("Tổng tiền:")
+            if not tongtien_matches:
+                continue
+            for rect in tongtien_matches:
+                # Tính vị trí mới (lệch phải 180px)
+                new_x = rect.x0 + 195
+                new_y = rect.y0 +5
+
+                # Tạo vùng cần xóa ở vị trí mới (kích thước tương tự chữ gốc)
+                new_rect = fitz.Rect(new_x, rect.y0, new_x + (rect.x1 - rect.x0+80), rect.y1)
+                page.add_redact_annot(new_rect)
+                page.apply_redactions()
+
+                # Chèn chữ IT FARE vào đúng vị trí mới
+                page.insert_text(
+                    (new_x, new_y + 5),
+                    "IT FARE    ",
+                    fontsize=font_size*0.9,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 0),
+                    render_mode=0
+                )  
+                new_x = rect.x0 + 195
+                new_y = rect.y0 - 70
+
+                # Tạo vùng cần xóa ở vị trí mới (kích thước tương tự chữ gốc)
+                new_rect = fitz.Rect(new_x, new_y, new_x + (rect.x1 - rect.x0+80), new_y+1)
+                page.add_redact_annot(new_rect)
+                page.apply_redactions()
+
+                # Chèn chữ IT FARE vào đúng vị trí mới
+                page.insert_text(
+                    (new_x, new_y + 5),
+                    "IT FARE    ",
+                    fontsize=font_size*0.9,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 0),
+                    render_mode=0
+                )
+                print(f"✅ Đã thay 'Tổngtiền:' → 'IT FARE' ở trang {page_number + 1}")
+    page = doc[0]  # chỉ page đầu
+    fs = font_size * 0.8
+
+    text = page.get_text()
+    #print("===== TEXT PAGE 1 =====")
+    #print(text)
+
+    # ===== LẤY NGÀY SAU "Ngày:" =====
+    date_found = None
+    if "Ngày:" in text:
+        start_idx = text.find("Ngày:") + len("Ngày:")
+        raw_date = text[start_idx:start_idx+10].strip()
+        #print(f"[DEBUG] Ngày gốc sau 'Ngày:': {raw_date}")
+        try:
+            dt = datetime.strptime(raw_date, "%d%b%Y")
+            date_found = dt.strftime("%d/%m/%Y")
+            #print(f"[DEBUG] Ngày chuẩn hóa: {date_found}")
+        except:
+            #print("[DEBUG] Không parse được ngày, giữ nguyên")
+            date_found = raw_date
+    if date_found:
+        new_text_lines = new_text.split("\n")
+        for i, line in enumerate(new_text_lines):
+            if line.strip().startswith("Ngày:"):
+                new_text_lines[i] = f"Ngày: {date_found}"
+        new_text = "\n".join(new_text_lines)
+
+    # ===== LẤY GIỜ & NGÀY BAY =====
+    found_time = None
+    found_date = None
+
+    for line in text.splitlines():
+        if re.fullmatch(r"\d{2}:\d{2}", line.strip()):
+            found_time = line.strip()
+            #print(f"[DEBUG] Giờ bay tìm thấy: {found_time}")
+            break
+
+    date_pattern = re.compile(r"\b\d{2}[A-Za-z]{3}\d{4}\b")
+    date_matches = date_pattern.findall(text)
+    #print(f"[DEBUG] Danh sách date matches: {date_matches}")
+    if len(date_matches) >= 2:
+        try:
+            d = datetime.strptime(date_matches[1], "%d%b%Y")
+            found_date = d.strftime("%d/%m/%Y")
+            #print(f"[DEBUG] Ngày bay tìm thấy: {found_date}")
+        except:
+            print("[DEBUG] Không parse được ngày bay")
+
+    if found_time and found_date:
+        try:
+            flight_dt = datetime.strptime(f"{found_date} {found_time}", "%d/%m/%Y %H:%M")
+            checkin_dt = flight_dt - timedelta(hours=3)
+            hour = checkin_dt.hour
+
+            if 0 <= hour <= 6:
+                periodt = "(Rạng sáng)"
+            elif 6 < hour <= 11:
+                periodt = "(Sáng)"
+            elif 11 < hour <= 13:
+                periodt = "(Trưa)"
+            elif 13 < hour <= 18:
+                periodt = "(Chiều)"
+            else:
+                periodt = "(Đêm)"
+            note_str = f"Luu y: Quy khach vui long den san bay truoc {checkin_dt.strftime('%d/%m/%Y %H:%M')} {periodt} de lam thu tuc len may bay."
+            #print(f"[DEBUG] Giờ check-in: {note_str}")
+        except Exception as e:
+            print("[DEBUG] Lỗi parse giờ/ngày:", e)
+
+    # ===== XỬ LÝ GIỜ (thêm sáng/chiều) =====
+    idxmatch = 0  # đếm số time_part hợp lệ đã xử lý
+    for line in text.splitlines():
+        if ":" in line:
+            time_part = line.strip()
+            try:
+                t = datetime.strptime(time_part, "%H:%M")
+                hour = t.hour
+
+                if 0 <= hour <= 6:
+                    periodt = "(Rạng sáng)"
+                elif 6 < hour <= 11:
+                    periodt = "(Sáng)"
+                elif 11 < hour <= 13:
+                    periodt = "(Trưa)"
+                elif 13 < hour <= 18:
+                    periodt = "(Chiều)"
+                else:
+                    periodt = "(Đêm)"
+                time_part_new = f"{time_part} {periodt}"
+            except:
+                continue
+
+            # tìm và sửa text trên PDF
+            search_rects = page.search_for(time_part)
+            for rect in search_rects:
+                page.add_redact_annot(rect)
+                page.apply_redactions()
+                page.insert_text(
+                    (rect.x0, rect.y0 + 5),
+                    time_part_new,
+                    fontsize=fs,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 0),
+                    render_mode=0
+                )
+
+                # chỉ xử lý thêm dòng "ra sân bay đêm hôm trước" nếu là line chẵn (2,4,6,...)
+                # và có ngày tương ứng trong date_matches
+                if idxmatch % 2 == 0 and periodt == "(Rạng sáng)" and date_matches:
+                    try:
+                        print(idxmatch)
+                        d_str = date_matches[idxmatch+1]
+
+                        flight_date = datetime.strptime(d_str, "%d%b%Y")
+                        pre_night = flight_date - timedelta(days=1)
+                        ddmm = pre_night.strftime("%d/%m")
+
+                        page.insert_text(
+                            (rect.x0-5, rect.y0 + 30),
+                            f"(Ra sân bay\n đêm {ddmm})",
+                            fontsize=fs,
+                            fontfile=FONT_ARIAL,
+                            fontname="arial",
+                            fill=(1, 0, 0),
+                            render_mode=0
+                        )
+                    except Exception as e:
+                        print(f"[DEBUG] Lỗi khi thêm dòng ra sân bay: {e}")
+
+            idxmatch += 1  # tăng sau khi xử lý 1 time_part
+
+    # ===== AUTO ĐỔI DẠNG NGÀY =====
+    matches = set(date_pattern.findall(text))
+    for match in matches:
+        try:
+            d = datetime.strptime(match, "%d%b%Y")
+            new_date = d.strftime("%d/%m/%Y")
+            #print(f"[DEBUG] Đổi ngày: '{match}' → '{new_date}'")
+            search_rects = page.search_for(match)
+            for rect in search_rects:
+                page.add_redact_annot(rect)
+                page.apply_redactions()
+                page.insert_text(
+                    (rect.x0, rect.y0 + 5),
+                    new_date,
+                    fontsize=fs,
+                    
+                    fill=(0, 0, 0),
+                    render_mode=0
+                )
+        except:
+            continue
+
+    # ===== ĐỔI MÀU HÀNH LÝ =====
+    # FIX: vé SUN PhuQuoc hiển thị hành lý dạng "Hành lý (4): 2PC"
+    # (khác với VNA "Hành lý ký gửi miễn cước: 2PC")
+    is_infant = "(INF)" in text
+    hl_pattern = re.compile(r"Hành lý \(4\): ([123]PC)")
+    matches = set(hl_pattern.findall(text))
+    
+    for pc in matches:
+        match_text = f"Hành lý (4): {pc}"
+        rects = page.search_for(match_text)
+    
+        for rect in rects:
+    
+            if pc == "1PC":
+                addon = "(10kg)" if is_infant else "(23kg)"
+            elif pc == "2PC":
+                addon = "(10kg+10kg)" if is_infant else "(23kg+23kg)"
+            elif pc == "3PC":
+                addon = "(32kg+32kg+32kg)" if is_infant else "(32kg+32kg+32kg)"
+            else:
+                addon = ""
+    
+            # xóa dòng cũ
+            rect_del = rect
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()
+    
+            x = rect.x0
+            y = rect.y0 +9
+    
+            # 1️⃣ Hành lý: (xanh + bold)
+            page.insert_text(
+                (x, y),
+                "Hành lý: ",
+                fontsize=fs*1.2,
+                fontfile=FONT_ARIAL_BOLD,
+                
+                
+                fill=(0.1, 0.3, 0.4),
+                render_mode=0
+            )
+            page.insert_text(
+                (x, y+0.2),
+                "Hành lý: ",
+                fontsize=fs*1.2,
+                fontfile=FONT_ARIAL_BOLD,
+                
+                
+                fill=(0.1, 0.3, 0.4),
+                render_mode=0
+            )
+    
+            # tính độ dài để đặt tiếp text
+            x += fitz.get_text_length("Hành lý:", fontsize=fs*1.4 +3)
+    
+            # 2️⃣ 1PC / 2PC
+            page.insert_text(
+                (x, y),
+                f" {pc}",
+                fontsize=fs*1.2,
+                fill=(0, 0, 0)
+            )
+    
+            x += fitz.get_text_length(f" {pc}", fontsize=fs*1.4)
+    
+            # 3️⃣ (kg) đỏ
+            page.insert_text(
+                (x, y),
+                f" {addon}",
+                fontsize=fs*1.2,
+                fill=(1, 0, 0)
+            )
+    # ===== THÊM NOTE KHI THẤY DÒNG XANHSM BANNER =====
+    note_text_xanhsm = XANHSM_BANNER
+    search_rects_xanhsm = page.search_for(note_text_xanhsm)
+    
+    for rect in search_rects_xanhsm:
+        # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+        rect_del = fitz.Rect(rect.x0, rect.y0, page.rect.x1, rect.y0+40)
+        page.add_redact_annot(rect_del)
+        page.apply_redactions()
+        # Vị trí box note
+        line_height = fs * 1.6     # 👉 GIÃN DÒNG Ở ĐÂY
+        padding = 12
+        
+        box_height = line_height * len(NOTE_LINES_XANHSM) + padding * 2
+
+        note_rect = fitz.Rect(
+            rect.x0,
+            rect.y0,
+            page.rect.x1 - 20,
+            rect.y0+30
+        )
+
+        
+        y = note_rect.y0 
+
+        for line in NOTE_LINES_XANHSM:
+            page.insert_text(
+                (note_rect.x0 + padding, y),
+                line,
+                fontsize=fs * 1.3,
+                fontfile=FONT_ARIAL,
+                fontname= "arial",
+                color=(0/255, 0/255, 0/255)
+            )
+            y += line_height+17
+    # ===== THÊM NOTE KHI THẤY DÒNG OK/RQ =====
+    note_text = "(1) OK = Đã xác nhận , RQ/SA = Chưa xác nhận chỗ"
+    search_rects = page.search_for(note_text)
+    if type==3:
+        for rect in search_rects:
+            # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+            rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()                                   
+    if type==0:
+        for rect in search_rects:
+            # Xóa tất cả dòng phía dưới (về mặt hiển thị)
+            rect_del = fitz.Rect(rect.x0, rect.y0+10, page.rect.x1, page.rect.y1)
+            page.add_redact_annot(rect_del)
+            page.apply_redactions()
+            # Vị trí box note
+            line_height = fs * 1.6     # 👉 GIÃN DÒNG Ở ĐÂY
+            padding = 12
+
+            box_height = line_height * len(NOTE_LINES) + padding * 2
+
+            note_rect = fitz.Rect(
+                rect.x0,
+                rect.y1 + 10,
+                page.rect.x1 - 20,
+                rect.y1 + 10 + box_height
+            )
+
+            page.draw_rect(
+                note_rect,
+                color=(0/255, 53/255, 67/255),
+                width=1.5
+            )
+            y = note_rect.y0 + padding + fs
+
+            for line in NOTE_LINES:
+                page.insert_text(
+                    (note_rect.x0 + padding, y),
+                    line,
+                    fontsize=fs * 1.3,
+                    fontfile=FONT_ARIAL,
+                    fontname= "arial",
+                    color=(0/255, 53/255, 67/255)
+                )
+                y += line_height
+            # ===== THÊM QR + LINK NẾU CÓ B2BAGTHANVIETAIR =====
+            if type == 0 and "B2BAGTHANVIETAIR" in new_text:
+                qr_size = 90
+                qr_x = note_rect.x0 + padding
+                qr_y = y + 10
+
+                link_url = "https://hanvietair.com/vi/plane-booking"
+
+                # ===== QR IMAGE =====
+                page.insert_image(
+                    fitz.Rect(
+                        qr_x,
+                        qr_y,
+                        qr_x + qr_size,
+                        qr_y + qr_size
+                    ),
+                    filename=QR_IMAGE_PATH
+                )
+
+                # ===== TEXT LINK =====
+                text_x = qr_x + qr_size + 12
+                text_y = qr_y + 15
+
+                title_text = "Xem ưu đãi vé máy bay chặng Hàn-Việt tại đây"
+                link_text = link_url
+
+                page.insert_text(
+                    (text_x, text_y),
+                    title_text,
+                    fontsize=fs * 1.2,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 0)
+                )
+
+                page.insert_text(
+                    (text_x, text_y + 16),
+                    link_text,
+                    fontsize=fs,
+                    fontfile=FONT_ARIAL,
+                    fontname="arial",
+                    fill=(0, 0, 1)
+                )
+
+                # ===== TẠO HYPERLINK =====
+                link_width = fitz.get_text_length(link_text, fontsize=fs)
+
+                link_rect = fitz.Rect(
+                    text_x,
+                    text_y + 16 - fs,
+                    text_x + link_width,
+                    text_y + 16 + 4
+                )
+
+                page.insert_link({
+                    "kind": fitz.LINK_URI,
+                    "from": link_rect,
+                    "uri": link_url
+                })
+
+    # ===== REPLACE TEXT CHÍNH =====
+    blocks = page.get_text("blocks")
+    for block in blocks:
+        #print(block)
+        block_text = block[4]
+        if "Mã đặt chỗ" in block_text:
+            # In ra để debug
+            print("[DEBUG] Found block:", block_text)
+            
+            # Regex bắt Mã đặt chỗ và Số vé
+            match = re.search(r"Mã đặt chỗ:\s*([A-Z0-9]+).*?Sốvé:\s*([0-9 ]+)", block_text, re.S)
+            if match:
+                ma_pnr = match.group(1).strip()
+                so_ve = match.group(2).strip()
+                pnrpax = f"{ma_pnr}-{so_ve}"
+                print(f"✅ PNR = {pnrpax}")
+        if start_phrase in block_text and end_phrase in block_text:
+            #print("[DEBUG] Thay block chính")
+            x0, y0, x1, y1 = block[:4]
+            rect = fitz.Rect(x0, y0, x1, y1)
+            page.add_redact_annot(rect)
+            page.apply_redactions()
+
+            adj_x = x0 + 15
+            adj_y = y0 + 15
+            for i, line in enumerate(new_text.split("\n")):
+                if ":" in line:
+                    bold_part, normal_part = line.split(":", 1)
+                    bold_part += ": "
+                    page.insert_text(
+                        (adj_x, adj_y + i * (fs + 2)),
+                        bold_part,
+                        fontsize=fs,
+                        fontfile=FONT_ARIAL,
+                        fontname= "arial",
+                        fill=(0/255, 61/255, 77/255),
+                        render_mode=0.5
+                    )
+                    text_width = fitz.get_text_length(bold_part, fontsize=fs)
+                    page.insert_text(
+                        (adj_x + 50 + 3, adj_y + i * (fs + 2)),
+                        normal_part.strip(),
+                        fontsize=fs,
+                        fontfile=FONT_ARIAL,
+                        fontname= "arial",
+                        fill=(0, 0, 0),
+                        render_mode=0
+                    )
+                else:
+                    page.insert_text(
+                        (adj_x, adj_y + i * (fs + 2)),
+                        line,
+                        fontsize=fs,
+                        fontfile=FONT_ARIAL,
+                        fontname= "arial",
+                        fill=(0, 0, 0),
+                        render_mode=0
+                    )
+
+    # ===== GẮN LINK MỚI =====
+    
+
+    # ===== LƯU TRỰC TIẾP =====
+    doc.save(output_path)
+    #print(f"[DEBUG] Đã lưu file ra: {outputpath}")
+    doc.close()
+    time.sleep(0.5)
+    extract_first_page(output_path,output_path,type=type)
+    
+
+def extract_first_page(input_pdf, prnpax, type=0):
+    """Lấy page 1 hoặc full PDF tùy theo type, giữ nguyên hyperlink."""
+    doc = fitz.open(input_pdf)
+    new_doc = fitz.open()
+    
+    if type == 0 or type == 3:
+        # Page 0 là trang 1
+        new_doc.insert_pdf(doc, from_page=0, to_page=0, links=True)
+    else:
+        # Lấy toàn bộ các trang
+        new_doc.insert_pdf(doc, from_page=0, to_page=len(doc)-1, links=True)
+
+    doc.close()
+    new_doc.save(input_pdf)
+    new_doc.close()
+
+    print(f"{prnpax}.pdf")
+    try:
+        os.makedirs(FILES_DIR, exist_ok=True)
+        dest_filename = prnpax
+        filename = os.path.basename(input_pdf)
+        dest_path = os.path.join(FILES_DIR, filename)
+        shutil.copy2(input_pdf, dest_path)
+        print(f"✅ Đã copy {input_pdf} sang {dest_path}")
+    except Exception as e:
+        print(f"❌ Lỗi khi copy file: {e}")
+
+
+ 
+def reformat_SUN(input_pdf,output_path,new_text=NEW_TEXT,type=0):
+    if new_text=="":
+        new_text=NEW_TEXT
+    replace_text_between_phrases(
+    input_pdf,
+    output_path,
+    new_text,
+    type=type
+)
+# Ví dụ dùng
+
+# ===== TEST =====
+
+
+
+
+#reformat_SUN("pdf1.pdf","output.pdf",type=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
