@@ -5,6 +5,7 @@ from backend_read_PDF_VNA_VN import reformat_VNA_VN
 from backend_read_PDF_VNA_EN import reformat_VNA_EN
 from backend_read_PDF_VNA_KR import reformat_VNA_KR
 from backend_read_PDF_VJ import reformat_VJ
+from backend_read_PDF_SUN import reformat_SUN
 from backend_api_kakao import send_bms_image,kakao_delay
 from backend_checkpayment_PDF_VJ import check_payment
 from backend_checkpayment_PDF_VNA import check_payment_vna
