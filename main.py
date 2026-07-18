@@ -13,7 +13,7 @@ from backend_checkpayment_PDF_ASIANA import check_payment_asiana
 from backend_checkpayment_PDF_SUN import check_payment_sun
 from checkdate_VJ import checkdate_VJ
 from checkdate_VNA import checkdate_VNA
-from checkdate_VNA import checkdate_SUN
+from checkdate_SUN import checkdate_SUN
 from backend_read_PDF_VNA import check_ngon_ngu
 from get_bag_info_pnr_vj import get_bag_info_vj
 from get_gmail_service import get_gmail_service
