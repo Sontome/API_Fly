@@ -5,7 +5,33 @@ from backend_api_kakao import send_bms_image
 from backendapi1a import checkmatvechoVNA
 import asyncio
 KST = timezone(timedelta(hours=9))  # GMT+9
+import httpx
 
+async def checkpnr_sun(pnr):
+    url = "http://127.0.0.1:8080/spa/checkpnr"
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                url,
+                json={
+                    "pnr": pnr
+                }
+            )
+
+        if resp.status_code != 200:
+            return None
+
+        data = resp.json()
+
+        if data.get("success") is True:
+            return data
+
+        return None
+
+    except Exception as e:
+        print(f"[SUN] Lỗi check PNR {pnr}: {e}")
+        return None
 
 async def process_all_unsent_kakao():
     # Lấy danh sách chưa gửi
@@ -59,7 +85,32 @@ async def process_send_kakao(PNR, type, phone,id,wl):
             update_sent_phone(phone)
         update_row_sent(id)
         return
+    result_sun = await checkpnr_sun(PNR)
 
+    if result_sun and result_sun.get("success"):
+    
+        data = result_sun.get("data", {})
+        kakaomess = data.get("kakaomess", "")
+    
+        if not kakaomess.strip():
+            print(f"Bỏ qua PNR {PNR} vì kakaomess rỗng")
+            return
+    
+        content = f"{prefix}\n\n----------------------\n{kakaomess}"
+    
+        send_bms_image(
+            to_number=phone,
+            type="SUN",
+            pnr=PNR,
+            time=current_time,
+            trip=kakaomess
+        )
+    
+        if not wl:
+            update_sent_phone(phone)
+    
+        update_row_sent(id)
+        return
     result_vna = await checkmatvechoVNA(PNR, "checkvecho")
 
     if result_vna and "kakaomess" in result_vna:
