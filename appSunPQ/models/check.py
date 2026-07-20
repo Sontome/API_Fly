@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
-
+from datetime import datetime
 
 @dataclass
 class CheckResult:
@@ -49,6 +49,7 @@ class CheckResult:
     passengers: list[dict[str, Any]] = field(default_factory=list)
     error: Any = None
     raw: dict[str, Any] = field(default_factory=dict)
+    kakaomess: str = ""
 
     @property
     def is_ticketed(self) -> bool:
@@ -68,6 +69,7 @@ class CheckResult:
             "chieudi":        self.chieudi,
             "chieuve":        self.chieuve,
             "passengers":     self.passengers,
+            "kakaomess": self.kakaomess,
         }
 
     @classmethod
@@ -149,7 +151,32 @@ class CheckResult:
                 chieuve = trips[ordered_trip_ids[1]]
 
         passengers = inner.get("list_passenger", [])
+        kakao_lines = []
 
+        for seg in chieudi + chieuve:
+            dep = seg.get("departure", "")
+            arr = seg.get("arrival", "")
+        
+            dep_info = seg.get("departure_info") or {}
+            dt = dep_info.get("datetime", "")
+        
+            if dt:
+                try:
+                    dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+                    time_str = dt.strftime("%H:%M")
+                    date_str = dt.strftime("%d/%m")
+                except Exception:
+                    time_str = ""
+                    date_str = ""
+            else:
+                time_str = ""
+                date_str = ""
+        
+            kakao_lines.append(
+                f"{dep}-{arr} {time_str} ngày {date_str}".strip()
+            )
+        
+        kakaomess = "\n".join(kakao_lines)
         return cls(
             pnr=pnr,
             status=status,
@@ -163,4 +190,5 @@ class CheckResult:
             passengers=passengers,
             error=error,
             raw=data,
+            kakaomess=kakaomess,
         )
