@@ -8,7 +8,7 @@ KST = timezone(timedelta(hours=9))  # GMT+9
 import httpx
 
 async def checkpnr_sun(pnr):
-    url = "http://127.0.0.1:8080/spa/checkpnr"
+    url = "https://apilive.hanvietair.com/spa/checkpnr"
 
     try:
         async with httpx.AsyncClient(timeout=20) as client:
