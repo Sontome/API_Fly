@@ -1933,6 +1933,7 @@ def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
             upper_name.startswith("VJ")
             or upper_name.startswith("VNA")
             or upper_name.startswith("ASIANA")
+            or upper_name.startswith("SUN")
         ):
             continue
 
@@ -1961,7 +1962,13 @@ def list_pnr_files(background_tasks: BackgroundTasks, data: PNRRequest):
                     new_text=data.banner,
                     output_path=output_path
                 )
-
+            # ===== VJ =====
+            elif filename.upper().startswith("SUN"):
+                reformat_SUN(
+                    input_path,
+                    output_path,
+                    data.banner
+                )
             # ===== VNA =====
             elif filename.upper().startswith("VNA"):
                 ngonngu = check_ngon_ngu(input_path)
