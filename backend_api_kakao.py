@@ -17,6 +17,7 @@ API_KEY = os.getenv("API_KEY_SOLAPI")
 API_SECRET = os.getenv("API_SECRET_KAKAO")
 PF_ID = os.getenv("PF_ID")
 VNA = os.getenv("IMAGE_VNA")
+SUN = os.getenv("IMAGE_SUN")
 VJ = os.getenv("IMAGE_VJ")
 DELAY = os.getenv("IMAGE_DELAY")
 BF24H = os.getenv("IMAGE_BF24H")
@@ -142,12 +143,14 @@ def send_bms_image(
         "DELAY": DELAY,
         "VJ": VJ,
         "VNA": VNA,
+        "SUN": SUN,
         "BF24H": BF24H,
         "AT24H":AT24H
     }
     airline_map = {
         "VJ": "Vietjet Air",
         "VNA": "Vietnam Airlines",
+        "SUN": "Sun PhuQuoc Airways",
         "QH": "Bamboo Airways"
     }
     
@@ -168,6 +171,11 @@ def send_bms_image(
             "#{url}": f"check/{type}/{pnr}"
         },
         "VNA": {
+            "#{pnr}": pnr,
+            "#{Airlines_name}": "\n"+airline_map.get(type, type),
+            "#{url}": f"check/{type}/{pnr}"
+        },
+        "SUN": {
             "#{pnr}": pnr,
             "#{Airlines_name}": "\n"+airline_map.get(type, type),
             "#{url}": f"check/{type}/{pnr}"
