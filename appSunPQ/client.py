@@ -280,6 +280,7 @@ class SunPortalClient:
         self,
         payload: dict[str, Any],
         override_url: str | None = None,
+        contact_info: ContactInfo | dict[str, Any] | None = None,
     ) -> BookingResult:
         """
         Giữ vé với payload đầy đủ.
@@ -290,14 +291,24 @@ class SunPortalClient:
 
         Dùng ``build_hold_payload(trace_id)`` từ ``appSunPQ.models.booking``
         để tạo payload, hoặc truyền thẳng dict.
+
+        Args:
+            contact_info: Contact THẬT của khách (ContactInfo hoặc dict) — dùng
+                          để báo Kakao add-queue khi giữ vé thành công. Nên
+                          truyền cùng contact_info đã dùng lúc ``create_booking``,
+                          vì Sun Portal hiện lưu contact_info CỨNG chứ không
+                          phải của khách thật.
         """
-        return self._hold_service.hold(payload, override_url=override_url)
+        return self._hold_service.hold(
+            payload, override_url=override_url, contact_info=contact_info,
+        )
 
     def hold_simple(
         self,
         trace_id: str,
         send_email: bool = True,
         override_url: str | None = None,
+        contact_info: ContactInfo | dict[str, Any] | None = None,
     ) -> BookingResult:
         """
         Giữ vé từ trace_id — cách ngắn gọn nhất.
@@ -305,8 +316,13 @@ class SunPortalClient:
         Gọi ngay sau ``create_booking_simple`` khi ``preview.is_confirmed == True``.
 
         Args:
-            trace_id:    Lấy từ ``BookingPreviewResult.trace_id``.
-            send_email:  Gửi email xác nhận cho khách (mặc định True).
+            trace_id:     Lấy từ ``BookingPreviewResult.trace_id``.
+            send_email:   Gửi email xác nhận cho khách (mặc định True).
+            contact_info: Contact THẬT của khách (ContactInfo hoặc dict) — nên
+                          truyền chính contact_info đã dùng ở
+                          ``create_booking_simple``. Dùng để báo Kakao add-queue
+                          khi giữ vé thành công (contact_info trả về từ Sun
+                          Portal là dữ liệu CỨNG, không phải của khách thật).
 
         Returns:
             BookingResult::
@@ -320,13 +336,16 @@ class SunPortalClient:
         Example::
 
             if preview.is_confirmed:
-                hold = client.hold_simple(preview.trace_id)
+                hold = client.hold_simple(
+                    preview.trace_id, contact_info=contact_info,
+                )
                 print(hold.pnr, hold.expiration_date, hold.total_amount)
         """
         return self._hold_service.hold_simple(
             trace_id=trace_id,
             send_email=send_email,
             override_url=override_url,
+            contact_info=contact_info,
         )
 
     # ── Check Booking (tra cứu vé theo PNR) ─────────────────────────────────
