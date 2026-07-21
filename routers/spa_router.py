@@ -553,6 +553,7 @@ async def create_and_hold_booking(body: BookingQuoteRequest) -> BookingQuoteResp
             client.hold_simple,
             trace_id=preview.trace_id,
             send_email=body.send_email,
+            contact_info=contact_info,
         )
 
     except HTTPException:
