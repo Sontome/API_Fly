@@ -243,11 +243,11 @@ def replace_text_between_phrases(pdf_path,output_path,
         for rect in rects:
     
             if pc == "1PC":
-                addon = "(10kg)" if is_infant else "(23kg)"
+                addon = "(0kg)" if is_infant else "(23kg)"
             elif pc == "2PC":
-                addon = "(10kg+10kg)" if is_infant else "(23kg+23kg)"
+                addon = "(0kg)" if is_infant else "(23kg+23kg)"
             elif pc == "3PC":
-                addon = "(32kg+32kg+32kg)" if is_infant else "(32kg+32kg+32kg)"
+                addon = "(0kg)" if is_infant else "(3kg+23kg+23kg)"
             else:
                 addon = ""
     
