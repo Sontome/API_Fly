@@ -35,6 +35,61 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+import requests
+
+from shared.logger import LogPrefix, get_logger
+
+logger = get_logger(LogPrefix.HOLD)
+
+KAKAO_ADD_QUEUE_URL = "https://apilive.hanvietair.com/kakao-add-queue"
+
+
+def _notify_kakao_add_queue(
+    contact_info: dict[str, Any],
+    pnr: str,
+    notif_type: str = "HOLD",
+) -> None:
+    """
+    Báo cho hệ thống Kakao queue khi hold-booking thành công và đã có PNR.
+
+    Gọi POST tới ``KAKAO_ADD_QUEUE_URL`` với thông tin liên hệ lấy từ
+    ``contact_info`` (dict dạng ``{"email": "...", "phone_number": "...",
+    "full_name": "..."}`` — đúng format trả về trong response hold-booking).
+
+    Đây là tác vụ best-effort: nếu gọi thất bại (lỗi mạng, timeout, response
+    lỗi...) chỉ log lại, KHÔNG raise exception để không ảnh hưởng tới luồng
+    parse BookingResult.
+
+    Args:
+        contact_info: dict {"email", "phone_number", "full_name"}.
+        pnr:          Mã PNR vừa giữ chỗ thành công.
+        notif_type:   Loại thông báo, mặc định "HOLD".
+    """
+    payload = {
+        "phone": contact_info.get("phone_number", ""),
+        "name": contact_info.get("full_name", ""),
+        "pnr": pnr,
+        "type": notif_type,
+        "row_sent": False,
+        "email": contact_info.get("email", ""),
+    }
+
+    try:
+        response = requests.post(
+            KAKAO_ADD_QUEUE_URL,
+            headers={
+                "accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=10,
+        )
+        logger.info(
+            f"Kakao add-queue: pnr={pnr}, status_code={response.status_code}"
+        )
+    except Exception as e:
+        logger.warning(f"Kakao add-queue thất bại (bỏ qua, không raise): {e}")
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Input models — build payload
@@ -482,10 +537,14 @@ class BookingResult:
             PassengerInfo.from_dict(p) for p in inner.get("list_passenger", [])
         ]
 
-        return cls(
+        contact_info = inner.get("contact_info", {})
+        pnr = inner.get("pnr_number", "")
+        booking_status = inner.get("booking_status", "")
+
+        result = cls(
             success=success,
-            pnr=inner.get("pnr_number", ""),
-            booking_status=inner.get("booking_status", ""),
+            pnr=pnr,
+            booking_status=booking_status,
             trace_id=trace_id,
             expiration_date=inner.get("expiration_date", ""),
             tz_expiration_date=inner.get("tz_expiration_date", ""),
@@ -497,13 +556,19 @@ class BookingResult:
             pax_pricing=pax_pricing,
             list_itinerary=inner.get("list_itinerary", []),
             passengers=passengers,
-            contact_info=inner.get("contact_info", {}),
+            contact_info=contact_info,
             created_at=inner.get("created_at", ""),
             office_id=inner.get("office_id", ""),
             error=error,
             message=data.get("message", ""),
             raw=data,
         )
+
+        # Hold-booking thành công và đã có PNR → báo Kakao add-queue.
+        if result.is_held:
+            _notify_kakao_add_queue(contact_info, pnr)
+
+        return result
 
 
 @dataclass
