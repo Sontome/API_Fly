@@ -514,8 +514,29 @@ class BookingResult:
         return self.success and bool(self.pnr) and self.booking_status == "OK"
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], status_code: int = 200) -> "BookingResult":
-        """Parse từ response thật của POST /normal/create/hold-booking."""
+    def from_dict(
+        cls,
+        data: dict[str, Any],
+        status_code: int = 200,
+        real_contact_info: dict[str, Any] | None = None,
+    ) -> "BookingResult":
+        """
+        Parse từ response thật của POST /normal/create/hold-booking.
+
+        Args:
+            data:              Response JSON thô.
+            status_code:       HTTP status code.
+            real_contact_info: Contact info THẬT của khách (do người gọi
+                               ``hold_simple()``/``hold()`` truyền vào), dùng để
+                               báo Kakao add-queue. Vì ``build_booking_payload``
+                               hiện đang gửi ``contact_info`` CỨNG lên Sun Portal
+                               (không phải contact thật của khách), nên
+                               ``contact_info`` trong response hold-booking cũng
+                               chỉ là dữ liệu cứng đó — KHÔNG dùng để báo Kakao.
+                               Nếu không truyền ``real_contact_info``, sẽ fallback
+                               dùng ``contact_info`` trong response (và log warning
+                               vì có thể sai).
+        """
         success = bool(data.get("success", status_code < 400))
         trace_id = data.get("trace_id", "")
         error = data.get("error")
@@ -565,8 +586,20 @@ class BookingResult:
         )
 
         # Hold-booking thành công và đã có PNR → báo Kakao add-queue.
+        # Ưu tiên dùng real_contact_info (contact thật của khách, truyền vào
+        # từ lúc gọi hold) thay vì contact_info trong response (chỉ là dữ liệu
+        # cứng mà build_booking_payload đã gửi lên Sun Portal).
         if result.is_held:
-            _notify_kakao_add_queue(contact_info, pnr)
+            if real_contact_info is not None:
+                notify_contact = real_contact_info
+            else:
+                logger.warning(
+                    "Không có real_contact_info truyền vào — dùng tạm "
+                    "contact_info trong response (có thể là dữ liệu cứng, "
+                    "SAI với khách thật)."
+                )
+                notify_contact = contact_info
+            _notify_kakao_add_queue(notify_contact, pnr)
 
         return result
 
