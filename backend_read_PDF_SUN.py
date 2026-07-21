@@ -194,7 +194,7 @@ def replace_text_between_phrases(pdf_path,output_path,
                         ddmm = pre_night.strftime("%d/%m")
 
                         page.insert_text(
-                            (rect.x0-5, rect.y0 + 30),
+                            (rect.x0-5, rect.y0 + 40),
                             f"(Ra sân bay\n đêm {ddmm})",
                             fontsize=fs,
                             fontfile=FONT_ARIAL,
