@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Any
 
 from appSunPQ.endpoints import HOLD_BOOKING
-from appSunPQ.models.booking import BookingResult, build_hold_payload
+from appSunPQ.models.booking import BookingResult, ContactInfo, build_hold_payload
 from appSunPQ.session_manager import SessionManager
 from shared.exceptions import HoldError
 from shared.logger import LogPrefix, get_logger
@@ -45,6 +45,7 @@ class HoldService:
         self,
         payload: dict[str, Any],
         override_url: str | None = None,
+        contact_info: ContactInfo | dict[str, Any] | None = None,
     ) -> BookingResult:
         """
         Giữ chỗ với payload đầy đủ đã build sẵn.
@@ -56,6 +57,10 @@ class HoldService:
                               {"trace_id": "FLN...", "option": {"send_email": "Y"}}
 
             override_url: Ghi đè URL endpoint.
+            contact_info: Contact THẬT của khách (ContactInfo hoặc dict), dùng để
+                          báo Kakao add-queue khi giữ vé thành công. Nên truyền vào
+                          vì ``contact_info`` mà Sun Portal lưu (và trả về trong
+                          response) hiện là dữ liệu CỨNG, không phải của khách thật.
 
         Returns:
             BookingResult chứa pnr, expiration_date, total_amount, booking_status.
@@ -63,13 +68,14 @@ class HoldService:
         Raises:
             HoldError: Nếu request thất bại.
         """
-        return self._post(payload, override_url)
+        return self._post(payload, override_url, contact_info)
 
     def hold_simple(
         self,
         trace_id: str,
         send_email: bool = True,
         override_url: str | None = None,
+        contact_info: ContactInfo | dict[str, Any] | None = None,
     ) -> BookingResult:
         """
         Giữ chỗ từ trace_id — tự build payload, cách ngắn gọn nhất.
@@ -80,19 +86,28 @@ class HoldService:
             trace_id:     trace_id lấy từ ``BookingPreviewResult.trace_id``.
             send_email:   Gửi email xác nhận cho khách (mặc định True).
             override_url: Ghi đè URL endpoint.
+            contact_info: Contact THẬT của khách (ContactInfo hoặc dict), dùng để
+                          báo Kakao add-queue khi giữ vé thành công. Nên truyền
+                          đúng ``contact_info`` ban đầu (cùng cái đã truyền vào
+                          ``create_booking_simple``), vì Sun Portal hiện lưu
+                          contact_info CỨNG chứ không phải của khách thật.
 
         Returns:
             BookingResult chứa pnr, expiration_date, total_amount, booking_status.
 
         Example::
 
-            preview = booking_service.create_booking_simple(...)
+            preview = booking_service.create_booking_simple(
+                ..., contact_info=contact_info,
+            )
             if preview.is_confirmed:
-                hold = hold_service.hold_simple(preview.trace_id)
+                hold = hold_service.hold_simple(
+                    preview.trace_id, contact_info=contact_info,
+                )
                 print(hold.pnr)
         """
         payload = build_hold_payload(trace_id=trace_id, send_email=send_email)
-        return self._post(payload, override_url)
+        return self._post(payload, override_url, contact_info)
 
     # ── Internal ────────────────────────────────────────────────────────────
 
@@ -100,6 +115,7 @@ class HoldService:
         self,
         payload: dict[str, Any],
         override_url: str | None,
+        contact_info: ContactInfo | dict[str, Any] | None = None,
     ) -> BookingResult:
         url = override_url or HOLD_BOOKING
         http = self._sm.get_http_client()
@@ -110,10 +126,20 @@ class HoldService:
         logger.info(f"Hold booking: trace_id={trace_id}, send_email={send_email}")
         logger.debug(f"POST {url} payload={payload}")
 
+        real_contact_dict: dict[str, Any] | None = None
+        if isinstance(contact_info, ContactInfo):
+            real_contact_dict = contact_info.to_dict()
+        elif contact_info is not None:
+            real_contact_dict = dict(contact_info)
+
         try:
             response = http.post(url, headers=headers, json=payload)
             data = response.json()
-            result = BookingResult.from_dict(data, status_code=response.status_code)
+            result = BookingResult.from_dict(
+                data,
+                status_code=response.status_code,
+                real_contact_info=real_contact_dict,
+            )
 
             logger.info(
                 f"Hold result: success={result.success}, "
