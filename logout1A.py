@@ -4,8 +4,7 @@ import re
 import xml.etree.ElementTree as ET
 import subprocess
 file_path = "login1A.py"
-USERNAME = "SEL28AA8"
-PASSWORD = "Bkdfasdv@203414"
+
 def logout1A(
     session_log_file="session_log.json",
     cookie_file="cookie1a.json"
