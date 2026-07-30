@@ -196,7 +196,10 @@ def login(p):
 
 
 if __name__ == "__main__":
-
+    # Xóa logout signal cũ khi khởi động
+    if os.path.exists(LOGOUT_SIGNAL):
+        os.remove(LOGOUT_SIGNAL)
+        print("🗑️ Xóa logout signal cũ")
     with sync_playwright() as p:
 
         # Bước 1: đợi nếu crash gần đây
