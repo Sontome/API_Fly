@@ -76,7 +76,7 @@ PREMIUM_BOOKING_CLASSES: set[str] = {"S", "G", "A", "X"}
 # mỗi nhóm (premium / normal). Lưu ý "L" xuất hiện 2 lần trong danh sách gốc;
 # _fare_class_rank() chỉ lấy rank của lần xuất hiện ĐẦU TIÊN.
 FARE_CLASS_PRIORITY_ORDER: list[str] = [
-    "X", "A", "G", "L", "S", "V", "U", "R", "O", "T",
+    "X", "A", "G", "S", "V", "U", "R", "O", "T",
     "Q", "N", "M", "L", "K", "H", "B", "W", "Y",
 ]
  
