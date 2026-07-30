@@ -97,7 +97,7 @@ def do_logout(page, browser):
 
 def login():
     with Camoufox(
-        headless=False,
+        headless=True,
         os="windows",  # giả lập Windows OS fingerprint
         geoip=True,
     ) as browser:
