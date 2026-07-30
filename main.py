@@ -71,7 +71,7 @@ from cachetools import TTLCache
 from check_price_stu_vna import check_price_stu_vna
 from routers.change_router import router as change_router
 from routers.spa_router import router as spa_router
-from backendapi1asun import repricePNR_SUN,beginRepricePNR_SUN
+from backendapi1asun import repricePNR_SUN,beginRepricePNR_SUN,autoRepricePNR_SUN
 
 load_dotenv()
 RATE_LIMIT_MINUTES = int(os.getenv("RATE_LIMIT_MINUTES", 3))
@@ -2912,7 +2912,17 @@ async def beginRepricee_sun(
     except Exception as e:
         return (str(e))
 
-
+@app.get("/spa/UpVfr")
+async def autoRepricePNRSUN(
+    pnr: str = Query(..., description="pnr")
+    
+):
+    try:
+        result = await autoRepricePNR_SUN(pnr)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
