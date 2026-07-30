@@ -2900,7 +2900,17 @@ async def repricee_sun(
     except Exception as e:
         return (str(e))
 
-
+@app.get("/spa/beginReprice")
+async def beginRepricee_sun(
+    pnr: str = Query(..., description="pnr")
+    
+):
+    try:
+        result = await beginRepricePNR_SUN(pnr)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
