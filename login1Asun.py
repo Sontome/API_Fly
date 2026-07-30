@@ -152,7 +152,7 @@ def login(p):
     def target_response(res):
         return "createSessionKey" in res.url
 
-    url = "https://www.accounts.amadeus.com/LoginService/authorizeAngular?service=ARD_9G-DC&client_id=1ASIXARD9GDC&LANGUAGE=GB&redirect_uri=https%3A%2F%2Ftc110.resdesktop.altea.com%2Fapp_ard%2Fapf%2Finit%2Flogin"
+    url = "https://www.accounts.amadeus.com/LoginService/authorizeAngular?service=ARD_9G-DC&client_id=1ASIXARD9GDC&LANGUAGE=GB&redirect_uri=https%3A%2F%2Ftc110.resdesktop.altea.amadeus.com%2Fapp_ard%2Fapf%2Finit%2Flogin%3FSITE%3DA9GPAIDL%26LANGUAGE%3DGB%26MARKETS%3DARDW_PROD_WBP%26ACTION%3DclpLogin#/login"
 
     page.goto(url)
     page.wait_for_selector("#userAliasInput")
