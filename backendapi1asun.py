@@ -251,8 +251,17 @@ async def repricePNR_SUN(pnr,type):
             ssid, pricegocres = await send_command(client, commandreprice, pnr)
 
             print("✅ Response FXB ... ")
-            ssid, res = await send_command(client, "RFHVA", pnr)
             pricegoc=pricegocres.json()
+            giareprice = pricegoc["model"]["output"]["crypticResponse"]["response"]
+            # Kiểm tra KRW
+            if "KRW" not in giareprice:
+                print("⚠️ Không có KRW, bỏ qua RFHVA/ET")
+                ssid, res = await send_command(client, "IG", pnr)
+                ssid, res = await send_close(client, pnr)
+                print("close Session")
+                return {"status": "ERROR", "reason": "KRW not found", "response": giareprice}
+
+            ssid, res = await send_command(client, "RFHVA", pnr)
             
 
             print("✅ Response rfson ... ")
