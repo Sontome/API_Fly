@@ -2888,7 +2888,17 @@ app.include_router(spa_router)
 
 #------------------------------------------------------------------------------------------------------
 
-
+@app.get("/spa/reprice")
+async def repricee_sun(
+    pnr: str = Query(..., description="pnr"),
+    doituong: str = Query(..., description="doituong")
+):
+    try:
+        result = await repricePNR_SUN(pnr,doituong)
+        
+        return result
+    except Exception as e:
+        return (str(e))
 
 
 
