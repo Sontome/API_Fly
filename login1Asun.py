@@ -1,11 +1,9 @@
-from camoufox.sync_api import Camoufox
-from playwright.sync_api import TimeoutError
+from playwright.sync_api import sync_playwright, TimeoutError
 import json
 import xml.etree.ElementTree as ET
 import threading
 import time
 import os
-import random
 from queue import Queue
 from dotenv import load_dotenv
 
@@ -15,6 +13,7 @@ USERNAME = os.getenv("SUN_1A_USERNAME")
 PASSWORD = os.getenv("SUN_1A_PASSWORD")
 
 LOGOUT_SIGNAL = "/tmp/logout1asun"
+STATE_FILE = "/root/API_Fly/state_sun1a.json"  # lưu trạng thái giữa các lần chạy
 
 unlock_queue = Queue()
 
@@ -40,32 +39,83 @@ def getIDvsENC(xml_data):
         return None
 
 
-def human_type(page, selector, text):
-    """Type như người thật: click, hover, delay ngẫu nhiên giữa các ký tự"""
-    locator = page.locator(selector)
-    locator.hover()
-    time.sleep(random.uniform(0.2, 0.5))
-    locator.click()
-    time.sleep(random.uniform(0.1, 0.3))
-    for char in text:
-        page.keyboard.type(char, delay=random.randint(80, 180))
-        # Thỉnh thoảng dừng lâu hơn như người thật
-        if random.random() < 0.1:
-            time.sleep(random.uniform(0.2, 0.5))
+def save_last_crash_time():
+    with open(STATE_FILE, "w") as f:
+        json.dump({"last_crash": time.time()}, f)
 
 
-def human_click(page, selector):
-    """Click với mouse move tự nhiên"""
-    locator = page.locator(selector)
-    box = locator.bounding_box()
-    if box:
-        # Move đến gần button trước
-        page.mouse.move(
-            box["x"] + box["width"] / 2 + random.randint(-5, 5),
-            box["y"] + box["height"] / 2 + random.randint(-5, 5),
+def get_last_crash_time():
+    if not os.path.exists(STATE_FILE):
+        return None
+    try:
+        with open(STATE_FILE) as f:
+            return json.load(f).get("last_crash")
+    except:
+        return None
+
+
+def wait_if_recent_crash():
+    """Nếu crash gần đây < 5 phút thì đợi cho Amadeus reset"""
+    last = get_last_crash_time()
+    if not last:
+        return
+    elapsed = time.time() - last
+    wait_time = 300  # 5 phút
+    if elapsed < wait_time:
+        remaining = int(wait_time - elapsed)
+        print(f"⏳ Crash gần đây, đợi {remaining}s để Amadeus reset session...")
+        time.sleep(remaining)
+
+
+def try_logout_old_session(p):
+    """Mở browser, vào Amadeus và logout session cũ nếu còn"""
+    print("🔄 Thử logout session cũ...")
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+
+    # Inject cookie cũ nếu còn
+    cookie_file = "/root/API_Fly/cookie1a_sun.json"
+    if os.path.exists(cookie_file):
+        try:
+            with open(cookie_file) as f:
+                cookies = json.load(f)
+            page.context.add_cookies(cookies)
+        except:
+            pass
+
+    try:
+        page.goto(
+            "https://tc110.resdesktop.altea.com/app_ard/apf/init/login",
+            timeout=30000
         )
-        time.sleep(random.uniform(0.1, 0.3))
-    locator.click()
+        time.sleep(3)
+
+        # Thử click logout nếu đang có session
+        try:
+            page.wait_for_selector(
+                "#eusermanagement_logout_logo_logout_id",
+                timeout=5000
+            )
+            page.click("#eusermanagement_logout_logo_logout_id")
+            time.sleep(2)
+            try:
+                page.wait_for_selector("#uicAlertBox_ok", timeout=5000)
+                page.click("#uicAlertBox_ok")
+            except:
+                pass
+            print("✅ Logout session cũ OK")
+            time.sleep(3)
+        except:
+            print("ℹ️ Không có session cũ cần logout")
+
+    except Exception as e:
+        print(f"⚠️ Logout session cũ lỗi: {e}")
+    finally:
+        browser.close()
+
+    # Xóa cookie cũ
+    if os.path.exists(cookie_file):
+        os.remove(cookie_file)
 
 
 def do_logout(page, browser):
@@ -95,121 +145,117 @@ def do_logout(page, browser):
         return True
 
 
-def login():
-    with Camoufox(
-        headless=True,
-        os="windows",  # giả lập Windows OS fingerprint
-        geoip=True,
-    ) as browser:
+def login(p):
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
 
-        page = browser.new_page()
+    def target_response(res):
+        return "createSessionKey" in res.url
 
-        def target_response(res):
-            return "createSessionKey" in res.url
+    url = "https://www.accounts.amadeus.com/LoginService/authorizeAngular?service=ARD_9G-DC&client_id=1ASIXARD9GDC&LANGUAGE=GB&redirect_uri=https%3A%2F%2Ftc110.resdesktop.altea.com%2Fapp_ard%2Fapf%2Finit%2Flogin"
 
-        url = "https://www.accounts.amadeus.com/LoginService/authorizeAngular?service=ARD_9G-DC&client_id=1ASIXARD9GDC&LANGUAGE=GB&redirect_uri=https%3A%2F%2Ftc110.resdesktop.altea.com%2Fapp_ard%2Fapf%2Finit%2Flogin"
+    page.goto(url)
+    page.wait_for_selector("#userAliasInput")
+    page.fill("#userAliasInput", USERNAME)
+    page.click('button[type="submit"]')
+    page.wait_for_selector("#passwordInput")
+    page.fill("#passwordInput", PASSWORD)
+    page.click('button[type="submit"]')
 
-        page.goto(url)
-        time.sleep(random.uniform(1.0, 2.0))  # đợi page load tự nhiên
+    try:
+        page.wait_for_selector("#privateDataDiscOkButton", timeout=5000)
+        page.click("#privateDataDiscOkButton")
+    except:
+        pass
 
-        page.wait_for_selector("#userAliasInput")
-        time.sleep(random.uniform(0.5, 1.0))
+    try:
+        res = page.wait_for_event("response", timeout=60000, predicate=target_response)
+        body = res.text()
+    except TimeoutError:
+        print("❌ Không bắt được createSessionKey")
+        page.screenshot(path="/root/API_Fly/login_timeout.png")
+        save_last_crash_time()  # ← lưu thời điểm fail
+        return None, browser
 
-        human_type(page, "#userAliasInput", USERNAME)
-        time.sleep(random.uniform(0.5, 1.0))
+    session = getIDvsENC(body)
+    if not session:
+        save_last_crash_time()
+        return None, browser
 
-        human_click(page, 'button[type="submit"]')
-        time.sleep(random.uniform(1.5, 2.5))
+    with open("session_log_sun.json", "w") as f:
+        json.dump(session, f, indent=2)
+    with open("/root/API_Fly/cookie1a_sun.json", "w") as f:
+        json.dump(page.context.cookies(), f, indent=2)
 
-        page.wait_for_selector("#passwordInput")
-        time.sleep(random.uniform(0.5, 1.0))
+    # Xóa crash time khi login thành công
+    if os.path.exists(STATE_FILE):
+        os.remove(STATE_FILE)
 
-        human_type(page, "#passwordInput", PASSWORD)
-        time.sleep(random.uniform(0.5, 1.0))
-
-        human_click(page, 'button[type="submit"]')
-        time.sleep(random.uniform(1.5, 2.5))
-
-        try:
-            page.wait_for_selector("#privateDataDiscOkButton", timeout=5000)
-            human_click(page, "#privateDataDiscOkButton")
-        except:
-            pass
-
-        try:
-            res = page.wait_for_event(
-                "response", timeout=60000, predicate=target_response
-            )
-            body = res.text()
-        except TimeoutError:
-            print("❌ Không bắt được createSessionKey")
-            page.screenshot(path="/root/API_Fly/login_timeout.png")
-            return None, browser
-
-        session = getIDvsENC(body)
-        if not session:
-            return None, browser
-
-        with open("session_log_sun.json", "w") as f:
-            json.dump(session, f, indent=2)
-
-        with open("cookie1a_sun.json", "w") as f:
-            json.dump(page.context.cookies(), f, indent=2)
-
-        print("✅ Login OK", session)
-
-        return {"page": page, "browser": browser}, browser
+    print("✅ Login OK", session)
+    return {"page": page, "browser": browser}, browser
 
 
 if __name__ == "__main__":
 
-    result, browser = login()
+    with sync_playwright() as p:
 
-    if not result:
-        browser.close()
-        exit(1)
+        # Bước 1: đợi nếu crash gần đây
+        wait_if_recent_crash()
 
-    page = result["page"]
+        # Bước 2: logout session cũ trước khi login mới
+        try_logout_old_session(p)
+        time.sleep(5)
 
-    threading.Thread(target=unlock_worker, daemon=True).start()
+        # Bước 3: login mới
+        result, browser = login(p)
 
-    print("🚀 Browser giữ sống")
-
-    try:
-        while True:
-            if do_logout(page, browser):
-                break
-
-            if not unlock_queue.empty():
-                msg = unlock_queue.get()
-
-                if msg == "check_unlock":
-                    try:
-                        page.wait_for_selector(
-                            "#uicAlertBox_ok", state="visible", timeout=1000
-                        )
-                        page.click("#uicAlertBox_ok")
-                        print("Đóng alert")
-                    except TimeoutError:
-                        pass
-
-                    try:
-                        page.wait_for_selector(
-                            "#eusermanagement_logout_lock_PASSWORD_id_input",
-                            timeout=1000,
-                        )
-                        page.fill(
-                            "#eusermanagement_logout_lock_PASSWORD_id_input", PASSWORD
-                        )
-                        page.click("#eusermanagement_logout_lock_save_id")
-                        print("Unlock OK")
-                    except TimeoutError:
-                        pass
-
-            time.sleep(1)
-
-    finally:
-        try:
+        if not result:
             browser.close()
-        except:
-            pass
+            exit(1)
+
+        page = result["page"]
+
+        threading.Thread(target=unlock_worker, daemon=True).start()
+        print("🚀 Browser giữ sống")
+
+        try:
+            while True:
+                if do_logout(page, browser):
+                    break
+
+                if not unlock_queue.empty():
+                    msg = unlock_queue.get()
+                    if msg == "check_unlock":
+                        try:
+                            page.wait_for_selector(
+                                "#uicAlertBox_ok", state="visible", timeout=1000
+                            )
+                            page.click("#uicAlertBox_ok")
+                            print("Đóng alert")
+                        except TimeoutError:
+                            pass
+
+                        try:
+                            page.wait_for_selector(
+                                "#eusermanagement_logout_lock_PASSWORD_id_input",
+                                timeout=1000,
+                            )
+                            page.fill(
+                                "#eusermanagement_logout_lock_PASSWORD_id_input",
+                                PASSWORD
+                            )
+                            page.click("#eusermanagement_logout_lock_save_id")
+                            print("Unlock OK")
+                        except TimeoutError:
+                            pass
+
+                time.sleep(1)
+
+        finally:
+            # Lưu crash time nếu thoát không phải do logout signal
+            if os.path.exists(LOGOUT_SIGNAL) is False:
+                save_last_crash_time()
+            try:
+                browser.close()
+            except:
+                pass
