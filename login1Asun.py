@@ -32,7 +32,7 @@ def getIDvsENC(xml_data):
         return None
 
 def login(p, username=USERNAME, password=PASSWORD):
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=True)
     page = browser.new_page()
 
     def is_target_response(res):
