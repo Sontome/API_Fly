@@ -55,10 +55,21 @@ def login(p, username=USERNAME, password=PASSWORD):
         pass
 
     try:
-        res = page.wait_for_event("response", timeout=60000, predicate=is_target_response)
+        res = page.wait_for_event(
+            "response",
+            timeout=60000,
+            predicate=is_target_response
+        )
         body = res.text()
-    except:
-        print("[❌] Không bắt được createSessionKey")
+    
+    except TimeoutError:
+        print("[❌] Timeout: Không bắt được createSessionKey trong 60s")
+        page.screenshot(path="login_timeout.png", full_page=True)
+        return None, browser
+    
+    except Exception as e:
+        print(f"[❌] Lỗi: {e}")
+        page.screenshot(path="login_error.png", full_page=True)
         return None, browser
 
     jsession_data = getIDvsENC(body)
