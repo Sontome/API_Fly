@@ -250,9 +250,9 @@ async def repricePNR_SUN(pnr,type):
             print("✅ Response RT ... ")
             ssid, pricegocres = await send_command(client, commandreprice, pnr)
 
-            print("✅ Response RTN ... ")
+            print("✅ Response FXB ... ")
             ssid, res = await send_command(client, "RFHVA", pnr)
-            
+            pricegoc=pricegocres.json()
             
 
             print("✅ Response rfson ... ")
@@ -266,7 +266,9 @@ async def repricePNR_SUN(pnr,type):
             print("close Session")
             
             
-        return pricegocres
+        return {
+            "status" :"OK"
+        }
     
     except Exception as e:
         print("🚨 Lỗi khi chạy:", e)
