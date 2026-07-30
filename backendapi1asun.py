@@ -283,6 +283,54 @@ async def repricePNR_SUN(pnr,type):
         print("🚨 Lỗi khi chạy:", e)
         #await send_mess("lỗi api 1A")
         return {"error": str(e)}
+async def autoRepricePNR_SUN(pnr: str):
+    try:
+        # Bước 1: beginRepricePNR_SUN
+        print(f"🔍 Begin reprice PNR: {pnr}")
+        begin_result = await beginRepricePNR_SUN(pnr)
+
+        if "error" in begin_result:
+            print(f"❌ beginRepricePNR_SUN lỗi: {begin_result['error']}")
+            return {"status": "ERROR", "reason": "beginRepricePNR_SUN failed", "detail": begin_result}
+
+        # Bước 2: Kiểm tra loaive của tất cả chặng
+        chang_list = begin_result.get("chang", [])
+        if not chang_list:
+            return {"status": "ERROR", "reason": "Không có chặng bay"}
+
+        excluded_classes = {"S", "G", "A", "X"}
+        all_valid_class = all(
+            seg.get("loaive", "") not in excluded_classes
+            for seg in chang_list
+        )
+
+        # Bước 3: Kiểm tra departure chặng 1
+        dep_chang1 = chang_list[0].get("departure", "")
+        valid_departure = dep_chang1 in ("ICN", "PUS")
+
+        print(f"✅ loaive hợp lệ: {all_valid_class}, departure chặng 1: {dep_chang1}")
+
+        if not all_valid_class or not valid_departure:
+            return {
+                "status": "SKIP",
+                "reason": "Không đủ điều kiện reprice",
+                "all_valid_class": all_valid_class,
+                "departure_chang1": dep_chang1
+            }
+
+        # Bước 4: Chạy repricePNR_SUN
+        print(f"🚀 Đủ điều kiện, tiến hành reprice VFR cho PNR: {pnr}")
+        reprice_result = await repricePNR_SUN(pnr, "VFR")
+
+        return {
+            "status": reprice_result.get("status", "ERROR"),
+            "pnr": pnr,
+            "reprice_result": reprice_result
+        }
+
+    except Exception as e:
+        print(f"🚨 autoRepricePNR_SUN lỗi: {e}")
+        return {"status": "ERROR", "reason": str(e)}
 def parse_segments(text):
     pattern = re.compile(
         r"^\s*\d+\s+[A-Z ]?\s*([A-Z]{3})\s+\w+\s+\d+\s+\w\s+\d{2}[A-Z]{3}\s+\d{4}\s+OK\s+([A-Z0-9]+)",
