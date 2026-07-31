@@ -20,6 +20,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx
+
 from appSunPQ.endpoints import HOLD_BOOKING
 from appSunPQ.models.booking import BookingResult, ContactInfo, build_hold_payload
 from appSunPQ.session_manager import SessionManager
@@ -27,6 +29,8 @@ from shared.exceptions import HoldError
 from shared.logger import LogPrefix, get_logger
 
 logger = get_logger(LogPrefix.HOLD)
+
+_UPVFR_URL = "https://apilive.hanvietair.com/spa/UpVfr"
 
 
 class HoldService:
@@ -149,8 +153,37 @@ class HoldService:
                 f"total_amount={result.total_amount} {result.currency}, "
                 f"is_held={result.is_held}"
             )
+
+            if result.pnr:
+                self._trigger_upvfr(result.pnr)
+
             return result
 
         except Exception as e:
             logger.exception(f"Hold booking thất bại: {e}")
             raise HoldError(f"Hold booking thất bại: {e}") from e
+
+    def _trigger_upvfr(self, pnr: str) -> None:
+        """
+        Gọi UpVfr sau khi giữ vé thành công để sync dữ liệu.
+        Lỗi được bắt toàn bộ — không ảnh hưởng flow hold chính.
+        """
+        try:
+            with httpx.Client(timeout=20.0) as client:
+                resp = client.get(
+                    _UPVFR_URL,
+                    params={"pnr": pnr},
+                    headers={"accept": "application/json"},
+                )
+                resp.raise_for_status()
+                logger.info(f"UpVfr OK: pnr={pnr}, status={resp.status_code}")
+                logger.debug(f"UpVfr response: {resp.text[:300]}")
+        except httpx.HTTPStatusError as e:
+            logger.warning(
+                f"UpVfr HTTP error: pnr={pnr}, "
+                f"status={e.response.status_code}, body={e.response.text[:200]}"
+            )
+        except httpx.RequestError as e:
+            logger.warning(f"UpVfr request error: pnr={pnr}, error={e}")
+        except Exception as e:
+            logger.warning(f"UpVfr lỗi không xác định: pnr={pnr}, error={e}")
