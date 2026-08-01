@@ -225,6 +225,9 @@ async def beginRepricePNR_SUN(pnr:str):
             listhanhly= parse_segments(pricegoc)
             rt_respone["listhanhly"] = listhanhly
             # print(listhanhly)
+            # ✅ Cập nhật doituong theo passenger_type từ listhanhly
+            if listhanhly:
+                rt_respone["doituong"] = listhanhly[0].get("passenger_type", "ADT")
             ssid, res = await send_close(client, str(pnr))
             print("close Session")
             
