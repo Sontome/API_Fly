@@ -188,7 +188,28 @@ async def send_command(client: httpx.AsyncClient, command_str: str, ssid=None):
     except Exception:
         print("Không parse được JSON:", await res.text())
     return ssid, resp
-
+def get_cheapest_fxt_command(data):
+    """
+    Hàm nhận vào object JSON (output từ 1A),
+    tìm dòng giá vé thấp nhất và trả về lệnh FXT tương ứng.
+    """
+    try:
+        text = data["model"]["output"]["crypticResponse"]["response"]
+    except KeyError:
+        return None  # data không đúng format
+    # Regex bắt dòng kiểu:
+    # 01 TKAP4KRE+* * IN       * P1,4       *     40300  *      *Y
+    pattern = r"(\d{2})\s+\S+\s+\*\s+IN\s+\*\s+(P\d+(?:,\d+)*)\s+\*\s+(\d+)"
+    matches = re.findall(pattern, text)
+    fares = []
+    for stt, pax, price in matches:
+        fares.append((int(price), stt, pax))
+    if not fares:
+        return None
+    # Sắp xếp giá tăng dần, lấy dòng rẻ nhất
+    fares.sort(key=lambda x: x[0])
+    _, stt, pax = fares[0]
+    return f"FXT{stt}/{pax}"
 
 async def beginRepricePNR_SUN(pnr:str):
     try:
@@ -240,7 +261,7 @@ async def beginRepricePNR_SUN(pnr:str):
         print("🚨 Lỗi khi chạy:", e)
         
         return {"error": str(e)}
-async def repricePNR_SUN(pnr,type):
+async def repricePNR_SUN(pnr, type, rt_respone=None):
     try:
         async with httpx.AsyncClient(http2=False) as client:
             ssid, res = await send_command(client, "IG", pnr)
@@ -248,50 +269,81 @@ async def repricePNR_SUN(pnr,type):
             ssid, res = await send_command(client, "RT" + str(pnr), pnr)
             print("✅ Response RT ... ")
             data = res.json()
-            
-            
 
             rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
-            rt_respone = parse_pnr(rt_respone_raw,pnr)
-            if type== "VFR":
-                commandreprice = "FXB/RVFR,U555555"
-            else : 
-                commandreprice = "FXB"
-            print("✅ Response RT ... ")
-            ssid, pricegocres = await send_command(client, commandreprice, pnr)
+            rt_respone = parse_pnr(rt_respone_raw, pnr)
 
-            print("✅ Response FXB ... ")
-            pricegoc=pricegocres.json()
+            if type == "VFR":
+                # ── Phân loại passengers theo loaikhach (index 1-based) ──
+                adt_indices = []
+                chd_indices = []
+                has_inf = False
+
+                for i, pax in enumerate(rt_respone.get("passengers", []), start=1):
+                    loai = pax.get("loaikhach", "ADT").upper()
+                    if loai == "CHD":
+                        chd_indices.append(str(i))
+                    else:
+                        adt_indices.append(str(i))
+                    if pax.get("inf"):
+                        has_inf = True
+
+                # ── Build FXP command ──
+                parts = []
+                if adt_indices:
+                    parts.append(f"PAX/RVFR,U555555/P{','.join(adt_indices)}")
+                if chd_indices:
+                    parts.append(f"PAX/RVFR-CH,U555555/P{','.join(chd_indices)}")
+
+                commandreprice = "FXP/" + "//".join(parts)
+                print(f"🧾 FXP command: {commandreprice}")
+
+            else:
+                commandreprice = "FXB"
+
+            ssid, pricegocres = await send_command(client, commandreprice, pnr)
+            print("✅ Response FXP/FXB ... ")
+            pricegoc = pricegocres.json()
             giareprice = pricegoc["model"]["output"]["crypticResponse"]["response"]
+
             # Kiểm tra KRW
             if "KRW" not in giareprice:
-                print("⚠️ Không có KRW, bỏ qua RFHVA/ET")
+                print("⚠️ Không có KRW, bỏ qua")
                 ssid, res = await send_command(client, "IG", pnr)
                 ssid, res = await send_close(client, pnr)
                 print("close Session")
                 return {"status": "ERROR", "reason": "KRW not found", "response": giareprice}
 
-            ssid, res = await send_command(client, "RFHVA", pnr)
-            
+            # ── Xử lý INF nếu có ──
+            if type == "VFR" and has_inf:
+                ssid, list_inf_raw = await send_command(client, "FXP/INF/RVFR-IN,U", pnr)
+                list_inf = list_inf_raw.json()
+                print("📦 Xử lý INF reprice")
+                try:
+                    cmd_inf = get_cheapest_fxt_command(list_inf)
+                    print(f"🎫 FXT INF command: {cmd_inf}")
+                    if cmd_inf:
+                        ssid, res = await send_command(client, cmd_inf, pnr)
+                        print("✅ Xử lý yêu cầu chọn chuyến của inf")
+                    else:
+                        print("⚠️ Không tìm được FXT command cho INF")
+                except Exception as e:
+                    print(f"⚠️ Không có yêu cầu chọn chuyến của inf: {e}")
 
-            print("✅ Response rfson ... ")
+            ssid, res = await send_command(client, "RFHVA", pnr)
+            print("✅ Response RFHVA ... ")
+
             ssid, res = await send_command(client, "ET", pnr)
-            print(res)
             print("✅ Response ET ... ")
-            
+
             ssid, res = await send_command(client, "IG", pnr)
-            print(res)
             ssid, res = await send_close(client, pnr)
             print("close Session")
-            
-            
-        return {
-            "status" :"OK"
-        }
-    
+
+        return {"status": "OK"}
+
     except Exception as e:
         print("🚨 Lỗi khi chạy:", e)
-        #await send_mess("lỗi api 1A")
         return {"error": str(e)}
 async def autoRepricePNR_SUN(pnr: str):
     try:
