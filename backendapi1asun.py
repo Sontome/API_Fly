@@ -210,8 +210,23 @@ def get_cheapest_fxt_command(data):
     fares.sort(key=lambda x: x[0])
     _, stt, pax = fares[0]
     return f"FXT{stt}/{pax}"
-
-async def beginRepricePNR_SUN(pnr:str):
+def get_first_adt_tst(text: str) -> str | None:
+    """
+    Parse danh sách TST từ TQT response.
+    Trả về số TST đầu tiên của ADT (không phải INF - không có chữ 'I' ở cột loại).
+    Dòng mẫu:
+      3    .1   TRINH/SON MR       KRW  435500   2-3
+      4    .1 I NGUYEN/LINH MSTR   KRW   26100   2-3   ← INF (có I)
+    """
+    pattern = re.compile(
+        r"^\s*(\d+)\s+\.\d+\s+(?!I\s)([A-Z])",  # số TST, không có I
+        re.MULTILINE
+    )
+    match = pattern.search(text)
+    if match:
+        return match.group(1)
+    return None
+async def beginRepricePNR_SUN(pnr: str):
     try:
         async with httpx.AsyncClient(http2=False) as client:
             ssid, res = await send_command(client, "IG", str(pnr))
@@ -220,46 +235,48 @@ async def beginRepricePNR_SUN(pnr:str):
 
             print("✅ Response RT ... ")
             data = res.json()
-            
-            # print(data)
 
             rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
             # nếu có page 2 thì gọi thêm MD đúng 1 lần
             if ")>" in rt_respone_raw:
                 print("co trang 2")
-        
                 ssid, res_md = await send_command(client, "MD", str(pnr))
-        
                 data_md = res_md.json()
-        
                 rt_respone_raw += "\n" + data_md["model"]["output"]["crypticResponse"]["response"]
-            rt_respone = parse_pnr(rt_respone_raw,pnr)
+
+            rt_respone = parse_pnr(rt_respone_raw, pnr)
+
+            # ── Gọi TQT ──
             ssid, pricegocres = await send_command(client, "TQT", str(pnr))
-            
             print("✅ Response gia goc ... ")
             pricegoc_data = pricegocres.json()
             pricegoc = pricegoc_data["model"]["output"]["crypticResponse"]["response"]
-            
-            ssid, res = await send_command(client, "IG", str(pnr))
 
+            # ── Detect danh sách TST → gọi TQT/T{n} nếu cần ──
+            tst_no = get_first_adt_tst(pricegoc)
+            if tst_no:
+                print(f"📋 Phát hiện danh sách TST, gọi TQT/T{tst_no} cho ADT...")
+                ssid, pricegocres2 = await send_command(client, f"TQT/T{tst_no}", str(pnr))
+                pricegoc_data2 = pricegocres2.json()
+                pricegoc = pricegoc_data2["model"]["output"]["crypticResponse"]["response"]
+                print(f"✅ Response TQT/T{tst_no} ... ")
+
+            ssid, res = await send_command(client, "IG", str(pnr))
             print("✅ Response IG ... ")
-            listhanhly= parse_segments(pricegoc)
+
+            listhanhly = parse_segments(pricegoc)
             rt_respone["listhanhly"] = listhanhly
-            # print(listhanhly)
-            # ✅ Cập nhật doituong theo passenger_type từ listhanhly
+
             if listhanhly:
                 rt_respone["doituong"] = listhanhly[0].get("passenger_type", "ADT")
+
             ssid, res = await send_close(client, str(pnr))
             print("close Session")
-            
 
-            #print (respone)
-            
-            
         return rt_respone
+
     except Exception as e:
         print("🚨 Lỗi khi chạy:", e)
-        
         return {"error": str(e)}
 async def repricePNR_SUN(pnr, type, rt_respone=None):
     try:
