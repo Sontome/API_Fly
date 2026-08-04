@@ -246,6 +246,13 @@ async def repricePNR_SUN(pnr,type):
             ssid, res = await send_command(client, "IG", pnr)
             print("clear code")
             ssid, res = await send_command(client, "RT" + str(pnr), pnr)
+            print("✅ Response RT ... ")
+            data = res.json()
+            
+            
+
+            rt_respone_raw = data["model"]["output"]["crypticResponse"]["response"]
+            rt_respone = parse_pnr(rt_respone_raw,pnr)
             if type== "VFR":
                 commandreprice = "FXB/RVFR,U555555"
             else : 
