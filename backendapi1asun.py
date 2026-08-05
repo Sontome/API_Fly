@@ -281,45 +281,91 @@ async def beginRepricePNR_SUN(pnr: str):
 def parse_fxp_prices(text: str) -> dict:
     text = text.replace("\r\n", "\n").replace("\r", "\n")
 
-    pattern = re.compile(
-        r"^(\d{2})\s+"
-        r"([A-Z]+\/[A-Z\s\*]+?)"
-        r"\s{2,}"
-        r"([A-Z]+)\s+"
-        r"\d+\s+"
-        r"(\d+)\s+"
-        r"(\d+)\s+"
-        r"(\d+)",
-        re.MULTILINE
-    )
     total_pattern = re.compile(r"TOTALS\s+\d+\s+(\d+)\s+(\d+)\s+(\d+)")
 
-    passengers_price = []
-    seen_indices = set()  # track số thứ tự đã xử lý
+    # ── Luồng nhiều người: có bảng PASSENGER + TOTALS ──
+    if "TOTALS" in text:
+        pattern = re.compile(
+            r"^(\d{2})\s+"
+            r"([A-Z]+\/[A-Z\s\*]+?)"
+            r"\s{2,}"
+            r"([A-Z]+)\s+"
+            r"\d+\s+"
+            r"(\d+)\s+"
+            r"(\d+)\s+"
+            r"(\d+)",
+            re.MULTILINE
+        )
 
-    for m in pattern.finditer(text):
-        idx = m.group(1)
-        if idx in seen_indices:
-            continue
-        seen_indices.add(idx)
+        passengers_price = []
+        seen_indices = set()
 
-        name = m.group(2).strip().rstrip("*").strip()
-        passengers_price.append({
+        for m in pattern.finditer(text):
+            idx = m.group(1)
+            if idx in seen_indices:
+                continue
+            seen_indices.add(idx)
+
+            name = m.group(2).strip().rstrip("*").strip()
+            passengers_price.append({
+                "name": name,
+                "ptc": m.group(3),
+                "fare": int(m.group(4)),
+                "tax": int(m.group(5)),
+                "total": int(m.group(6)),
+            })
+
+        total_match = total_pattern.search(text)
+        total = {
+            "fare": int(total_match.group(1)) if total_match else 0,
+            "tax": int(total_match.group(2)) if total_match else 0,
+            "total": int(total_match.group(3)) if total_match else 0,
+        }
+
+        return {"passengers": passengers_price, "total": total}
+
+    # ── Luồng 1 người: không có bảng TOTALS ──
+    else:
+        # Lấy tên từ dòng "01 TRINH/SON MR"
+        name_match = re.search(r"^\d{2}\s+([A-Z]+\/[A-Z\s\*]+?)$", text, re.MULTILINE)
+        name = name_match.group(1).strip().rstrip("*").strip() if name_match else ""
+
+        # Lấy PTC từ FARE BASIS (QMESR0KE → Q..., TMESR0KE → T...)
+        # PTC nằm sau <CORP 555555> dạng dòng riêng không có, fallback từ command
+        ptc_match = re.search(r"<CORP\s+\d+>", text)
+        # PTC thực tế không có trong response 1 người → để trống hoặc default VFR
+        ptc = "VFR"
+
+        # Tất cả số KRW trong text
+        krw_matches = re.findall(r"KRW\s+(\d+)(?!\s*-)", text)
+        # Dòng KRW cuối không có dấu - là tổng tiền
+        # Lọc: lấy số KRW standalone (không phải breakdown YQ/C4/JC/BP/XT)
+        # Dòng tổng là dòng "KRW   531700" đứng một mình (không có text sau)
+        total_krw_match = re.search(r"^KRW\s+(\d+)\s*$", text, re.MULTILINE)
+        total_amount = int(total_krw_match.group(1)) if total_krw_match else 0
+
+        # Fare = dòng KRW đầu tiên (trước các dòng tax)
+        fare_match = re.search(r"^KRW\s+(\d+)\s+\d{2}", text, re.MULTILINE)
+        fare = int(fare_match.group(1)) if fare_match else 0
+
+        tax = total_amount - fare
+
+        passengers_price = [{
             "name": name,
-            "ptc": m.group(3),
-            "fare": int(m.group(4)),
-            "tax": int(m.group(5)),
-            "total": int(m.group(6)),
-        })
+            "ptc": ptc,
+            "fare": fare,
+            "tax": tax,
+            "total": total_amount,
+        }]
 
-    total_match = total_pattern.search(text)
-    total = {
-        "fare": int(total_match.group(1)) if total_match else 0,
-        "tax": int(total_match.group(2)) if total_match else 0,
-        "total": int(total_match.group(3)) if total_match else 0,
-    }
-
-    return {"passengers": passengers_price, "total": total}
+        return {
+            "passengers": passengers_price,
+            "total": {
+                "fare": fare,
+                "tax": tax,
+                "total": total_amount,
+            }
+        }
 
 
 async def repricePNR_SUN(pnr, type, rt_respone=None):
