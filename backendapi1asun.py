@@ -279,30 +279,31 @@ async def beginRepricePNR_SUN(pnr: str):
         print("🚨 Lỗi khi chạy:", e)
         return {"error": str(e)}
 def parse_fxp_prices(text: str) -> dict:
-    """
-    Parse giá từ FXP response dạng:
-    01 TRINH/SON MR      VFR     1     195500  174700     370200
-    """
+    # Chuẩn hóa line endings
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
     pattern = re.compile(
-        r"^\d{2}\s+([A-Z]+\/[A-Z\s\*]+?)\s{2,}"  # tên khách
-        r"([A-Z]+)\s+"                              # PTC
-        r"\d+\s+"                                   # NP
-        r"(\d+)\s+"                                 # FARE
-        r"(\d+)\s+"                                 # TAX
-        r"(\d+)",                                   # PER PSGR
+        r"^(\d{2})\s+"           # số thứ tự
+        r"([A-Z]+\/[A-Z\s\*]+?)" # tên khách (họ/tên, có thể có * và spaces)
+        r"\s{2,}"                 # ít nhất 2 space ngăn cách tên và PTC
+        r"([A-Z]+)\s+"            # PTC (VFR, VFN, VFF...)
+        r"\d+\s+"                 # NP
+        r"(\d+)\s+"               # FARE
+        r"(\d+)\s+"               # TAX
+        r"(\d+)",                 # PER PSGR
         re.MULTILINE
     )
     total_pattern = re.compile(r"TOTALS\s+\d+\s+(\d+)\s+(\d+)\s+(\d+)")
 
     passengers_price = []
     for m in pattern.finditer(text):
-        name = m.group(1).strip().rstrip("*").strip()
+        name = m.group(2).strip().rstrip("*").strip()
         passengers_price.append({
             "name": name,
-            "ptc": m.group(2),
-            "fare": int(m.group(3)),
-            "tax": int(m.group(4)),
-            "total": int(m.group(5)),
+            "ptc": m.group(3),
+            "fare": int(m.group(4)),
+            "tax": int(m.group(5)),
+            "total": int(m.group(6)),
         })
 
     total_match = total_pattern.search(text)
