@@ -279,24 +279,30 @@ async def beginRepricePNR_SUN(pnr: str):
         print("🚨 Lỗi khi chạy:", e)
         return {"error": str(e)}
 def parse_fxp_prices(text: str) -> dict:
-    # Chuẩn hóa line endings
     text = text.replace("\r\n", "\n").replace("\r", "\n")
 
     pattern = re.compile(
-        r"^(\d{2})\s+"           # số thứ tự
-        r"([A-Z]+\/[A-Z\s\*]+?)" # tên khách (họ/tên, có thể có * và spaces)
-        r"\s{2,}"                 # ít nhất 2 space ngăn cách tên và PTC
-        r"([A-Z]+)\s+"            # PTC (VFR, VFN, VFF...)
-        r"\d+\s+"                 # NP
-        r"(\d+)\s+"               # FARE
-        r"(\d+)\s+"               # TAX
-        r"(\d+)",                 # PER PSGR
+        r"^(\d{2})\s+"
+        r"([A-Z]+\/[A-Z\s\*]+?)"
+        r"\s{2,}"
+        r"([A-Z]+)\s+"
+        r"\d+\s+"
+        r"(\d+)\s+"
+        r"(\d+)\s+"
+        r"(\d+)",
         re.MULTILINE
     )
     total_pattern = re.compile(r"TOTALS\s+\d+\s+(\d+)\s+(\d+)\s+(\d+)")
 
     passengers_price = []
+    seen_indices = set()  # track số thứ tự đã xử lý
+
     for m in pattern.finditer(text):
+        idx = m.group(1)
+        if idx in seen_indices:
+            continue
+        seen_indices.add(idx)
+
         name = m.group(2).strip().rstrip("*").strip()
         passengers_price.append({
             "name": name,
