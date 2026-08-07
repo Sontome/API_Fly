@@ -89,6 +89,10 @@ day_after = (datetime.today() + timedelta(days=2)).strftime("%Y-%m-%d")
 KST = timezone(timedelta(hours=9))  # GMT+9
 mail_scheduler = MailScheduler(delay=10)
 
+GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbxZYDuO3NML_NHfpfQLtqn3On07zrtRug-6X48dNjJwVdu7HWUwwQdY8Kwwt2OrWZpH/exec"  #linkappscript_service
+GAS_URL = "https://script.google.com/macros/s/AKfycbzY3MnCpH7sMBG89PQ2mlDqYxpft5CNSmS2ttLp_xb0lji8amV43Mvf8KiyRcNVg2NTKQ/exec"
+
+
 class PreChangePNRRequest(BaseModel):
     pnr: str
 class CheckStuVNARequest(BaseModel):
@@ -1285,7 +1289,7 @@ async def checkdate_SUN_Api(
 import httpx
 from fastapi.responses import JSONResponse
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxNwvxUA-OouO02IeeEEDoOnJT1TenYhJZta6AP9geRsvBIQYqW3kRbvGTlYkSicDEtIA/exec"
+
 
 @app.options("/proxy-gas")
 async def proxy_gas_options():
@@ -1449,7 +1453,7 @@ async def process_pdf_SUN(
         filename=file.filename,
         media_type="application/pdf"
     )
-GAS_BOT_URL = "https://script.google.com/macros/s/AKfycbx41FKFHTYchSHqGDRs5Gjh6vh0LWtCENqSsGCYW_YnpAAa_aJAekc33yvKiO71cXUs/exec"
+
 LAST_HISTORY_ID_FILE = "last_history_id.txt"
 
 def read_last_history_id():
